@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guaki — Infraestructura de Descubrimiento & Crecimiento Empresarial en LATAM</title>
+    <meta name="description" content="Guaki es la infraestructura inteligente que conecta a las personas con las mejores empresas de Latinoamérica mediante reputación, datos e Inteligencia Artificial.">
+
+    <!-- GOOGLE FONTS: OUTFIT (DISPLAY DE MARCA) + INTER (CUERPO Y BOTONES) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --guaki-blue-deep: #0B132B;
+            --guaki-blue-ai: #2563EB;
+            --guaki-turquoise: #06B6D4;
+            --guaki-orange: #FF5722;
+            --guaki-coral: #EF4444;
+            --guaki-bg-dark: #030712;
+            --guaki-card-bg: #0F172A;
+            --guaki-border: #1E293B;
+            --guaki-text-dark: #F8FAFC;
+            --guaki-text-muted: #94A3B8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--guaki-bg-dark);
+            color: var(--guaki-text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* 🔘 BARRA SUPERIOR DE NAVEGACIÓN INSTITUCIONAL GUAKI */
+        .mode-control-bar {
+            width: 100%;
+            background: rgba(11, 19, 43, 0.95);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            color: white;
+        }
+
+        .brand-name span { color: var(--guaki-orange); }
+
+        .foundation-badge {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--guaki-turquoise);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* HERO PRINCIPAL — PRINCIPIOS GUAKI BIBLE */
+        .hero-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 60px 24px 40px;
+            text-align: center;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 87, 34, 0.1);
+            border: 1px solid rgba(255, 87, 34, 0.3);
+            color: var(--guaki-orange);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 18px;
+            border-radius: 50px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--guaki-text-muted);
+            max-width: 780px;
+            margin: 0 auto 36px;
+            line-height: 1.6;
+        }
+
+        /* BARRA DE BÚSQUEDA INTELIGENTE CON ATLAS AI CORE */
+        .search-engine-box {
+            background: #0F172A;
+            border: 1px solid #1E293B;
+            padding: 10px;
+            border-radius: 16px;
+            max-width: 850px;
+            margin: 0 auto 50px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 14px 20px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .search-btn {
+            background: var(--guaki-orange);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .search-btn:hover { background: #E64A19; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 87, 34, 0.35); }
+        .search-btn:active { transform: translateY(0) scale(0.98); }
+
+        /* REGLA MAESTRA DE GUAKI */
+        .principle-banner {
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 24px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .principle-item {
+            text-align: left;
+        }
+
+        .principle-title {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--guaki-turquoise);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .principle-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+            margin-top: 4px;
+        }
+
+        /* MATRIZ DE EMPRESAS RECOMENDADAS POR ALGORITMO DE REPUTACIÓN */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 24px 60px;
+        }
+
+        .vendor-card {
+            background: var(--guaki-card-bg);
+            border: 1px solid var(--guaki-border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .vendor-card:hover {
+            border-color: var(--guaki-turquoise);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(6, 182, 212, 0.12);
+        }
+
+        .vendor-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22C55E;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 50px;
+            align-self: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .vendor-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .vendor-metrics {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--guaki-text-muted);
+            margin-bottom: 16px;
+        }
+
+        .btn-action {
+            background: #1E293B;
+            color: white;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-action:hover {
+            background: var(--guaki-orange);
+            border-color: var(--guaki-orange);
+            transform: translateY(-2px);
+        }
+
+        .btn-action:active {
+            transform: translateY(0) scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔘 BARRA SUPERIOR DE NAVEGACIÓN INSTITUCIONAL GUAKI -->
+    <nav class="mode-control-bar">
+        <a href="#" class="brand-logo-group">
+            <div class="brand-name">GUAKI<span>.AI</span></div>
+        </a>
+        <div class="foundation-badge">
+            INFRAESTRUCTURA DE CRECIMIENTO LATAM
+        </div>
+    </nav>
+
+    <!-- HERO PRINCIPAL — PRINCIPIOS GUAKI BIBLE -->
+    <header class="hero-container">
+        <div class="hero-pill">
+            ⚡ REINVENTANDO EL DESCUBRIMIENTO EMPRESARIAL EN LATINOAMÉRICA
+        </div>
+        <h1 class="hero-title">
+            Conectamos Clientes con las Mejores Empresas. Sin Manipulación.
+        </h1>
+        <p class="hero-subtitle">
+            Guaki no es un directorio ni una guía comercial. Es la infraestructura inteligente donde las empresas crecen mediante datos estructurados, reputación transparente y recomendaciones alimentadas por <strong>Atlas AI Core</strong>.
+        </p>
+
+        <!-- BARRA DE BÚSQUEDA INTELIGENTE -->
+        <div class="search-engine-box">
+            <input type="text" class="search-input" placeholder="¿Qué servicio o empresa buscas hoy? (ej. Clínica odontológica, Spa, Broker)...">
+            <button class="search-btn">BUSCAR EN GUAKI</button>
+        </div>
+    </header>
+
+    <!-- PRINCIPIOS GUAKI FOUNDATION BIBLE -->
+    <section class="principle-banner">
+        <div class="principle-item">
+            <div class="principle-title">PRINCIPIO DE TRANSPARENCIA</div>
+            <div class="principle-text">La mejor empresa aparece primero — No la que más paga.</div>
+        </div>
+        <div class="principle-item">
+            <div class="principle-title">NUESTRO PRODUCTO MAESTRO</div>
+            <div class="principle-text">No vendemos anuncios. Vendemos Confianza y Crecimiento.</div>
+        </div>
+        <div class="principle-item">
+            <div class="principle-title">INTEGRACIÓN ATLAS IA</div>
+            <div class="principle-text">Respuesta rápida garantizada y atención directa sin esperas.</div>
+        </div>
+    </section>
+
+    <!-- CATÁLOGO INTELIGENTE DE CLIENTES VERIFICADOS -->
+    <main class="catalog-grid">
+        <!-- VENDOR 1 -->
+        <div class="vendor-card">
+            <div>
+                <span class="vendor-badge">✓ NEGOCIO VERIFICADO 100%</span>
+                <h3 class="vendor-name">Clínica Odontológica San Martín</h3>
+                <p style="font-size: 13px; color: var(--guaki-text-muted); margin-bottom: 12px;">Barranquilla, Colombia · Salud Privada & Implantes</p>
+                <div class="vendor-metrics">
+                    <span>⏱️ Respuesta: Inmediata</span>
+                    <span>⭐ 4.9 (142 reseñas)</span>
+                </div>
+            </div>
+            <a href="https://wa.me/573004589210?text=Hola,%20los%20encontré%20en%20Guaki%20y%20quiero%20agendar%20una%20cita" class="btn-action" target="_blank">AGENDAR POR WHATSAPP</a>
+        </div>
+
+        <!-- VENDOR 2 -->
+        <div class="vendor-card">
+            <div>
+                <span class="vendor-badge">✓ NEGOCIO VERIFICADO 100%</span>
+                <h3 class="vendor-name">RV Inmobiliaria Corporativa</h3>
+                <p style="font-size: 13px; color: var(--guaki-text-muted); margin-bottom: 12px;">Bogotá, Colombia · Brokers & Desarrollo</p>
+                <div class="vendor-metrics">
+                    <span>⏱️ Respuesta: Inmediata</span>
+                    <span>⭐ 4.8 (98 reseñas)</span>
+                </div>
+            </div>
+            <a href="https://wa.me/573184445566?text=Hola,%20los%20encontré%20en%20Guaki%20y%20quiero%20consultar%20propiedades" class="btn-action" target="_blank">CONSULTAR POR WHATSAPP</a>
+        </div>
+
+        <!-- VENDOR 3 -->
+        <div class="vendor-card">
+            <div>
+                <span class="vendor-badge">✓ NEGOCIO VERIFICADO 100%</span>
+                <h3 class="vendor-name">Restaurante La Matriarca</h3>
+                <p style="font-size: 13px; color: var(--guaki-text-muted); margin-bottom: 12px;">Medellín, Colombia · Gastronomía & Gastrobar</p>
+                <div class="vendor-metrics">
+                    <span>⏱️ Respuesta: Inmediata</span>
+                    <span>⭐ 4.9 (210 reseñas)</span>
+                </div>
+            </div>
+            <a href="https://wa.me/573049991122?text=Hola,%20los%20encontré%20en%20Guaki%20y%20quiero%20reservar%20una%20mesa" class="btn-action" target="_blank">RESERVAR POR WHATSAPP</a>
+        </div>
+    </main>
+
+</body>
+</html>

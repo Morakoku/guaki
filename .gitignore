@@ -1,0 +1,5 @@
+# Guaki-local generated artifacts
+.next/
+.next-*/
+dev-server*.log
+.env*

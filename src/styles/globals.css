@@ -1,0 +1,842 @@
+/* ==========================================================================
+   GUAKI OFFICIAL DESIGN SYSTEM
+   Soft Neumorphism (#E0E0E0 / #E7ECE7 / #F4F7F2) + Dark Emerald UI (#17382D)
+   ========================================================================== */
+
+:root {
+  /* 🌿 Base & Surfaces (Level 1 & 2) */
+  --guaki-bg-main: #E7ECE7;
+  --guaki-bg-alt: #EEF2ED;
+  --guaki-bg-light: #F4F7F2;
+  --guaki-surface: #E8EDE8;
+  --guaki-surface-elevated: #EDF1EC;
+  --guaki-surface-glass: rgba(232, 237, 232, 0.80);
+  --guaki-surface-glass-elevated: rgba(237, 241, 236, 0.92);
+  --guaki-surface-inset: #DEE4DE;
+
+  /* 🖋️ Editorial Typography */
+  --guaki-text-main: #16231D;
+  --guaki-text-secondary: #5A6E63;
+  --guaki-text-muted: #84968C;
+  --guaki-text-inverse: #F8FAF7;
+
+  /* 🌲 Dark Emerald & Sage Accents (Level 3) */
+  --guaki-emerald-dark: #17382D;
+  --guaki-emerald-deep: #102B22;
+  --guaki-green-primary: #5F8F67;
+  --guaki-green-soft: #AFC8AD;
+  --guaki-highlight: #DCE9D5;
+  --guaki-accent-cyan: #2E8B7B;
+  --guaki-white: #FFFFFF;
+  --guaki-border-light: rgba(255, 255, 255, 0.75);
+  --guaki-border-subtle: rgba(22, 35, 29, 0.08);
+
+  /* 📐 Radii Scale */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-hero: 32px;
+  --radius-pill: 9999px;
+
+  /* 🛋️ 3-LEVEL NEUMORPHIC SHADOWS */
+  /* LEVEL 1: Superficie Base */
+  --shadow-level-1: none;
+  --shadow-glass: 0 12px 36px rgba(20, 40, 30, 0.08);
+  --shadow-glass-hover: 0 16px 44px rgba(20, 40, 30, 0.12);
+
+  /* LEVEL 2: Cards & Paneles Neumórficos */
+  --shadow-soft-card: 8px 8px 18px rgba(90, 110, 95, 0.14), -6px -6px 16px rgba(255, 255, 255, 0.88);
+  --shadow-soft-card-hover: 10px 10px 22px rgba(90, 110, 95, 0.18), -8px -8px 20px rgba(255, 255, 255, 0.98);
+  --shadow-soft-card-subtle: 5px 5px 12px rgba(90, 110, 95, 0.10), -4px -4px 10px rgba(255, 255, 255, 0.80);
+
+  /* LEVEL 3: Botones & Acciones Interactivas */
+  --shadow-soft-btn: 5px 6px 14px rgba(90, 110, 95, 0.16), -4px -4px 10px rgba(255, 255, 255, 0.92);
+  --shadow-soft-btn-primary: 0 10px 24px rgba(23, 56, 45, 0.24), inset 0 2px 4px rgba(255, 255, 255, 0.25);
+  --shadow-soft-btn-pressed: inset 3px 3px 6px rgba(90, 110, 95, 0.20), inset -3px -3px 6px rgba(255, 255, 255, 0.85);
+  --shadow-soft-inset: inset 4px 4px 8px rgba(90, 110, 95, 0.16), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+
+  /* ⚡ Craft Motion Standards */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-press: 160ms;
+  --duration-fast: 160ms;
+  --duration-normal: 220ms;
+  --duration-modal: 260ms;
+
+  /* Brand typography restored from the previous approved visual system. */
+  --font-family-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+}
+
+/* 🌐 Reset Global & Universal Curvature */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-family-main);
+  background-color: #E2E8E1;
+  background-image:
+    radial-gradient(at 12% 8%, rgba(175, 202, 172, 0.45) 0px, transparent 55%),
+    radial-gradient(at 88% 12%, rgba(220, 235, 214, 0.60) 0px, transparent 55%),
+    radial-gradient(at 50% 45%, rgba(255, 255, 255, 0.75) 0px, transparent 65%),
+    radial-gradient(at 8% 85%, rgba(198, 217, 196, 0.40) 0px, transparent 55%),
+    radial-gradient(at 92% 88%, rgba(212, 226, 210, 0.50) 0px, transparent 60%),
+    linear-gradient(175deg, #DFE6DE 0%, #E8EFE7 30%, #F6F9F5 65%, #DFE7DE 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: var(--guaki-text-main);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 🖋️ Unified Editorial Typography & Centering */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-heading);
+  color: var(--guaki-text-main);
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+p {
+  font-family: var(--font-family-main);
+  color: var(--guaki-text-secondary);
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 🔘 Curvatura Universal y Redondez en Todos los Elementos */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  font-family: var(--font-family-main);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--guaki-border-light);
+  background-color: var(--guaki-surface);
+  color: var(--guaki-text-main);
+  outline: none;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--guaki-emerald-dark);
+  box-shadow: 0 0 0 3px rgba(23, 56, 45, 0.12);
+}
+
+/* 🔍 Search Bar Clean Focus (Eliminates weird corner halos) */
+.search-bar-form input,
+.search-bar-form input:focus,
+.search-bar-form input:focus-visible,
+.search-bar-form input:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* 🎙️ Voice Listening Animation & Organic Waveform */
+@keyframes guaki-audio-wave {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes guaki-listening-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.guaki-voice-listening {
+  animation: guaki-listening-pulse 1.8s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+.guaki-wave-bar {
+  display: inline-block;
+  width: 2.5px;
+  height: 14px;
+  border-radius: 999px;
+  background-color: var(--guaki-emerald-dark);
+  animation: guaki-audio-wave 0.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.guaki-wave-bar:nth-child(2) {
+  animation-delay: 0.18s;
+  height: 18px;
+}
+
+.guaki-wave-bar:nth-child(3) {
+  animation-delay: 0.36s;
+  height: 12px;
+}
+
+/* 🧭 Directorio Responsive Controls & View Mode Centering */
+.directory-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.directory-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.directory-view-toggle {
+  display: flex;
+  gap: 4px;
+  background-color: var(--guaki-surface-inset);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .directory-controls-bar {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .directory-filter-group {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .directory-view-toggle {
+    margin: 0 auto;
+    width: auto;
+  }
+}
+
+/* 🧭 Responsive Header Navigation */
+.guaki-desktop-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .guaki-desktop-nav-links {
+    display: none !important;
+  }
+}
+
+button {
+  font-family: var(--font-family-main);
+}
+
+/* 📱 Centrado Automático en Dispositivos Móviles */
+@media (max-width: 768px) {
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
+  
+  .guaki-mobile-center {
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+}
+
+/* 🛋️ NEUMORPHIC LEVEL CLASSES & MOTION */
+.neu-level-1 {
+  background-color: var(--guaki-bg-main);
+}
+
+.neu-level-2 {
+  background-color: var(--guaki-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft-card);
+  border: 1px solid var(--guaki-border-light);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.neu-level-2:hover {
+  box-shadow: var(--shadow-soft-card-hover);
+  transform: translateY(-2px);
+}
+
+.neu-level-2:active {
+  transform: scale(0.98);
+}
+
+.neu-level-3 {
+  background-color: var(--guaki-surface-elevated);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft-btn);
+  border: 1px solid var(--guaki-border-light);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.neu-level-3:hover {
+  transform: translateY(-1.5px);
+}
+
+.neu-level-3:active {
+  box-shadow: var(--shadow-soft-btn-pressed);
+  transform: scale(0.97);
+}
+
+.neu-btn-primary, .soft-btn-primary {
+  background-color: var(--guaki-emerald-dark);
+  color: var(--guaki-white);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft-btn-primary);
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.neu-btn-primary:hover, .soft-btn-primary:hover {
+  background-color: var(--guaki-emerald-deep);
+  transform: translateY(-1.5px);
+  box-shadow: 0 12px 28px rgba(23, 56, 45, 0.30), inset 0 2px 4px rgba(255, 255, 255, 0.25);
+}
+
+.neu-btn-primary:active, .soft-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.soft-btn {
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft-btn);
+  border: 1px solid var(--guaki-border-light);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.soft-btn:hover {
+  transform: translateY(-1.5px);
+}
+
+.soft-btn:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-soft-btn-pressed);
+}
+
+.soft-card {
+  background-color: var(--guaki-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--guaki-border-light);
+  box-shadow: var(--shadow-soft-card);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.soft-card:hover {
+  box-shadow: var(--shadow-soft-card-hover);
+  transform: translateY(-2px);
+}
+
+.soft-card-elevated {
+  background-color: var(--guaki-surface-elevated);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--guaki-border-light);
+  box-shadow: var(--shadow-soft-card);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  will-change: transform;
+}
+
+.soft-card-elevated:hover {
+  box-shadow: var(--shadow-soft-card-hover);
+  transform: translateY(-2px);
+}
+
+.glass-surface-elevated {
+  background: var(--guaki-surface-glass-elevated);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--guaki-border-light);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.neu-inset {
+  background-color: var(--guaki-surface-inset);
+  box-shadow: var(--shadow-soft-inset);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(22, 35, 29, 0.05);
+}
+
+/* 🧭 Floating Navigation Dock (ALWAYS Anchored to Viewport) */
+.soft-bottom-dock {
+  display: flex !important;
+  position: fixed !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 99999 !important;
+  width: calc(100% - 24px) !important;
+  max-width: 440px !important;
+  background: rgba(232, 237, 232, 0.94) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  border-radius: var(--radius-pill) !important;
+  border: 1px solid var(--guaki-border-light) !important;
+  box-shadow: 0 16px 40px rgba(20, 40, 30, 0.20), 0 2px 10px rgba(255, 255, 255, 0.9) !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  padding: 6px 10px !important;
+  pointer-events: auto !important;
+}
+
+.has-bottom-dock {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* 📱 Responsive Grid System */
+.guaki-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .guaki-container {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .guaki-container {
+    padding: 0 32px;
+  }
+}
+
+/* 🎙️ Emil Kowalski 60FPS Hardware Accelerated Keyframes */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pageFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-fade-in {
+  animation: pageFadeIn var(--duration-normal) var(--ease-out) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes guaki-slide-up {
+  0% {
+    transform: translateY(16px) scale(0.97);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes guaki-breathe {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.20;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.55;
+  }
+}
+
+@keyframes guaki-voice-float-pulse {
+  0% {
+    transform: translateY(-13px) scale(1);
+    box-shadow: 0 6px 18px rgba(23, 56, 45, 0.35), 0 0 0 0 rgba(23, 56, 45, 0.35);
+  }
+  50% {
+    transform: translateY(-18px) scale(1.06);
+    box-shadow: 0 14px 28px rgba(23, 56, 45, 0.45), 0 0 0 9px rgba(23, 56, 45, 0);
+  }
+  100% {
+    transform: translateY(-13px) scale(1);
+    box-shadow: 0 6px 18px rgba(23, 56, 45, 0.35), 0 0 0 0 rgba(23, 56, 45, 0);
+  }
+}
+
+@keyframes guaki-voice-wave-1 {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(0.95);
+  }
+}
+
+@keyframes guaki-voice-wave-2 {
+  0%, 100% {
+    transform: scaleY(0.90);
+  }
+  50% {
+    transform: scaleY(0.40);
+  }
+}
+
+@keyframes guaki-voice-wave-3 {
+  0%, 100% {
+    transform: scaleY(0.45);
+  }
+  50% {
+    transform: scaleY(1.0);
+  }
+}
+
+@keyframes guaki-modal-item-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes guaki-voice-input-glow {
+  0%, 100% {
+    box-shadow: inset 4px 4px 8px rgba(90, 110, 95, 0.12), inset -4px -4px 8px rgba(255, 255, 255, 0.82);
+  }
+  50% {
+    box-shadow: inset 3px 3px 7px rgba(90, 110, 95, 0.08), 0 0 0 3px rgba(95, 143, 103, 0.08), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+  }
+}
+
+@keyframes guaki-voice-cta-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.012);
+  }
+}
+
+.guaki-modal-item-in {
+  animation: guaki-modal-item-in 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: transform, opacity;
+}
+
+.guaki-voice-input-glow {
+  animation: guaki-voice-input-glow 3.2s ease-in-out infinite;
+}
+
+.guaki-voice-cta-pulse {
+  animation: guaki-voice-cta-pulse 2.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guaki-modal-item-in,
+  .guaki-voice-input-glow,
+  .guaki-voice-cta-pulse,
+  .guaki-voice-center-btn,
+  .guaki-wave-bar-1,
+  .guaki-wave-bar-2,
+  .guaki-wave-bar-3 {
+    animation: none !important;
+  }
+}
+
+.guaki-voice-center-btn {
+  animation: guaki-voice-float-pulse 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  will-change: transform, box-shadow;
+}
+
+.guaki-voice-center-btn:hover {
+  animation-play-state: paused;
+  transform: translateY(-18px) scale(1.08) !important;
+  box-shadow: 0 16px 32px rgba(23, 56, 45, 0.50), 0 0 0 10px rgba(95, 143, 103, 0.22) !important;
+}
+
+.guaki-voice-center-btn:active {
+  transform: translateY(-13px) scale(0.95) !important;
+  box-shadow: 0 4px 12px rgba(23, 56, 45, 0.30) !important;
+}
+
+.guaki-wave-bar-1 {
+  animation: guaki-voice-wave-1 1.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.guaki-wave-bar-2 {
+  animation: guaki-voice-wave-2 1.4s ease-in-out infinite 0.2s;
+  will-change: transform;
+}
+
+.guaki-wave-bar-3 {
+  animation: guaki-voice-wave-3 1.4s ease-in-out infinite 0.4s;
+  will-change: transform;
+}
+
+.animate-guaki-breathe {
+  animation: guaki-breathe 2.4s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-guaki-bar-1 {
+  animation: guaki-bar-1 0.75s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+  will-change: transform;
+}
+
+.animate-guaki-bar-2 {
+  animation: guaki-bar-2 0.62s cubic-bezier(0.23, 1, 0.32, 1) infinite 0.12s alternate;
+  will-change: transform;
+}
+
+.animate-guaki-bar-3 {
+  animation: guaki-bar-3 0.82s cubic-bezier(0.23, 1, 0.32, 1) infinite 0.2s alternate;
+  will-change: transform;
+}
+
+/* 🌟 Skeleton Shimmer Neumórfico */
+@keyframes guaki-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.neu-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(222, 228, 222, 0.6) 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(222, 228, 222, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: guaki-shimmer 1.8s ease-in-out infinite;
+}
+
+/* 🦽 PREFERS-REDUCED-MOTION SUPPORT (Emil Kowalski Standard) */
+/* 🥑 Grid de Planes GUAKI - 3 Columnas fijas en escritorio (1 al lado del otro) */
+.guaki-plans-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: stretch;
+  width: 100%;
+}
+
+@media (min-width: 520px) {
+  .guaki-plans-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 760px) {
+  .guaki-plans-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 🌿 81. Fondos de Vidrio Esmerilado con Aceleración por GPU */
+.neu-glass-gpu {
+  background: rgba(232, 237, 232, 0.85);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+}
+
+/* 🔘 82. Efecto de Pulsación Cóncava Táctil (Sombra Inset al Presionar) */
+.soft-btn:active,
+.neu-btn-primary:active,
+.neu-level-3:active {
+  box-shadow: inset 3px 3px 6px rgba(90, 110, 95, 0.22), inset -3px -3px 6px rgba(255, 255, 255, 0.90) !important;
+  transform: scale(0.97) !important;
+}
+
+/* 📐 86. Acordeones con Animación Fluida (Grid Template Rows) */
+.guaki-accordion-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.guaki-accordion-grid.is-open {
+  grid-template-rows: 1fr;
+}
+.guaki-accordion-content {
+  overflow: hidden;
+}
+
+/* ✨ 87. Insignia VIP con Destello Metálico Dorado cada 8s */
+@keyframes gold-sheen-sweep {
+  0%, 75% {
+    transform: translateX(-150%) rotate(25deg);
+    opacity: 0;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  90% {
+    transform: translateX(250%) rotate(25deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(250%) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+.badge-gold-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.badge-gold-sheen::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: gold-sheen-sweep 8s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* 🦽 90. Soporte para Prefers Reduced Motion & Ahorro de Energía */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   FIX 2026-08-25: .soft-input — clase usada por SoftInput.tsx pero nunca
+   definida. Sin ella, los inputs quedan en ~19px de alto (falla tap-target
+   44px WCAG/Apple HIG). Mínimo táctil: 48px + estilo neumórfico inset.
+   ========================================================================== */
+.soft-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 1rem; /* 16px evita zoom automático en iOS */
+  font-weight: 600;
+  color: var(--guaki-text-main);
+  background: var(--guaki-surface-inset);
+  border: 1px solid var(--guaki-border-subtle);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset, inset 2px 2px 5px rgba(90, 110, 95, 0.14), inset -2px -2px 5px rgba(255, 255, 255, 0.85));
+  outline: none;
+  transition: box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.soft-input:focus {
+  border-color: var(--guaki-green-primary);
+  box-shadow: inset 2px 2px 5px rgba(90, 110, 95, 0.10), inset -2px -2px 5px rgba(255, 255, 255, 0.90), 0 0 0 3px rgba(95, 143, 103, 0.22);
+}
+.soft-input::placeholder {
+  color: var(--guaki-text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   DOCK NAV 2026-08-26: entrada spring + FAB flotante con pulso respirante.
+   Estética neumórfica sage intacta; solo movimiento más fluido y suave.
+   ========================================================================== */
+@keyframes guaki-dock-slide-up {
+  0% { opacity: 0; transform: translateX(-50%) translateY(24px) scale(0.96); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes guaki-fab-rise {
+  0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.7); }
+  60% { opacity: 1; transform: translateX(-50%) translateY(-6px) scale(1.06); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes guaki-fab-breathe {
+  0%, 100% { box-shadow: 0 10px 26px rgba(23, 56, 45, 0.38), 0 2px 6px rgba(23, 56, 45, 0.18), 0 0 0 0 rgba(23, 56, 45, 0.14); }
+  50% { box-shadow: 0 10px 26px rgba(23, 56, 45, 0.38), 0 2px 6px rgba(23, 56, 45, 0.18), 0 0 0 9px rgba(23, 56, 45, 0); }
+}
+.guaki-dock-enter {
+  animation: guaki-dock-slide-up 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.guaki-fab-float.guaki-dock-enter {
+  animation: guaki-fab-rise 640ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             guaki-fab-breathe 3.6s ease-in-out 640ms infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .guaki-dock-enter, .guaki-fab-float.guaki-dock-enter { animation: none; }
+}

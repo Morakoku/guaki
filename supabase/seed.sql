@@ -1,0 +1,4 @@
+-- GUAKI local seed intentionally contains no records.
+-- Real businesses and leads must enter through verified application flows.
+-- Keeping this file present makes `supabase db reset` reproducible without
+-- inventing demo data or mixing synthetic records with real data.

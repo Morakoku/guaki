@@ -1,0 +1,14 @@
+# Local credentials and generated runtime artifacts must never be uploaded.
+.env*
+.next*
+.p3_backup/
+
+# Local diagnostics and transient proof files are not application source.
+.codex-*.log
+p3-*.log
+.p1-red-evidence.txt
+
+# Local branding experiments and visual QA captures are not used by the app.
+public/images/branding/
+public/images/real_screenshots/
+public/one-pager.html

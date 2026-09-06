@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal del Cliente | VEYRA Soluciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --swiss-black: #0A0A0A;
+      --swiss-white: #FFFFFF;
+      --swiss-accent-orange: #FF5722;
+      --swiss-gray-light: #F8FAFC;
+      --swiss-gray-border: #E2E8F0;
+      --swiss-gray-text: #64748B;
+      --swiss-red: #DC2626;
+      --swiss-emerald: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--swiss-white);
+      color: var(--swiss-black);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 🏛️ SWISS HEADER */
+    .swiss-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      border-bottom: 2px solid var(--swiss-black);
+      background: rgba(255, 255, 255, 0.98);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+    }
+    .brand-as-logo {
+      background: var(--swiss-black);
+      color: var(--swiss-white);
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      padding: 6px 12px;
+      letter-spacing: -0.05em;
+    }
+    .header-brand {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      color: var(--swiss-black);
+    }
+    .badge-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      background: var(--swiss-black);
+      color: var(--swiss-white);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .doc-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      border-left: 2px solid var(--swiss-black);
+      border-right: 2px solid var(--swiss-black);
+    }
+    @media (max-width: 900px) {
+      .doc-container { border: none; }
+      .swiss-header { padding: 14px 20px; }
+    }
+
+    /* TOP BANNER HERO */
+    .portal-banner {
+      padding: 36px 40px;
+      border-bottom: 2px solid var(--swiss-black);
+      background: var(--swiss-gray-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .portal-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--swiss-accent-orange);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .portal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      color: var(--swiss-black);
+    }
+
+    /* STAGES IN 5 PHASES */
+    .section-title {
+      padding: 16px 40px;
+      background: var(--swiss-black);
+      color: var(--swiss-white);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--swiss-black);
+    }
+    .section-title h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .stages-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-bottom: 2px solid var(--swiss-black);
+      background: var(--swiss-white);
+    }
+    @media (max-width: 768px) { .stages-grid { grid-template-columns: 1fr; } }
+    .stage-card {
+      padding: 24px 18px;
+      border-right: 1px solid var(--swiss-black);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .stage-card:last-child { border-right: none; }
+    .stage-card.completed { background: #F0FDF4; }
+    .stage-card.active { background: #FFFBEB; border-bottom: 4px solid var(--swiss-accent-orange); }
+    .stage-status {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .stage-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .stage-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* 2 COLUMNS DASHBOARD */
+    .portal-main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 2px solid var(--swiss-black);
+    }
+    @media (max-width: 800px) { .portal-main { grid-template-columns: 1fr; } }
+    .col-feed {
+      padding: 40px;
+      border-right: 2px solid var(--swiss-black);
+      background: var(--swiss-white);
+    }
+    .col-approvals {
+      padding: 40px;
+      background: var(--swiss-gray-light);
+    }
+    @media (max-width: 800px) { .col-feed { border-right: none; border-bottom: 2px solid var(--swiss-black); } }
+
+    .block-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* BITÁCORA */
+    .agenda-card {
+      border: 2px solid var(--swiss-black);
+      padding: 16px;
+      box-shadow: 4px 4px 0px var(--swiss-black);
+      background: var(--swiss-white);
+      margin-bottom: 16px;
+    }
+    .agenda-label {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .agenda-list {
+      list-style: none;
+      font-size: 13px;
+      display: grid;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--swiss-gray-border);
+      font-size: 13px;
+    }
+    .log-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--swiss-accent-orange);
+      flex: 0 0 50px;
+    }
+
+    /* APPROVAL BOX */
+    .approval-card {
+      border: 2px solid var(--swiss-black);
+      background: var(--swiss-white);
+      padding: 24px;
+      box-shadow: 6px 6px 0px var(--swiss-black);
+      margin-bottom: 24px;
+    }
+    .opt-box {
+      border: 2px solid var(--swiss-black);
+      padding: 14px;
+      margin: 12px 0;
+      display: flex;
+      gap: 10px;
+      cursor: pointer;
+      background: var(--swiss-white);
+      transition: background 0.15s;
+    }
+    .opt-box:hover {
+      background: #FFF8F6;
+      border-color: var(--swiss-accent-orange);
+    }
+    .btn-approve {
+      width: 100%;
+      background: var(--swiss-black);
+      color: var(--swiss-white);
+      padding: 14px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 2px solid var(--swiss-black);
+      cursor: pointer;
+      box-shadow: 4px 4px 0px var(--swiss-accent-orange);
+    }
+    .btn-approve:hover {
+      background: var(--swiss-accent-orange);
+      border-color: var(--swiss-accent-orange);
+    }
+
+    /* TRANSFORMATION BEFORE / AFTER */
+    .transform-card {
+      border: 2px solid var(--swiss-black);
+      background: var(--swiss-white);
+      padding: 20px;
+      box-shadow: 6px 6px 0px var(--swiss-black);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      text-align: center;
+    }
+    .score-large {
+      font-family: 'Outfit', sans-serif;
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    /* VEYRA CARE */
+    .care-banner {
+      padding: 32px 40px;
+      background: var(--swiss-accent-orange);
+      color: var(--swiss-black);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .care-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .care-desc {
+      font-size: 13px;
+      font-weight: 600;
+      max-width: 680px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SWISS HEADER -->
+  <header class="swiss-header">
+    <a href="/" class="header-brand-group">
+      <div class="brand-as-logo">V</div>
+      <div class="header-brand">VEYRA CLIENT PORTAL</div>
+    </a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="badge-tag">SEGUIMIENTO EN VIVO</span>
+      <span class="badge-tag" id="tokenBadge" style="background:var(--swiss-accent-orange);">TOKEN VERIFICADO</span>
+    </div>
+  </header>
+
+  <div class="doc-container">
+    
+    <!-- PORTAL BANNER -->
+    <section class="portal-banner">
+      <div>
+        <div class="portal-tag">EXPEDIENTE DE PROYECTO C-LEVEL · VEYRA OS</div>
+        <h1 class="portal-title" id="projectName">Cargando proyecto…</h1>
+        <div style="font-size:13px;color:#555;font-weight:600;margin-top:4px;" id="clientMeta">
+          Cliente: — · Token de Seguridad: <span style="font-family:'JetBrains Mono',monospace;color:var(--swiss-black);" id="projectToken">—</span>
+        </div>
+      </div>
+      <div>
+        <span class="badge-tag" id="stageBadge" style="padding:8px 16px;background:var(--swiss-emerald);font-size:12px;">
+          🟢 SPRINT DE TRANSFORMACIÓN EN EJECUCIÓN
+        </span>
+      </div>
+    </section>
+
+    <!-- STAGES BAR -->
+    <div class="section-title">
+      <h2>ETAPAS DE IMPLEMENTACIÓN MÉTODO ASTF™</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--swiss-accent-orange);" id="stageCounter">FASE 03 / 05</span>
+    </div>
+
+    <section class="stages-grid" id="stagesContainer">
+      <!-- Injected via portal.js -->
+    </section>
+
+    <!-- 2 COLUMNS PORTAL BODY -->
+    <div class="portal-main">
+      
+      <!-- LEFT: BITÁCORA Y ACTUALIZACIONES -->
+      <section class="col-feed">
+        <div class="block-title">
+          <span>📋 BITÁCORA DIARIA DE EJECUCIÓN</span>
+        </div>
+
+        <div class="agenda-card">
+          <div class="agenda-label" style="color:var(--swiss-emerald);">✓ HOY HICIMOS:</div>
+          <ul class="agenda-list" id="dailyDoneList">
+            <li>Cargando bitácora de tareas completadas…</li>
+          </ul>
+        </div>
+
+        <div class="agenda-card">
+          <div class="agenda-label" style="color:var(--swiss-accent-orange);">➔ MAÑANA HAREMOS:</div>
+          <ul class="agenda-list" id="dailyNextList">
+            <li>Cargando próximas tareas programadas…</li>
+          </ul>
+        </div>
+
+        <div style="margin-top:28px;">
+          <div class="agenda-label" style="color:#666;">REGISTRO EN TIEMPO REAL:</div>
+          <div id="progressLogsContainer">
+            <!-- Injected via portal.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: APROBACIONES Y RESULTADOS -->
+      <section class="col-approvals">
+        <div class="block-title">
+          <span>🔔 DECISIÓN: APROBACIÓN DEL CLIENTE</span>
+        </div>
+
+        <div class="approval-card" id="approvalCard">
+          <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:var(--swiss-accent-orange);margin-bottom:6px;" id="approvalTitle">
+            DECISIÓN REQUERIDA
+          </div>
+          <p style="font-size:13px;color:#333;margin-bottom:14px;" id="approvalDesc">
+            Cargando opciones de decisión de proyecto...
+          </p>
+
+          <div id="approvalOptionsContainer">
+            <!-- Options injected dynamically -->
+          </div>
+
+          <button type="button" class="btn-approve" id="submitApprovalBtn" style="margin-top:12px;">
+            APROBAR DECISIÓN SELECCIONADA ✔
+          </button>
+          <div id="approvalStatus" style="font-size:12px;font-weight:800;color:var(--swiss-emerald);margin-top:10px;" hidden></div>
+        </div>
+
+        <!-- BEFORE / AFTER METRIC SCORE -->
+        <div class="block-title" style="margin-top:32px;">
+          <span>📈 TRANSFORMACIÓN DE IMPACTO</span>
+        </div>
+        
+        <div class="transform-card">
+          <div>
+            <div style="font-size:11px;font-weight:900;color:#999;text-transform:uppercase;">PUNTAJE INICIAL</div>
+            <div class="score-large" style="color:var(--swiss-red);" id="beforeScore">42<span style="font-size:18px;">/100</span></div>
+            <div style="font-size:11px;color:#666;font-weight:700;">Fricción digital</div>
+          </div>
+          <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:var(--swiss-accent-orange);">➔</div>
+          <div>
+            <div style="font-size:11px;font-weight:900;color:var(--swiss-emerald);text-transform:uppercase;">PUNTAJE OBJETIVO</div>
+            <div class="score-large" style="color:var(--swiss-emerald);" id="afterScore">76<span style="font-size:18px;">/100</span></div>
+            <div style="font-size:11px;color:var(--swiss-emerald);font-weight:700;">Activos ordenados</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- VEYRA CARE FOOTER -->
+    <footer class="care-banner">
+      <div>
+        <div class="care-title" id="careTitle">🛡️ VEYRA CARE: OPERACIÓN CONTINUA</div>
+        <p class="care-desc" id="careDesc">
+          Monitoreo mensual de SEO local, alertas automáticas de fallos en formularios, optimización de campañas y reportes de EBITDA.
+        </p>
+      </div>
+      <span class="badge-tag" style="background:var(--swiss-black);padding:10px 18px;font-size:12px;" id="careBadge">
+        COBERTURA ACTIVA
+      </span>
+    </footer>
+
+  </div>
+
+  <script src="/portal.js"></script>
+</body>
+</html>

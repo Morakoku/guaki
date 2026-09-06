@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Business MRI™ | Veyra Soluciones</title>
+  <style>
+    :root { --black:#0a0a0a; --orange:#ff5722; --emerald:#10b981; --paper:#f8fafc; --line:#e2e8f0; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial, sans-serif; background:var(--paper); color:var(--black); line-height:1.5; }
+    main { max-width:760px; margin:48px auto; padding:0 20px; }
+    .brand { font-weight:900; letter-spacing:.08em; font-size:13px; color:var(--orange); }
+    .card { margin-top:16px; background:#fff; border:2px solid var(--black); padding:36px; box-shadow:8px 8px 0 var(--black); }
+    .eyebrow { color:var(--orange); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    h1 { font-size:clamp(28px,5vw,42px); margin:10px 0; line-height:1.1; text-transform:uppercase; font-weight:900; }
+    p { color:#3f3f46; }
+    .step-header { font-size:14px; font-weight:800; color:#52525b; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+    label { display:block; margin:16px 0 6px; font-size:13px; font-weight:800; }
+    input, textarea, select { width:100%; padding:13px; border:2px solid var(--black); font:inherit; background:#fff; }
+    textarea { min-height:92px; resize:vertical; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media (max-width:600px) { .grid-2 { grid-template-columns:1fr; } }
+    .actions { display:flex; justify-content:space-between; gap:12px; margin-top:28px; }
+    button { border:2px solid var(--black); background:var(--black); color:#fff; cursor:pointer; font-weight:800; padding:13px 22px; font-size:14px; }
+    button.secondary { background:#fff; color:var(--black); }
+    button:disabled { opacity:.6; cursor:wait; }
+    #businessMriProgress { font-size:13px; font-weight:800; margin-top:24px; color:#52525b; }
+    #businessMriResponse { margin-top:24px; border:2px solid #15803d; background:#ecfdf5; padding:20px; font-weight:700; }
+    #businessMriResponse[data-status="error"] { border-color:#b91c1c; background:#fef2f2; }
+    .privacy { margin-top:22px; font-size:12px; color:#52525b; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">VEYRA SOLUCIONES EMPRESARIALES</div>
+    <section class="card" aria-labelledby="businessMriTitle">
+      <div class="eyebrow">Diagnóstico Estratégico Business MRI™</div>
+      <h1 id="businessMriTitle">Empecemos por entender tu negocio</h1>
+      <p>Esto no es un formulario genérico. Tus respuestas se combinan con un análisis de tu presencia digital para estructurar un informe estratégico personalizado.</p>
+      
+      <form id="businessMriForm" novalidate>
+        <!-- Step 1: Identificación y Contacto -->
+        <section data-step="1">
+          <div class="step-header">Paso 1 · Identificación de la Empresa</div>
+          
+          <div class="grid-2">
+            <div>
+              <label for="name">Tu nombre y apellido</label>
+              <input id="name" name="name" autocomplete="name" required maxlength="120" placeholder="Ej. Pedro Martínez">
+            </div>
+            <div>
+              <label for="company">Nombre de tu empresa</label>
+              <input id="company" name="company" autocomplete="organization" required maxlength="160" placeholder="Ej. Clínica Dental Sonrisas">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="email">Correo corporativo</label>
+              <input id="email" name="email" autocomplete="email" type="email" required maxlength="254" placeholder="contacto@tuempresa.com">
+            </div>
+            <div>
+              <label for="phone">Teléfono / WhatsApp</label>
+              <input id="phone" name="phone" autocomplete="tel" required maxlength="50" placeholder="+57 300 123 4567">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="sector">Sector comercial</label>
+              <select id="sector" name="sector" required>
+                <option value="">Selecciona un sector</option>
+                <option value="Salud y Odontología">Salud y Odontología</option>
+                <option value="Servicios Profesionales y Legal">Servicios Profesionales y Legal</option>
+                <option value="Belleza y Estética">Belleza y Estética</option>
+                <option value="Comercio y Retail">Comercio y Retail</option>
+                <option value="Inmobiliario y Construcción">Inmobiliario y Construcción</option>
+                <option value="Tecnología y Software">Tecnología y Software</option>
+                <option value="Otro sector">Otro sector</option>
+              </select>
+            </div>
+            <div>
+              <label for="city">Ciudad principal</label>
+              <input id="city" name="city" required maxlength="100" placeholder="Ej. Medellín, Barranquilla, Bogotá">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Diagnóstico Operativo -->
+        <section data-step="2" hidden>
+          <div class="step-header">Paso 2 · Situación Actual y Retos</div>
+          
+          <div class="grid-2">
+            <div>
+              <label for="company_size">Tamaño aproximado del equipo</label>
+              <select id="company_size" name="company_size">
+                <option value="1-5 personas">1 - 5 personas</option>
+                <option value="5-20 personas">5 - 20 personas</option>
+                <option value="20-50 personas">20 - 50 personas</option>
+                <option value="50+ personas">Más de 50 personas</option>
+              </select>
+            </div>
+            <div>
+              <label for="priority">Nivel de prioridad</label>
+              <select id="priority" name="priority">
+                <option value="Urgente (este mes)">Urgente (este mes)</option>
+                <option value="Alta (próximos 60 días)">Alta (próximos 60 días)</option>
+                <option value="Media (explorando opciones)">Media (explorando opciones)</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="goal">¿Cuál es el objetivo principal que querés conseguir?</label>
+          <input id="goal" name="goal" required maxlength="300" placeholder="Ej. Conseguir más pacientes o clientes calificados por Internet">
+
+          <label for="bottleneck">¿Dónde sentís hoy el mayor problema o cuello de botella?</label>
+          <textarea id="bottleneck" name="bottleneck" required maxlength="1200" placeholder="Ej. Llegan contactos pero no hay seguimiento oportuno, la web está desactualizada y no convierte."></textarea>
+        </section>
+
+        <!-- Step 3: Servicios y Sistemas -->
+        <section data-step="3" hidden>
+          <div class="step-header">Paso 3 · Alcance y Sistemas Actuales</div>
+          
+          <label for="services_needed">¿Qué servicios o áreas te interesan?</label>
+          <input id="services_needed" name="services_needed" placeholder="Ej. Captación web, automatización de WhatsApp, CRM, SEO local">
+
+          <label for="systems">¿Qué herramientas o sistemas usan hoy para trabajar?</label>
+          <textarea id="systems" name="systems" maxlength="500" placeholder="Ej. WhatsApp, Excel, Instagram, Software administrativo"></textarea>
+
+          <label for="budget">Presupuesto aproximado mensual o por proyecto (opcional)</label>
+          <select id="budget" name="budget">
+            <option value="No definido">Por definir en diagnóstico</option>
+            <option value="$1M - $3M COP">$1M - $3M COP</option>
+            <option value="$3M - $7M COP">$3M - $7M COP</option>
+            <option value="$7M+ COP">Más de $7M COP</option>
+          </select>
+
+          <p style="margin-top:16px;">Al enviar, el equipo de VEYRA revisará tu presencia digital y elaborará tu <strong>Business MRI™</strong> estratégico.</p>
+        </section>
+
+        <div id="businessMriProgress" aria-live="polite"></div>
+        
+        <div class="actions">
+          <button class="secondary" id="businessMriBack" type="button" hidden>Volver</button>
+          <button id="businessMriNext" type="button">Continuar ➔</button>
+          <button id="businessMriSubmit" type="submit" hidden style="background:var(--orange);border-color:var(--orange);">Generar Business MRI™</button>
+        </div>
+      </form>
+
+      <div id="businessMriResponse" aria-live="polite" hidden></div>
+      <p class="privacy">🔒 Tus datos son confidenciales y solo se utilizan para estructurar el diagnóstico estratégico de tu empresa.</p>
+    </section>
+  </main>
+  <script src="/business-mri.js"></script>
+</body>
+</html>
