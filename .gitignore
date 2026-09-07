@@ -3,3 +3,4 @@
 .next-*/
 dev-server*.log
 .env*
+node_modules/
