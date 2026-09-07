@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { buildDependencyHealth } from '../../../lib/command_center_hardening.mjs';
+import { mapacheFetch } from '../../../lib/mapacheClient';
 
-const MAPACHE_API = (process.env.MAPACHE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
 const RELAY_URL = (process.env.HERMES_CODEX_RELAY_URL ?? 'http://127.0.0.1:9122/health').replace(/\/$/, '');
 
 async function isAvailable(url: string) {
@@ -29,7 +29,7 @@ export async function GET() {
   }
 
   const [mapache, relay] = await Promise.all([
-    isAvailable(`${MAPACHE_API}/health`),
+    mapacheFetch('/health', { method: 'GET' }).then(r => r.ok).catch(() => false),
     isAvailable(RELAY_URL),
   ]);
   return NextResponse.json(buildDependencyHealth({ mapache, hermesBridge: mapache, hermesDashboard: null, relay }), { status: 200 });

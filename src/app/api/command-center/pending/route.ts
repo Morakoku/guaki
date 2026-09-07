@@ -2,19 +2,17 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { evaluateDiscoveryReadiness } from '../../../../lib/mapache_discovery_readiness.mjs';
 import { buildPendingSections } from '../../../../lib/command_center_pending.mjs';
-
-const MAPACHE_API = (process.env.MAPACHE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+import { mapacheFetch } from '../../../../lib/mapacheClient';
 
 export async function GET() {
   const tenantId = process.env.MAPACHE_TENANT_ID ?? '';
   const [apiResult, summaryResult, emailAccountsResult] = await Promise.allSettled([
-    fetch(`${MAPACHE_API}/health`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
-    fetch(`${MAPACHE_API}/api/v1/command-center/summary`, {
+    mapacheFetch('/health', { method: 'GET' }),
+    mapacheFetch('/api/v1/command-center/summary', {
+      method: 'GET',
       headers: { 'X-Tenant-ID': tenantId },
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
     }),
-    fetch(`${MAPACHE_API}/api/v1/settings/email-accounts`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
+    mapacheFetch('/api/v1/settings/email-accounts', { method: 'GET' }),
   ]);
   const readiness = evaluateDiscoveryReadiness({
     apiOk: apiResult.status === 'fulfilled' && apiResult.value.ok,
@@ -24,7 +22,7 @@ export async function GET() {
     providerConfigured: Boolean(process.env.MAPACHE_DISCOVERY_PROVIDER),
   });
   const summary = summaryResult.status === 'fulfilled' && summaryResult.value.ok
-    ? await summaryResult.value.clone().json() as {
+    ? summaryResult.value.data as {
       lastDiscovery?: { status: string; found?: number; new?: number; duplicate?: number; blocked?: boolean } | null;
       discoveryCaptured?: number;
       discoveryContactable?: number;
@@ -35,7 +33,7 @@ export async function GET() {
     }
     : {};
   const emailAccounts = emailAccountsResult.status === 'fulfilled' && emailAccountsResult.value.ok
-    ? await emailAccountsResult.value.clone().json() as Array<{ status?: string }>
+    ? emailAccountsResult.value.data as Array<{ status?: string }>
     : [];
   const emailAccountStatus = emailAccounts[0]?.status ?? 'NONE';
   const sections = buildPendingSections({

@@ -1,17 +1,18 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { evaluateDiscoveryReadiness } from '../../../../../lib/mapache_discovery_readiness.mjs';
-
-const MAPACHE_API = (process.env.MAPACHE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+import { mapacheFetch } from '../../../../../lib/mapacheClient';
 
 export async function POST() {
   const tenantId = process.env.MAPACHE_TENANT_ID ?? '';
   const searchId = process.env.MAPACHE_DISCOVERY_SEARCH_ID ?? '';
   const provider = process.env.MAPACHE_DISCOVERY_PROVIDER ?? '';
+
   const [apiResult, summaryResult] = await Promise.allSettled([
-    fetch(`${MAPACHE_API}/health`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
-    fetch(`${MAPACHE_API}/api/v1/command-center/summary`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
+    mapacheFetch('/health', { method: 'GET' }),
+    mapacheFetch('/api/v1/command-center/summary', { method: 'GET' }),
   ]);
+
   const readiness = evaluateDiscoveryReadiness({
     apiOk: apiResult.status === 'fulfilled' && apiResult.value.ok,
     bridgeOk: summaryResult.status === 'fulfilled' && summaryResult.value.ok,
@@ -29,10 +30,9 @@ export async function POST() {
   }
 
   try {
-    const response = await fetch(`${MAPACHE_API}/api/v1/hermes/dispatch`, {
+    const result = await mapacheFetch('/api/v1/hermes/dispatch', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Idempotency-Key': `command-center-discovery-${crypto.randomUUID()}`,
         'X-Tenant-ID': tenantId,
       },
@@ -40,14 +40,13 @@ export async function POST() {
         job_type: 'DISCOVERY',
         payload: { search_id: searchId, provider },
       }),
-      signal: AbortSignal.timeout(10000),
     });
-    const payload = await response.json().catch(() => ({}));
+
     return NextResponse.json({
-      status: response.ok ? 'QUEUED' : 'BLOCKED',
+      status: result.ok ? 'QUEUED' : 'BLOCKED',
       operation: 'LOCAL_DISCOVERY_DISPATCH',
-      ...payload,
-    }, { status: response.ok ? 202 : response.status });
+      ...result.data,
+    }, { status: result.ok ? 202 : result.status });
   } catch {
     return NextResponse.json({
       status: 'BLOCKED',

@@ -1,13 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { evaluateMapacheActivation } from '../../../../../lib/mapache_activation.mjs';
-
-const MAPACHE_API = (process.env.MAPACHE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+import { mapacheFetch } from '../../../../../lib/mapacheClient';
 
 export async function GET() {
   const [healthResult, summaryResult] = await Promise.allSettled([
-    fetch(`${MAPACHE_API}/health`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
-    fetch(`${MAPACHE_API}/api/v1/command-center/summary`, { cache: 'no-store', signal: AbortSignal.timeout(5000) }),
+    mapacheFetch('/health', { method: 'GET' }),
+    mapacheFetch('/api/v1/command-center/summary', { method: 'GET' }),
   ]);
   const healthOk = healthResult.status === 'fulfilled' && healthResult.value.ok;
   const summaryOk = summaryResult.status === 'fulfilled' && summaryResult.value.ok;
