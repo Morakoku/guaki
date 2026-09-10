@@ -679,7 +679,7 @@ export default async function ProviderProfilePage(props: Props) {
           </h2>
           <div className="neu-level-2" style={{ padding: '24px 22px', borderRadius: TOKENS.radii.lg, textAlign: 'center' }}>
             <p style={{ fontSize: '0.94rem', color: TOKENS.colors.textMain, lineHeight: 1.7, margin: '0 auto 16px', maxWidth: '680px', textAlign: 'center' }}>
-              {provider.description}
+              {provider.description || `${provider.name} está preparando su presentación comercial. Contáctale directo por WhatsApp para conocer sus servicios y disponibilidad.`}
             </p>
 
             {fullDetails?.features && fullDetails.features.length > 0 && (

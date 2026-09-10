@@ -195,7 +195,9 @@ export default function HomePage() {
             </h2>
           </div>
           <span style={{ fontSize: '0.8rem', color: TOKENS.colors.textMuted, fontWeight: 600 }}>
-            {Math.min(filteredBusinesses.length, 12)} de {filteredBusinesses.length} resultados
+            {!inventoryLoaded
+              ? 'Buscando comercios verificados…'
+              : `${Math.min(filteredBusinesses.length, 12)} de ${filteredBusinesses.length} resultados`}
           </span>
         </div>
 
@@ -207,9 +209,17 @@ export default function HomePage() {
             gap: '20px',
           }}
         >
-          {filteredBusinesses.slice(0, 12).map((afiche) => (
-            <AficheCard key={afiche.id} afiche={afiche} />
-          ))}
+          {!inventoryLoaded
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={`sk-${i}`}
+                  className="skeleton"
+                  style={{ height: '420px', borderRadius: '20px', opacity: 0.55 }}
+                />
+              ))
+            : filteredBusinesses.slice(0, 12).map((afiche) => (
+                <AficheCard key={afiche.id} afiche={afiche} />
+              ))}
         </div>
 
         {/* Botón Ver Más */}

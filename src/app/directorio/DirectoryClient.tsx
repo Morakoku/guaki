@@ -442,7 +442,9 @@ export default function DirectoryClient() {
         {/* Contador de Resultados Centrado */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '22px' }}>
           <span style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, fontWeight: 700, textAlign: 'center' }}>
-            {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}
+            {loading
+              ? 'Buscando comercios verificados…'
+              : `${filteredBusinesses.length} ${filteredBusinesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}`}
           </span>
         </div>
 
