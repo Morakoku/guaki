@@ -38,15 +38,24 @@ export async function GET(request: NextRequest) {
     let items;
     if (isSupabaseConfigured() && session) {
       const { data: actor, error: actorError } = await getSupabaseClient().auth.getUser(session);
-      if (actorError || !actor.user) return NextResponse.json({ error: 'SESSION_INVALID' }, { status: 401 });
-      const isAdmin = actor.user.app_metadata?.role === 'admin';
-      access = resolveInventoryAccess({ actor: { id: actor.user.id, role: isAdmin ? 'admin' : 'owner' } });
-      items = await GuakiDataService.getBusinessesWithToken(session, {
-        status: status || undefined,
-        city: city || undefined,
-        category: category || undefined,
-        ownerId: isAdmin ? undefined : actor.user.id,
-      });
+      if (actorError || !actor.user) {
+        // Sesión expirada/inválida: degrada a catálogo público en lugar de 401.
+        // Un visitante con cookie vieja no debe ver directorio vacío.
+        try {
+          items = await GuakiDataService.getAllBusinesses({ status: 'published' });
+        } catch {
+          return publicInventoryUnavailableResponse();
+        }
+      } else {
+        const isAdmin = actor.user.app_metadata?.role === 'admin';
+        access = resolveInventoryAccess({ actor: { id: actor.user.id, role: isAdmin ? 'admin' : 'owner' } });
+        items = await GuakiDataService.getBusinessesWithToken(session, {
+          status: status || undefined,
+          city: city || undefined,
+          category: category || undefined,
+          ownerId: isAdmin ? undefined : actor.user.id,
+        });
+      }
     } else if (isSupabaseConfigured()) {
       try {
         items = await GuakiDataService.getAllBusinesses({ status: 'published' });
