@@ -49,6 +49,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
         recognition.onstart = () => {
           setIsListening(true);
           setErrorMessage('');
+          autoSubmitRef.current = true;
         };
 
         recognition.onresult = (event: any) => {
@@ -77,7 +78,10 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
     }
   }, []);
 
-  // Preparar una búsqueda nueva al abrir el modal, sin activar el micrófono por sorpresa.
+  // Preparar una búsqueda nueva al abrir el modal. Un solo tap = hablar:
+  // activamos la escucha automáticamente tras un micro-delay si el navegador
+  // la soporta; si no (permiso denegado / navegador sin Web Speech), el foco
+  // cae directo en el input para escribir sin pasos extra.
   useEffect(() => {
     if (isOpen) {
       setTranscript('');
@@ -85,6 +89,19 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
       setTopThreeResults([]);
       setIsListening(false);
       const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
+      if (speechSupported && recognitionRef.current) {
+        const listenTimer = window.setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+          } catch {
+            /* start() duplicado o bloqueado: el usuario puede tocar el mic manualmente */
+          }
+        }, 260);
+        return () => {
+          window.clearTimeout(focusTimer);
+          window.clearTimeout(listenTimer);
+        };
+      }
       return () => window.clearTimeout(focusTimer);
     } else if (!isOpen && recognitionRef.current) {
       try {
@@ -92,6 +109,17 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
       } catch {}
     }
   }, [isOpen, speechSupported]);
+
+  // Fin de la dictación → búsqueda automática. El usuario habla y obtiene
+  // resultados sin pasos intermedios (sin re-tocar el mic ni el botón de buscar).
+  const autoSubmitRef = useRef(false);
+  useEffect(() => {
+    if (!isListening && transcript.trim().length >= 3 && autoSubmitRef.current) {
+      autoSubmitRef.current = false;
+      const submitTimer = window.setTimeout(() => handleExecuteSearch(), 480);
+      return () => window.clearTimeout(submitTimer);
+    }
+  }, [isListening, transcript]);
 
   // El modal debe comportarse como una capa de diálogo real: no desplazar el fondo
   // y permitir cerrarlo con Escape sin activar el micrófono de forma inesperada.
@@ -286,7 +314,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
             {isListening
               ? 'Dilo naturalmente (ej. "Peluquería cerca", "Veterinaria 24h")'
               : speechSupported
-                ? 'Toca el micrófono o escribe tu búsqueda'
+                ? 'Te escuchamos automáticamente al abrir — o escribe tu búsqueda'
                 : 'La búsqueda por voz no está disponible aquí. Escribe tu búsqueda.'}
           </p>
         </div>
@@ -393,7 +421,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
               letterSpacing: '0.01em',
             }}
           >
-            {isListening ? '🎙️ Escuchando...' : speechSupported ? 'Toca para hablar' : 'Escribe tu búsqueda'}
+            {isListening ? '🎙️ Escuchando...' : speechSupported ? 'Toca para volver a hablar' : 'Escribe tu búsqueda'}
           </span>
         </div>
 
