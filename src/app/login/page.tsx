@@ -159,7 +159,10 @@ export default function LoginPage() {
         color: TOKENS.colors.textMain,
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
+        // En viewports bajos el card puede exceder el alto disponible:
+        // margin:auto centra cuando hay espacio y se degrada arriba
+        // (con scroll) sin quedar bajo el dock fijo, jamás lo tapa.
         justifyContent: 'center',
         padding: '20px 16px',
         // Reserva espacio para el dock inferior + FAB elevado (no tapar el submit)
@@ -173,7 +176,7 @@ export default function LoginPage() {
           width: '100%',
           maxWidth: '420px',
           padding: 'clamp(24px, 5vw, 40px) clamp(18px, 4vw, 32px)',
-          margin: '0 auto',
+          margin: 'auto',
           boxSizing: 'border-box',
         }}
       >
