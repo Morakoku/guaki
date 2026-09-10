@@ -110,6 +110,7 @@ export default function LoginPage() {
           return;
         }
 
+        await ensureProviderRole({ token: result.token, user: result.user });
         window.location.href = '/provider/dashboard';
       } else {
         const result = await authService.login(userEmail, userPass);
@@ -130,6 +131,7 @@ export default function LoginPage() {
           return;
         }
 
+        await ensureProviderRole({ token: result.token, user: result.user });
         window.location.href = '/provider/dashboard';
       }
     } catch {
@@ -138,6 +140,16 @@ export default function LoginPage() {
       setBusy(false);
     }
   }
+
+  // Degradación: los cuentas recién registradas nacen 'client'; pedimos la
+  // provisión de rol 'provider' (validada por sesión en servidor) para que el
+  // middleware permita /provider/dashboard. Error tolerado: solo retrasa el bucle.
+  const ensureProviderRole = async (result: { token: string; user?: { role?: string } | null }) => {
+    if (result.user?.role === 'provider') return;
+    await fetch('/api/provider/provision', {
+      headers: { Authorization: `Bearer ${result.token}` },
+    }).catch(() => undefined);
+  };
 
   return (
     <div
