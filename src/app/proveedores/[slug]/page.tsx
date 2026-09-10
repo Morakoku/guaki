@@ -99,6 +99,10 @@ export default async function ProviderProfilePage(props: Props) {
 
   const pageUrl = absoluteUrl(`/proveedores/${provider.slug}`);
   const categoryUrl = absoluteUrl(`/servicios/${slugify(provider.category)}/${slugify(provider.city)}`);
+  // REGLA DE PLAN GRATIS: sin reputación visible (puntaje ni reseñas agregadas).
+  const freePlan = ['free', 'gratis', 'basico'].includes(
+    String(fullDetails?.plan || (provider as any).plan || '').toLowerCase()
+  );
   const localBusiness: Record<string, unknown> = {
     '@type': 'LocalBusiness',
     '@id': `${pageUrl}#business`,
@@ -113,7 +117,13 @@ export default async function ProviderProfilePage(props: Props) {
     ...(provider.description ? { description: provider.description } : {}),
     ...(provider.phone ? { telephone: provider.phone } : {}),
   };
-  if (provider.rating !== null && provider.rating !== undefined && provider.review_count && provider.review_count > 0) {
+  if (
+    !freePlan &&
+    provider.rating !== null &&
+    provider.rating !== undefined &&
+    provider.review_count &&
+    provider.review_count > 0
+  ) {
     localBusiness.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: provider.rating,
@@ -147,7 +157,7 @@ export default async function ProviderProfilePage(props: Props) {
   const cleanWhatsapp = normalizeWhatsAppNumber(rawWhatsapp) ?? '';
   const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
 
-  const rating = fullDetails?.rating ?? provider.rating ?? null;
+  const rating = freePlan ? null : (fullDetails?.rating ?? provider.rating ?? null);
   const reviewsCount = fullDetails?.reviewCount ?? provider.review_count ?? 0;
   const address = fullDetails?.address || provider.address || '';
   // H-03 FIX: Verification badge must depend on actual audit approval, not payment plan.
@@ -540,12 +550,25 @@ export default async function ProviderProfilePage(props: Props) {
                 <Star size={20} color="#D97706" fill="#D97706" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
-                  {rating !== null ? `${rating.toFixed(1)} / 5.0 ⭐` : 'Sin datos todavía'}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary, marginTop: '2px' }}>
-                  {reviewsCount > 0 ? `${reviewsCount} opiniones registradas` : 'Sin opiniones todavía'}
-                </div>
+                {freePlan ? (
+                  <>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
+                      Reputación con reseñas verificadas
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary, marginTop: '2px' }}>
+                      Disponible al activar el plan ✓ Verificado de Guaki.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
+                      {rating !== null ? `${rating.toFixed(1)} / 5.0 ⭐` : 'Sin datos todavía'}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary, marginTop: '2px' }}>
+                      {reviewsCount > 0 ? `${reviewsCount} opiniones registradas` : 'Sin opiniones todavía'}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

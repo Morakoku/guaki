@@ -20,6 +20,10 @@ function planOrUndefined(value) {
 
 export function mapPublicBusinessToAfiche(record) {
   const imageUrl = providerImage(record);
+  const plan = planOrUndefined(record.plan);
+  // REGLA DE PLAN GRATIS: sin reputación visible (rating/reseñas agregadas).
+  // El puntaje solo existe para planes Verificado/VIP con reseñas reales auditadas.
+  const isFreePlan = plan === 'free';
   return {
     id: String(record.id ?? ''),
     slug: String(record.slug ?? ''),
@@ -38,11 +42,11 @@ export function mapPublicBusinessToAfiche(record) {
     services: Array.isArray(record.services) ? record.services.filter((service) => typeof service === 'string' && service.trim()) : [],
     imageUrl,
     fallbackImageUrl: undefined,
-    rating: numberOrUndefined(record.rating),
-    reviewCount: numberOrUndefined(record.reviewCount ?? record.review_count),
+    rating: isFreePlan ? undefined : numberOrUndefined(record.rating),
+    reviewCount: isFreePlan ? undefined : numberOrUndefined(record.reviewCount ?? record.review_count),
     isVerified: record.isVerified === true ? true : undefined,
     isDemo: false,
     isOpenNow: record.isOpenNow === true ? true : undefined,
-    plan: planOrUndefined(record.plan),
+    plan,
   };
 }
