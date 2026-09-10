@@ -1,5 +1,5 @@
 // Service Worker Oficial de Guaki (PWA & Offline Cache)
-const CACHE_NAME = 'guaki-offline-v1';
+const CACHE_NAME = 'guaki-offline-v2';
 const STATIC_ASSETS = [
   '/',
   '/directorio',
@@ -39,8 +39,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  // No cachear APIs con mutate o auth
+  // No cachear APIs con mutate o auth, ni el optimizador de imágenes
   if (url.pathname.startsWith('/api/command-center') || url.pathname.startsWith('/admin')) {
+    return;
+  }
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/image')) {
     return;
   }
 
