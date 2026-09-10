@@ -34,6 +34,7 @@ import ProviderReviewsAccordion from '@/components/ProviderReviewsAccordion';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl, slugify } from '@/lib/site';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
+import { buildProviderFaqs, buildOpeningHoursSpecification } from '@/lib/provider_faq';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -121,43 +122,6 @@ export default async function ProviderProfilePage(props: Props) {
       worstRating: 1,
     };
   }
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      localBusiness,
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Inicio',
-            item: absoluteUrl('/'),
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: 'Directorio',
-            item: absoluteUrl('/directorio'),
-          },
-          {
-            '@type': 'ListItem',
-            position: 3,
-            name: provider.category,
-            item: categoryUrl,
-          },
-          {
-            '@type': 'ListItem',
-            position: 4,
-            name: provider.name,
-            item: pageUrl,
-          },
-        ],
-      },
-    ],
-  };
-
   const schedule = fullDetails?.schedule ?? [];
 
   const rawServices = fullDetails?.services ?? [];
@@ -206,8 +170,69 @@ export default async function ProviderProfilePage(props: Props) {
 
   const reviewsList = fullDetails?.reviews ?? [];
 
+  // SEO: enriquecer la ficha con imagen, horarios parseados, mapa y FAQPage
+  if (coverImage) {
+    localBusiness.image = [/^https?:\/\//.test(coverImage) ? coverImage : absoluteUrl(coverImage)];
+  }
+  if (googleMapsUrl) {
+    localBusiness.hasMap = googleMapsUrl;
+  }
+  const openingHoursSpecs = buildOpeningHoursSpecification(schedule as Array<{ day?: string; hours?: string }>);
+  if (openingHoursSpecs.length > 0) {
+    localBusiness.openingHoursSpecification = openingHoursSpecs;
+  }
+
+  const faqs = buildProviderFaqs({ businessName: provider.name, city: provider.city, phone: rawPhone });
+  const faqJsonLd = faqs.length > 0
+    ? {
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+        })),
+      }
+    : null;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      localBusiness,
+      faqJsonLd,
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Inicio',
+            item: absoluteUrl('/'),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Directorio',
+            item: absoluteUrl('/directorio'),
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: provider.category,
+            item: categoryUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 4,
+            name: provider.name,
+            item: pageUrl,
+          },
+        ],
+      },
+    ].filter(Boolean),
+  };
+
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ backgroundColor: 'transparent', color: TOKENS.colors.textMain, minHeight: '100vh' }}>
+    <div className="page-fade-in" style={{ backgroundColor: 'transparent', color: TOKENS.colors.textMain, minHeight: '100vh' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

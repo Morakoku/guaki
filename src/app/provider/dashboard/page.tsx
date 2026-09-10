@@ -186,6 +186,16 @@ function DashboardContent() {
     const userObj = { name: result.user?.fullName || ownerName.trim() || 'Comerciante Guaki', email: result.user?.email || ownerEmail.trim(), plan: selectedPlan };
     setMerchantUser(userObj);
 
+    // 145. Degradación: si el rol aún es 'client', solicitamos la provisión de rol
+    // 'provider' (validada por sesión en el servidor). Sin esto el middleware
+    // bloquea /provider y el comerciante nunca entra a su panel.
+    if (result.user?.role !== 'provider') {
+      await fetch('/api/provider/provision', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${result.token}` },
+      }).catch(() => undefined);
+    }
+
     if (!businessName && ownerName) {
       setBusinessName(`Servicios ${ownerName}`);
     }
@@ -300,7 +310,7 @@ function DashboardContent() {
   const completeness = calculateCompleteness();
 
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
 
       <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px 60px' }}>

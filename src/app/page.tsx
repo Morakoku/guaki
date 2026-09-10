@@ -70,7 +70,7 @@ export default function HomePage() {
         );
 
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
 
 
@@ -127,7 +127,7 @@ export default function HomePage() {
 
         {/* Chips de Categorías Minimalistas */}
         {inventoryLoaded && allBusinesses.length === 0 ? (
-          <p style={{ textAlign: 'center', color: TOKENS.colors.textSecondary, padding: '36px 20px' }}>Sin datos todavía</p>
+          <p style={{ textAlign: 'center', color: TOKENS.colors.textSecondary, padding: '36px 20px' }}>Estamos verificando los primeros comercios de tu zona. Muy pronto verás fichas aquí.</p>
         ) : filteredBusinesses.length === 0 && activeCategory !== 'todos' ? (
           <p style={{ textAlign: 'center', color: TOKENS.colors.textSecondary, padding: '36px 20px' }}>No encontramos negocios con esta categoría.</p>
         ) : <div

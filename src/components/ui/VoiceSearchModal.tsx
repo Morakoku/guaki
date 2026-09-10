@@ -182,6 +182,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
 
   return (
     <div
+      className="guaki-voice-overlay"
       style={{
         position: 'fixed',
         inset: 0,
@@ -190,7 +191,6 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
-        alignItems: 'flex-end',
         justifyContent: 'center',
         padding: '0 0 calc(12px + env(safe-area-inset-bottom, 0px))',
         animation: 'fadeIn 180ms cubic-bezier(0.23, 1, 0.32, 1) forwards',

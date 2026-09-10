@@ -445,7 +445,19 @@ button {
 }
 
 .has-bottom-dock {
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+  /* Reserva espacio para el dock (62px + 14px) + FAB elevado (58px + etiqueta) */
+  padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Buscador por voz: bottom-sheet en móvil, centrado en pantallas grandes */
+.guaki-voice-overlay {
+  align-items: flex-end;
+}
+
+@media (min-width: 768px) {
+  .guaki-voice-overlay {
+    align-items: center;
+  }
 }
 
 /* 📱 Responsive Grid System */

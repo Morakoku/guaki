@@ -54,7 +54,7 @@ export default function BrandResourcesPage() {
   ];
 
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
 
       <main style={{ maxWidth: '1080px', margin: '0 auto', padding: '36px 20px 80px' }}>

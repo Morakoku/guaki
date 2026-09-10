@@ -20,7 +20,7 @@ function DirectorySeoHeading() {
 
 export default function DirectoryPage() {
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
       <DirectorySeoHeading />
       <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center' }}>Cargando directorio...</div>}>

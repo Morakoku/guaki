@@ -3,11 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
+import { buildProviderFaqs, ProviderFaq } from '@/lib/provider_faq';
 
 interface ProviderFAQSectionProps {
   businessName: string;
@@ -24,24 +20,7 @@ export default function ProviderFAQSection({
 }: ProviderFAQSectionProps) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
-  const faqs: FAQItem[] = [
-    {
-      question: `¿Cómo puedo agendar o cotizar una cita con ${businessName}?`,
-      answer: `Puedes agendar o consultar disponibilidad directamente a través del botón oficial de WhatsApp en Guaki o llamando a su línea directa (${phone}). La confirmación es inmediata y sin intermediarios.`,
-    },
-    {
-      question: `¿Qué métodos de pago son aceptados?`,
-      answer: `La mayoría de servicios aceptan transferencias directas (Bancolombia, Nequi, Daviplata), tarjetas débito/crédito y efectivo en sede.`,
-    },
-    {
-      question: `¿${businessName} cuenta con verificación y auditoría en Guaki?`,
-      answer: `Sí, ${businessName} cuenta con verificación oficial en Guaki. Su identidad comercial, ubicación física en ${city} y canales de contacto directo fueron auditados.`,
-    },
-    {
-      question: `¿Atienden urgencias o servicios el mismo día?`,
-      answer: `Para atenciones prioritarias o urgencias diurnas, te sugerimos contactar inmediatamente por WhatsApp indicando el motivo de la consulta para recibir respuesta prioritaria en menos de 5 minutos.`,
-    },
-  ];
+  const faqs: ProviderFaq[] = buildProviderFaqs({ businessName, city, phone });
 
   const toggleFAQ = (idx: number) => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {

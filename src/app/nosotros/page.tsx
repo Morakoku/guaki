@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function NosotrosPage() {
   return (
-    <div className="page-fade-in has-bottom-dock" style={{ minHeight: '100vh', backgroundColor: 'transparent', color: TOKENS.colors.textMain }}>
+    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent', color: TOKENS.colors.textMain }}>
       <GuakiHeader />
 
       {/* ── CONTENIDO PRINCIPAL ── */}

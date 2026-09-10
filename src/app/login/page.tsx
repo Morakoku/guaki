@@ -150,6 +150,8 @@ export default function LoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '20px 16px',
+        // Reserva espacio para el dock inferior + FAB elevado (no tapar el submit)
+        paddingBottom: 'calc(150px + env(safe-area-inset-bottom, 0px))',
         width: '100%',
         boxSizing: 'border-box',
       }}
