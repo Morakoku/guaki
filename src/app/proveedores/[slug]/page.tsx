@@ -99,10 +99,12 @@ export default async function ProviderProfilePage(props: Props) {
 
   const pageUrl = absoluteUrl(`/proveedores/${provider.slug}`);
   const categoryUrl = absoluteUrl(`/servicios/${slugify(provider.category)}/${slugify(provider.city)}`);
-  // REGLA DE PLAN GRATIS: sin reputación visible (puntaje ni reseñas agregadas).
+  // REGLA DE PLAN GRATIS: no existe ficha — solo tarjeta en directorio con
+  // link directo a WhatsApp. La ruta del slug gratuito no es página pública.
   const freePlan = ['free', 'gratis', 'basico'].includes(
     String(fullDetails?.plan || (provider as any).plan || '').toLowerCase()
   );
+  if (freePlan) notFound();
   const localBusiness: Record<string, unknown> = {
     '@type': 'LocalBusiness',
     '@id': `${pageUrl}#business`,

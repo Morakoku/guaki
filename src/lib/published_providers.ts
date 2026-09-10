@@ -25,6 +25,7 @@ function toPublicProvider(record: unknown): PublishedProviderRecord | null {
     whatsapp: readString(source, 'whatsapp'),
     rating: typeof source.rating === 'number' ? source.rating : null,
     review_count: typeof source.review_count === 'number' ? source.review_count : typeof source.reviewCount === 'number' ? source.reviewCount : 0,
+    plan: readString(source, 'plan') || readString(source, 'planName') || undefined,
   };
   return isPubliclyEligibleProvider(candidate) ? candidate : null;
 }

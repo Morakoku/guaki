@@ -20,6 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const providers = await getPublishedProviders();
   const dynamicMap = new Map<string, MetadataRoute.Sitemap[number]>();
   for (const provider of providers) {
+    // REGLA DE PLAN GRATIS: sin ficha pública — no se anuncia en el sitemap.
+    const plan = String((provider as any).plan || '').toLowerCase();
+    if (['free', 'gratis', 'basico'].includes(plan)) continue;
+
     const providerPath = `/proveedores/${provider.slug}`;
     dynamicMap.set(providerPath, {
       url: `${base}${providerPath}`,

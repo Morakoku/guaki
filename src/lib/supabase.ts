@@ -95,6 +95,7 @@ export interface PublishedProviderRecord {
   whatsapp?: string | null;
   rating?: number | null;
   review_count?: number;
+  plan?: string | null;
 }
 
 export interface FactEvent {

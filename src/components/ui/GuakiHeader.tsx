@@ -131,6 +131,32 @@ export default function GuakiHeader({ className = '', style = {} }: GuakiHeaderP
           </div>
 
           <Link
+            href="/guardados"
+            aria-label="Tus negocios guardados"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '38px',
+              height: '38px',
+              borderRadius: TOKENS.radii.pill,
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              color: '#EF4444',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              textDecoration: 'none',
+              flexShrink: 0,
+              transition: 'transform 160ms cubic-bezier(0.23, 1, 0.32, 1)',
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.95)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 20s-7-4.4-9.2-8.7C1.3 8.2 3.1 5 6.3 5c2 0 3.5 1.2 4.3 2.6C11.4 6.2 12.9 5 14.9 5 17.9 5 19.7 8 18.6 11.3 16.8 15.6 12 20 12 20Z" />
+            </svg>
+          </Link>
+
+          <Link
             href="/provider/dashboard"
             className="neu-btn-primary"
             style={{

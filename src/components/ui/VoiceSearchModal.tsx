@@ -550,10 +550,13 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.78rem', fontWeight: 800, color: '#D97706' }}>
-                        <Star size={12} fill="#D97706" color="#D97706" />
-                        <span>{(biz.rating || 4.9).toFixed(1)}</span>
-                      </div>
+                      {/* Plan gratuito: sin reputación visible (regla de planes) */}
+                      {!['free', 'gratis', 'basico'].includes(String(biz.plan || '').toLowerCase()) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.78rem', fontWeight: 800, color: '#D97706' }}>
+                          <Star size={12} fill="#D97706" color="#D97706" />
+                          <span>{(biz.rating || 4.9).toFixed(1)}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ fontSize: '0.74rem', color: TOKENS.colors.textSecondary, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -588,6 +591,8 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                           <MessageCircle size={12} /> WhatsApp Directo
                         </a>
                       )}
+                      {/* Plan gratuito: sin ficha — el WhatsApp ES el contacto */}
+                      {!['free', 'gratis', 'basico'].includes(String(biz.plan || '').toLowerCase()) && (
                       <Link
                         href={`/proveedores/${biz.slug}`}
                         onClick={onClose}
@@ -609,6 +614,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                       >
                         Ver Ficha
                       </Link>
+                      )}
                     </div>
                   </div>
                   );

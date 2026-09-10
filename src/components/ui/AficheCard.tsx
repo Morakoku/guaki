@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Sparkles,
   ArrowRight,
+  Heart,
 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 import SoftBadge from './SoftBadge';
@@ -37,10 +38,34 @@ export default function AficheCard({
   const router = useRouter();
   const whatsappNumber = normalizeWhatsAppNumber(afiche.whatsapp);
 
+  // ♥ Guardar negocio (mismo contrato localStorage que la ficha: guaki_saved_businesses)
+  const [isSaved, setIsSaved] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('guaki_saved_businesses') || '[]');
+      setIsSaved(saved.includes(afiche.id));
+    } catch {}
+  }, [afiche.id]);
+
+  const toggleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(15);
+    try {
+      const saved = JSON.parse(localStorage.getItem('guaki_saved_businesses') || '[]');
+      const updated = saved.includes(afiche.id)
+        ? saved.filter((id: string) => id !== afiche.id)
+        : [...saved, afiche.id];
+      localStorage.setItem('guaki_saved_businesses', JSON.stringify(updated));
+      setIsSaved(!isSaved);
+    } catch {}
+  };
+
   // ⚡ Prefetch predictivo al entrar en viewport (IntersectionObserver)
+  // Solo para planes con ficha; el plan gratuito no tiene página de ficha.
   useEffect(() => {
     const el = cardRef.current;
-    if (!el || !afiche.slug || typeof IntersectionObserver === 'undefined') return;
+    if (!el || !afiche.slug || afiche.plan === 'free' || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -56,7 +81,7 @@ export default function AficheCard({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [afiche.slug, router]);
+  }, [afiche.slug, afiche.plan, router]);
 
   const handleImageError = () => {
     if (!imgError && afiche.fallbackImageUrl) {
@@ -111,6 +136,34 @@ export default function AficheCard({
               'linear-gradient(to top, rgba(22, 35, 29, 0.6) 0%, rgba(22, 35, 29, 0.1) 40%, transparent 80%)',
           }}
         />
+
+        {/* ♥ Guardar / Quitar de guardados (disponible en TODOS los planes) */}
+        <button
+          type="button"
+          onClick={toggleSave}
+          aria-label={isSaved ? 'Quitar de guardados' : 'Guardar negocio en favoritos'}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: `1px solid ${isSaved ? 'rgba(239, 68, 68, 0.45)' : TOKENS.colors.borderLight}`,
+            boxShadow: '0 3px 10px rgba(0,0,0,0.18)',
+            color: isSaved ? '#EF4444' : TOKENS.colors.textSecondary,
+            transition: 'transform 140ms cubic-bezier(0.23, 1, 0.32, 1)',
+          }}
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        >
+          <Heart size={16} fill={isSaved ? '#EF4444' : 'transparent'} color={isSaved ? '#EF4444' : 'currentColor'} />
+        </button>
 
         {/* Badge de Categoría (Pill Redondeado y sin icono, armonizado con Verificado) */}
         <div style={{ position: 'absolute', top: '14px', left: '14px' }}>
