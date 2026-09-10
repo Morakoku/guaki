@@ -834,9 +834,9 @@ button {
   100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 @keyframes guaki-fab-rise {
-  0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.7); }
-  60% { opacity: 1; transform: translateX(-50%) translateY(-6px) scale(1.06); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(40px) scale(0.7); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes guaki-fab-breathe {
   0%, 100% { box-shadow: 0 10px 26px rgba(23, 56, 45, 0.38), 0 2px 6px rgba(23, 56, 45, 0.18), 0 0 0 0 rgba(23, 56, 45, 0.14); }
