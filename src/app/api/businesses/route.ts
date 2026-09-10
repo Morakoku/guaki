@@ -48,13 +48,28 @@ export async function GET(request: NextRequest) {
         }
       } else {
         const isAdmin = actor.user.app_metadata?.role === 'admin';
-        access = resolveInventoryAccess({ actor: { id: actor.user.id, role: isAdmin ? 'admin' : 'owner' } });
-        items = await GuakiDataService.getBusinessesWithToken(session, {
-          status: status || undefined,
-          city: city || undefined,
-          category: category || undefined,
-          ownerId: isAdmin ? undefined : actor.user.id,
-        });
+        // Un usuario autenticado navegando el catálogo público (?status=published)
+        // debe ver todo el directorio, no solo lo suyo (que además suele venir
+        // vacío). El alcance por ownerId queda para el dashboard (sin ?status
+        // o con otros estados) y para /api/admin.
+        if (isAdmin) {
+          access = resolveInventoryAccess({ actor: { id: actor.user.id, role: 'admin' } });
+          items = await GuakiDataService.getBusinessesWithToken(session, {
+            status: status || undefined,
+            city: city || undefined,
+            category: category || undefined,
+          });
+        } else if (status === 'published') {
+          items = await GuakiDataService.getAllBusinesses({ status: 'published' });
+        } else {
+          access = resolveInventoryAccess({ actor: { id: actor.user.id, role: 'owner' } });
+          items = await GuakiDataService.getBusinessesWithToken(session, {
+            status: status || undefined,
+            city: city || undefined,
+            category: category || undefined,
+            ownerId: actor.user.id,
+          });
+        }
       }
     } else if (isSupabaseConfigured()) {
       try {
