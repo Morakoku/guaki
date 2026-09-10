@@ -45,7 +45,7 @@ export async function POST() {
     return NextResponse.json({
       status: result.ok ? 'QUEUED' : 'BLOCKED',
       operation: 'LOCAL_DISCOVERY_DISPATCH',
-      ...result.data,
+      ...(result.data && typeof result.data === 'object' && !Array.isArray(result.data) ? result.data : {}),
     }, { status: result.ok ? 202 : result.status });
   } catch {
     return NextResponse.json({
