@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/lib/auth_service';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -17,13 +17,20 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Mientras el formulario procesa signup/login, el listener de auth no debe
+  // navegar: su navegación prematura abortaba la provisión de rol (fetch status 0)
+  // y el middleware rebotaba el dashboard a /login.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
-    // Detectar si el usuario llega desde el enlace de confirmación de correo
+    // Detectar el regreso desde el enlace de confirmación de correo. El flujo
+    // normal del formulario lo maneja handleSubmit por sí solo.
     try {
       const supabase = getSupabaseClient();
       const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.access_token && (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION')) {
+        if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+        if (submittingRef.current) return;
+        if (session?.access_token) {
           const res = await fetch('/api/auth/session', {
             method: 'POST',
             credentials: 'include',
@@ -31,6 +38,9 @@ export default function LoginPage() {
             body: JSON.stringify({ accessToken: session.access_token }),
           });
           if (res.ok) {
+            // Asegura rol provider (p. ej. retorno de confirmación de un cliente)
+            // antes de navegar para no rebotar en el middleware.
+            await ensureProviderRole({ token: session.access_token, user: null });
             window.location.href = '/provider/dashboard';
           }
         }
@@ -42,6 +52,7 @@ export default function LoginPage() {
     } catch {
       // client error fallback
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleResendConfirmation() {
@@ -75,6 +86,7 @@ export default function LoginPage() {
 
   async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
     if (e) e.preventDefault();
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
     setSuccessMessage(null);
@@ -136,6 +148,7 @@ export default function LoginPage() {
       setError('Tuvimos un inconveniente al conectar con el servidor. Intenta nuevamente.');
     } finally {
       setBusy(false);
+      submittingRef.current = false;
     }
   }
 
