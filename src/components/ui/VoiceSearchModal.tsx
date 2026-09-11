@@ -27,6 +27,9 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
   const [speechSupported, setSpeechSupported] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [topThreeResults, setTopThreeResults] = useState<any[]>([]);
+  // Modo escritura: por defecto NO se muestra el input (cero teclado al abrir).
+  // Se activa solo si el usuario toca "Prefiero escribir" o si la voz falla.
+  const [typingMode, setTypingMode] = useState(false);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +67,9 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
           setIsListening(false);
           if (event.error === 'not-allowed') {
             setErrorMessage('Permiso de micrófono denegado. Escribe tu búsqueda abajo.');
+            // Sin voz no hay flujo: mostramos el input y enfocamos una única vez.
+            setTypingMode(true);
+            window.setTimeout(() => inputRef.current?.focus(), 150);
           } else if (event.error !== 'no-speech') {
             setErrorMessage('No detectamos audio claro. Intenta tocar de nuevo.');
           }
@@ -80,29 +86,34 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
 
   // Preparar una búsqueda nueva al abrir el modal. Un solo tap = hablar:
   // activamos la escucha automáticamente tras un micro-delay si el navegador
-  // la soporta; si no (permiso denegado / navegador sin Web Speech), el foco
-  // cae directo en el input para escribir sin pasos extra.
+  // la soporta. NO enfocamos el input en ese caso (evita que el teclado del
+  // celular se abra y tape el micrófono); el foco va al input solo cuando la
+  // voz no está disponible o si el usuario decide escribir.
   useEffect(() => {
     if (isOpen) {
       setTranscript('');
       setErrorMessage('');
       setTopThreeResults([]);
       setIsListening(false);
-      const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
-      if (speechSupported && recognitionRef.current) {
-        const listenTimer = window.setTimeout(() => {
-          try {
-            recognitionRef.current?.start();
-          } catch {
-            /* start() duplicado o bloqueado: el usuario puede tocar el mic manualmente */
-          }
-        }, 260);
-        return () => {
-          window.clearTimeout(focusTimer);
-          window.clearTimeout(listenTimer);
-        };
+      setTypingMode(false);
+      let focusTimer: number | undefined;
+      if (!speechSupported || !recognitionRef.current) {
+        setTypingMode(true);
+        focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
       }
-      return () => window.clearTimeout(focusTimer);
+      const listenTimer = speechSupported && recognitionRef.current
+        ? window.setTimeout(() => {
+            try {
+              recognitionRef.current?.start();
+            } catch {
+              /* start() duplicado o bloqueado: el usuario puede tocar el mic manualmente */
+            }
+          }, 260)
+        : undefined;
+      return () => {
+        if (focusTimer) window.clearTimeout(focusTimer);
+        if (listenTimer) window.clearTimeout(listenTimer);
+      };
     } else if (!isOpen && recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -427,6 +438,32 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
 
         {/* Input y Transcripción */}
         <form className="guaki-modal-item-in" onSubmit={handleExecuteSearch} style={{ display: 'flex', flexDirection: 'column', gap: '10px', animationDelay: '280ms' }}>
+          {/* Modo escucha: cero teclado. El input solo aparece si el usuario
+              pide escribir o si la voz no está disponible/falló. */}
+          {!typingMode && speechSupported && (
+            <button
+              type="button"
+              onClick={() => {
+                setTypingMode(true);
+                window.setTimeout(() => inputRef.current?.focus(), 80);
+              }}
+              style={{
+                alignSelf: 'center',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: TOKENS.colors.textSecondary,
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                textDecoration: 'underline',
+                padding: '6px 10px',
+              }}
+            >
+              Prefiero escribir en su lugar
+            </button>
+          )}
+
+          {(typingMode || !speechSupported) && (
           <div style={{ position: 'relative' }}>
             <input
               ref={inputRef}
@@ -435,7 +472,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               aria-label="Buscar en Guaki"
-              placeholder="Escribe qué necesitas o toca el micrófono..."
+              placeholder="Escribe qué necesitas…"
               style={{
                 width: '100%',
                 padding: '12px 38px 12px 14px',
@@ -471,6 +508,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
               </button>
             )}
           </div>
+          )}
 
           {/* Detección de Intención */}
           {transcript.trim().length >= 3 && (
@@ -629,7 +667,9 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
             </div>
           )}
 
-          {/* Botón de Acción Principal */}
+          {/* Botón de Acción Principal — solo en modo escritura;
+              por voz, al terminar de hablar la búsqueda se ejecuta sola. */}
+          {(typingMode || !speechSupported) && (
           <button
             type="submit"
             disabled={!transcript.trim()}
@@ -653,6 +693,7 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
             <span>Buscar en el Directorio</span>
             <ArrowRight size={15} />
           </button>
+          )}
         </form>
       </div>
     </div>
