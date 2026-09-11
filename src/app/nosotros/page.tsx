@@ -8,7 +8,7 @@ import { TOKENS } from '@/lib/design-tokens';
 export const metadata: Metadata = {
   title: 'Quiénes Somos, Dónde Estamos y Preguntas Frecuentes | Guaki',
   description:
-    'Conoce a Guaki: Directorio local transparente y verificado en Colombia. Sedes en Medellín y Bogotá, protocolo 0% cartón y FAQ oficial.',
+    'Conoce a Guaki: Directorio local transparente y verificado en Colombia y Venezuela. Presencia en Medellín, Bogotá y Caracas, protocolo 0% cartón y FAQ oficial.',
 };
 
 export default function NosotrosPage() {

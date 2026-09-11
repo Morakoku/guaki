@@ -53,7 +53,7 @@ const CATEGORIES = [
   'Otros',
 ];
 
-const CITIES = ['Todas las ciudades', 'Medellín', 'Bogotá', 'Cali', 'Barranquilla', 'Bucaramanga', 'Cartagena'];
+const CITIES = ['Todas las ciudades', 'Medellín', 'Bogotá', 'Cali', 'Barranquilla', 'Bucaramanga', 'Cartagena', 'Caracas', 'Valencia', 'Maracaibo', 'Barquisimeto'];
 
 export default function AdminGodModeDashboard() {
   const [businesses, setBusinesses] = useState<BusinessAdminRecord[]>([]);

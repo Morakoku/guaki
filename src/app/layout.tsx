@@ -37,31 +37,31 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Guaki — Directorio Inteligente & Servicios Verificados',
-  description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia.',
-  keywords: ['Guaki', 'Directorio de servicios', 'Proveedores Colombia', 'Veterinaria Medellín', 'Odontología Bogotá', 'Negocios verificados'],
+  description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia y Venezuela.',
+  keywords: ['Guaki', 'Directorio de servicios', 'Proveedores Colombia', 'Proveedores Venezuela', 'Veterinaria Medellín', 'Odontología Bogotá', 'Negocios verificados Caracas'],
   authors: [{ name: 'Guaki Team' }],
   metadataBase: new URL(SITE_URL),
   openGraph: {
     title: 'Guaki — Directorio Inteligente & Servicios Verificados',
-    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia.',
+    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia y Venezuela.',
     url: SITE_URL,
     siteName: 'Guaki',
     locale: 'es_CO',
     type: 'website',
     images: [
       {
-        url: '/api/og?title=Guaki%20Directorio%20Inteligente&category=Servicios%20Verificados&city=Colombia',
+        url: '/api/og?title=Guaki%20Directorio%20Inteligente&category=Servicios%20Verificados&city=Colombia%20y%20Venezuela',
         width: 1200,
         height: 630,
-        alt: 'Guaki Directorio Inteligente Colombia',
+        alt: 'Guaki Directorio Inteligente Colombia y Venezuela',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Guaki — Directorio Inteligente & Servicios Verificados',
-    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia.',
-    images: ['/api/og?title=Guaki%20Directorio%20Inteligente&category=Servicios%20Verificados&city=Colombia'],
+    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia y Venezuela.',
+    images: ['/api/og?title=Guaki%20Directorio%20Inteligente&category=Servicios%20Verificados&city=Colombia%20y%20Venezuela'],
   },
 };
 

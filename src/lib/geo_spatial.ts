@@ -117,4 +117,16 @@ export const CITY_SECTORS = {
     { name: 'Usaquén & Santa Bárbara', slug: 'usaquen', description: 'Plaza de Usaquén, Unicentro & Cedritos' },
     { name: 'Chicó & Parque 93', slug: 'chico', description: 'Virrey, El Chicó & Cabrera' },
   ],
+  Caracas: [
+    { name: 'Chacao', slug: 'chacao', description: 'Plaza Chacao, Bello Campo & Los Palos Grandes' },
+    { name: 'Las Mercedes', slug: 'las-mercedes', description: 'Zona gastronómica, Torre Sindoni & CCCT' },
+    { name: 'Altamira', slug: 'altamira', description: 'Plaza Francia, Avenida Luis Roche & El Ávila' },
+  ],
+  Valencia: [
+    { name: 'El Viñedo', slug: 'el-vinedo', description: 'Zona comercial, Av. Bolívar Norte & C.C. Metrópolis' },
+    { name: 'Prebo', slug: 'prebo', description: 'Prebo I y II, Av. Juan Uslar & zona empresarial' },
+  ],
+  Maracaibo: [
+    { name: 'Bella Vista', slug: 'bella-vista', description: 'Av. Bella Vista, C.C. Lago Mall & zona hotelera' },
+  ],
 };

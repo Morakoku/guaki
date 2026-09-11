@@ -15,6 +15,10 @@ const CITY_HINTS = [
   { name: 'Bogotá', pattern: /\b(bogota|usaquen|chapinero|suba|cedritos|chico)\b/ },
   { name: 'Cali', pattern: /\b(cali|granada|san antonio|chipichape)\b/ },
   { name: 'Barranquilla', pattern: /\b(barranquilla|el prado|villa campestre)\b/ },
+  { name: 'Caracas', pattern: /\b(caracas|chacao|altamira|las mercedes|palos grandes)\b/ },
+  { name: 'Valencia', pattern: /\b(valencia|prebo|viñedo|viniedo)\b/ },
+  { name: 'Maracaibo', pattern: /\b(maracaibo|bella vista|5 de julio)\b/ },
+  { name: 'Barquisimeto', pattern: /\b(barquisimeto|barquisimeto este)\b/ },
 ];
 
 // 💡 115. Sugerencias Predictivas (Typeahead Suggestions)
@@ -23,6 +27,7 @@ export const SEARCH_PREDICTIONS = [
   { text: 'Odontología & Ortodoncia Invisible', category: 'odontologia', city: 'Medellín' },
   { text: 'Clínica Dental & Urgencias', category: 'odontologia', city: 'Bogotá' },
   { text: 'Peluquería & Barbería Premium', category: 'peluqueria', city: 'Medellín' },
+  { text: 'Clínica Dental & Ortodoncia en Caracas', category: 'odontologia', city: 'Caracas' },
   { text: 'Spa, Masajes & Estética Facial', category: 'estetica', city: 'Medellín' },
   { text: 'Abogado Laboral & Tutelas', category: 'abogados', city: 'Bogotá' },
   { text: 'Consulta Médica & Fisioterapia', category: 'clinica', city: 'Medellín' },

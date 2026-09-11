@@ -16,7 +16,7 @@ interface ReverseGeoResponse {
   display_name?: string;
 }
 
-// Centros urbanos de referencia en Colombia para fallback por distancia
+// Centros urbanos de referencia (Colombia) para fallback por distancia
 const KNOWN_COLOMBIAN_REGIONS = [
   { name: 'Ciudad Verde, Soacha', city: 'Soacha', lat: 4.5847, lng: -74.2251 },
   { name: 'El Poblado, Medellín', city: 'Medellín', lat: 6.2088, lng: -75.5684 },
@@ -30,6 +30,26 @@ const KNOWN_COLOMBIAN_REGIONS = [
   { name: 'El Prado, Barranquilla', city: 'Barranquilla', lat: 10.9998, lng: -74.8016 },
   { name: 'Cabecera, Bucaramanga', city: 'Bucaramanga', lat: 7.1193, lng: -73.1096 },
 ];
+
+// Centros urbanos de referencia (Venezuela) para fallback por distancia
+const KNOWN_VENEZUELAN_REGIONS = [
+  { name: 'Chacao, Caracas', city: 'Caracas', lat: 10.4961, lng: -66.8517 },
+  { name: 'Las Mercedes, Caracas', city: 'Caracas', lat: 10.4806, lng: -66.8595 },
+  { name: 'El Viñedo, Valencia', city: 'Valencia', lat: 10.1620, lng: -68.0077 },
+  { name: 'Bella Vista, Maracaibo', city: 'Maracaibo', lat: 10.6544, lng: -71.6406 },
+  { name: 'Este, Barquisimeto', city: 'Barquisimeto', lat: 10.0678, lng: -69.3467 },
+];
+
+const KNOWN_REGIONS = [
+  ...KNOWN_COLOMBIAN_REGIONS.map((region) => ({ ...region, country: 'Colombia' })),
+  ...KNOWN_VENEZUELAN_REGIONS.map((region) => ({ ...region, country: 'Venezuela' })),
+];
+
+function countryFromCoordinates(lat: number, lng: number): string {
+  if (lat >= 0.6 && lat <= 12.2 && lng >= -73.4 && lng <= -59.8) return 'Venezuela';
+  if (lat >= -4.3 && lat <= 13.0 && lng >= -79.1 && lng <= -66.8) return 'Colombia';
+  return 'Colombia';
+}
 
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radio de la Tierra en km
@@ -88,12 +108,13 @@ export async function GET(request: NextRequest) {
             addr.suburb ||
             addr.city_district ||
             addr.county;
+          const countryName = addr.country || countryFromCoordinates(lat, lng);
           const ciudad =
             addr.city ||
             addr.town ||
             addr.municipality ||
             addr.state ||
-            'Colombia';
+            countryName;
 
           let formatted = '';
           if (barrio && barrio !== ciudad) {
@@ -108,6 +129,7 @@ export async function GET(request: NextRequest) {
             lng,
             locationName: formatted,
             city: ciudad,
+            country: countryName,
             neighborhood: barrio || null,
             source: 'nominatim_live',
           });
@@ -118,10 +140,10 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Fallback de proximidad matemática con las coordenadas GPS reales del usuario
-    let nearest = KNOWN_COLOMBIAN_REGIONS[0];
+    let nearest = KNOWN_REGIONS[0];
     let minDistance = getDistanceKm(lat, lng, nearest.lat, nearest.lng);
 
-    for (const region of KNOWN_COLOMBIAN_REGIONS) {
+    for (const region of KNOWN_REGIONS) {
       const dist = getDistanceKm(lat, lng, region.lat, region.lng);
       if (dist < minDistance) {
         minDistance = dist;
@@ -137,18 +159,21 @@ export async function GET(request: NextRequest) {
         lng,
         locationName: nearest.name,
         city: nearest.city,
+        country: nearest.country,
         neighborhood: null,
         source: 'gps_proximity_fallback',
       });
     }
 
-    // Ubicación en Colombia fuera del catálogo principal
+    // Ubicación fuera del catálogo principal: se resuelve el país por coordenadas
+    const fallbackCountry = countryFromCoordinates(lat, lng);
     return NextResponse.json({
       success: true,
       lat,
       lng,
-      locationName: `Colombia (${lat.toFixed(3)}, ${lng.toFixed(3)})`,
-      city: 'Colombia',
+      locationName: `${fallbackCountry} (${lat.toFixed(3)}, ${lng.toFixed(3)})`,
+      city: fallbackCountry,
+      country: fallbackCountry,
       neighborhood: null,
       source: 'gps_coordinates',
     });

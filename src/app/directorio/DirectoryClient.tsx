@@ -11,6 +11,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
+import { cityNames } from '../../lib/geo';
 import SearchBar from '../../components/ui/SearchBar';
 import AficheCard from '../../components/ui/AficheCard';
 import BusinessListItem from '../../components/ui/BusinessListItem';
@@ -92,7 +93,7 @@ export default function DirectoryClient() {
     loadBusinesses();
   }, []);
 
-  const cities = ['Medellín', 'Cali', 'Bogotá', 'Soacha'];
+  const cities = cityNames();
   const categories = [
     { id: 'todos', label: 'Todas las Categorías', icon: '✨' },
     { id: 'veterinaria', label: 'Veterinarias', icon: '🐾' },

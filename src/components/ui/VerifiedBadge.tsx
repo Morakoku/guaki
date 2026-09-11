@@ -196,7 +196,7 @@ export default function VerifiedBadge({
                     Identidad Comercial & RUT Verificado
                   </strong>
                   <span style={{ fontSize: '0.76rem', color: TOKENS.colors.textSecondary }}>
-                    Comprobación de existencia legal y tributaria en Colombia.
+                    Comprobación de existencia legal y tributaria en tu país de operación.
                   </span>
                 </div>
               </div>

@@ -16,6 +16,7 @@ import {
 import { getPublishedProviderBySlug } from '@/lib/published_providers';
 import { BusinessStore } from '@/lib/business_store';
 import { GuakiDataService } from '@/lib/supabase';
+import { getCountryMeta } from '@/lib/geo';
 import { ProviderShareButton } from '@/components/ProviderShareButton';
 import SaveBusinessButton from '@/components/ui/SaveBusinessButton';
 import { ProviderReviewForm } from '@/components/ProviderReviewForm';
@@ -163,7 +164,7 @@ export default async function ProviderProfilePage(props: Props) {
 
   const rawWebsite = fullDetails?.website || (provider as any).website || '';
   const websiteUrl = rawWebsite ? (rawWebsite.startsWith('http') ? rawWebsite : `https://${rawWebsite}`) : null;
-  const mapSearchQuery = encodeURIComponent(`${provider.name}, ${address}, ${provider.city}, Colombia`);
+  const mapSearchQuery = encodeURIComponent(`${provider.name}, ${address}, ${provider.city}, ${getCountryMeta(provider.city).name}`);
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
 
   const smartMessage = encodeURIComponent(
@@ -878,7 +879,7 @@ export default async function ProviderProfilePage(props: Props) {
             <p style={{ margin: 0, fontSize: '0.84rem', color: TOKENS.colors.textSecondary, lineHeight: 1.5 }}>
               {isVerified
                 ? 'RUT e identidad comercial comprobados · Ubicación física validada · Contacto directo por WhatsApp sin comisiones intermedias.'
-                : 'Contacto directo con comercios y profesionales en Colombia sin comisiones intermedias.'}
+                : 'Contacto directo con comercios y profesionales en Colombia y Venezuela sin comisiones intermedias.'}
             </p>
           </div>
         </section>

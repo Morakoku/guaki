@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Guaki 🥑 — Directorio Local Inteligente & Servicios Verificados',
     short_name: 'Guaki 🥑',
-    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia. 100% fresco, directo y sin intermediarios.',
+    description: 'Encuentra y contacta directamente con negocios y profesionales verificados en Colombia y Venezuela. 100% fresco, directo y sin intermediarios.',
     start_url: '/',
     display: 'standalone',
     background_color: '#E7ECE7',

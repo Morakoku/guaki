@@ -486,7 +486,7 @@ export default function GradientMeshShowcase() {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            Encuentra y Conecta con Servicios Verificados en Colombia
+            Encuentra y Conecta con Servicios Verificados en Colombia y Venezuela
           </h1>
 
           <p style={{ fontSize: '1.05rem', color: '#94A3B8', lineHeight: 1.6, margin: '0 auto 32px', maxWidth: '640px' }}>

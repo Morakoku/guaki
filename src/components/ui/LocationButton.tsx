@@ -58,8 +58,8 @@ export default function LocationButton({
           const res = await fetch(`/api/location/reverse?lat=${latitude}&lng=${longitude}`);
           if (res.ok) {
             const data = await res.json();
-            const formatted = data.locationName || `${data.city}, Colombia`;
-            const cityName = data.city || 'Colombia';
+            const formatted = data.locationName || `${data.city}, ${data.country || 'Colombia'}`;
+            const cityName = data.city || '';
 
             setLocationName(formatted);
             setStatus('success');

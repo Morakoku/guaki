@@ -3,25 +3,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { TOKENS } from '../lib/design-tokens';
+import { CITY_CATALOG, COUNTRY_META } from '../lib/geo';
 import SoftCard from './ui/SoftCard';
 
 export function GuakiCorporateIdentity() {
-  const cities = [
-    { name: 'Medellín', zone: 'El Poblado & Laureles', status: 'Sede Principal' },
-    { name: 'Bogotá D.C.', zone: 'Chicó, Usaquén & Chapinero', status: 'Operación Central' },
-    { name: 'Cali', zone: 'Granada & Ciudad Jardín', status: 'Cobertura Activa' },
-    { name: 'Barranquilla', zone: 'Alto Prado & El Golf', status: 'Cobertura Caribe' },
-    { name: 'Cartagena', zone: 'Bocagrande & Centro', status: 'Cobertura Activa' },
-    { name: 'Bucaramanga', zone: 'Cabecera & Cañaveral', status: 'Cobertura Activa' },
-    { name: 'Pereira', zone: 'Circunvalar & Pinares', status: 'Próxima Sede' },
-    { name: 'Santa Marta', zone: 'Rodadero & Centro Histórico', status: 'Próxima Sede' },
-  ];
+  const cities = CITY_CATALOG;
 
   const verificationFilters = [
     {
       num: '01',
-      title: 'Validación Legal y RUT',
-      desc: 'Comprobamos el registro en Cámara de Comercio y actividad comercial para asegurar que el negocio está en regla.',
+      title: 'Validación Legal y Tributaria',
+      desc: 'Comprobamos el registro legal y tributario del negocio (RUT en Colombia, RIF en Venezuela) y su actividad comercial para asegurar que está en regla.',
       icon: '📜',
     },
     {
@@ -219,7 +211,7 @@ export function GuakiCorporateIdentity() {
               Cobertura activa
             </span>
             <h4 style={{ fontSize: 'clamp(1.15rem, 2vw, 1.35rem)', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0, letterSpacing: '-0.02em' }}>
-              Presencia Operativa en Colombia
+              Presencia Operativa en Colombia y Venezuela
             </h4>
             <span style={{ display: 'block', fontSize: '0.84rem', color: TOKENS.colors.textSecondary, marginTop: '5px' }}>
               Red de proveedores auditados con geolocalización en tiempo real
@@ -264,12 +256,12 @@ export function GuakiCorporateIdentity() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span
-                  aria-label="Colombia"
+                  aria-label={COUNTRY_META[c.country].name}
                   style={{
                     width: '16px',
                     height: '11px',
                     borderRadius: '2px',
-                    background: 'linear-gradient(to bottom, #FCD116 0 50%, #003893 50% 75%, #CE1126 75% 100%)',
+                    background: COUNTRY_META[c.country].flagGradient,
                     boxShadow: '0 0 0 1px rgba(23, 56, 45, 0.10)',
                     flexShrink: 0,
                   }}
@@ -277,9 +269,14 @@ export function GuakiCorporateIdentity() {
                 <strong style={{ fontSize: '0.98rem', color: TOKENS.colors.textMain }}>{c.name}</strong>
               </div>
               <span style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary }}>{c.zone}</span>
-              <span style={{ alignSelf: 'flex-start', fontSize: '0.68rem', color: TOKENS.colors.greenPrimary, fontWeight: 800, marginTop: '5px', padding: '4px 8px', borderRadius: TOKENS.radii.pill, backgroundColor: 'rgba(61, 128, 79, 0.09)' }}>
-                {c.status}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '5px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.68rem', color: TOKENS.colors.textMuted, fontWeight: 700 }}>
+                  {COUNTRY_META[c.country].name}
+                </span>
+                <span style={{ alignSelf: 'flex-start', fontSize: '0.68rem', color: TOKENS.colors.greenPrimary, fontWeight: 800, padding: '4px 8px', borderRadius: TOKENS.radii.pill, backgroundColor: 'rgba(61, 128, 79, 0.09)' }}>
+                  {c.role}
+                </span>
+              </div>
             </div>
           ))}
         </div>

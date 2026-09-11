@@ -55,7 +55,7 @@ export function GuakiFAQSection() {
       category: 'Cobertura',
       question: '¿En qué ciudades puedo encontrar servicios con Guaki?',
       answer:
-        'Estamos activos en Medellín, Bogotá, Cali, Barranquilla, Cartagena y Bucaramanga, sumando continuamente nuevos especialistas y comercios verificados en más municipios de Colombia.',
+        'Estamos activos en Medellín, Bogotá, Cali, Barranquilla, Cartagena y Bucaramanga en Colombia, y en Caracas, Valencia, Maracaibo y Barquisimeto en Venezuela, sumando continuamente nuevos especialistas y comercios verificados en más ciudades de ambos países.',
     },
   ];
 

@@ -32,6 +32,7 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import PlanCardsSection from '@/components/ui/PlanCardsSection';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 import { parseScheduleText } from '@/lib/validation';
+import { CITY_CATALOG, citiesByCountry, countryOfCity, getCountryMeta, planLabel, planName, planPrice } from '@/lib/geo';
 
 const CATEGORIES = [
   'Veterinarias & Mascotas',
@@ -47,17 +48,7 @@ const CATEGORIES = [
   'Otros',
 ];
 
-const CITIES = [
-  'Medellín',
-  'Bogotá',
-  'Cali',
-  'Soacha',
-  'Barranquilla',
-  'Bucaramanga',
-  'Cartagena',
-  'Pereira',
-  'Manizales',
-];
+const CITIES = CITY_CATALOG.map((entry) => entry.name);
 
 const SCHEDULE_DAY_OPTIONS = [
   'Lunes a Sábado',
@@ -433,6 +424,11 @@ function DashboardContent() {
   const completeness = calculateCompleteness();
   const currentPlan = (merchantUser?.plan || selectedPlan || 'gratis') as 'gratis' | 'verificado' | 'vip';
   const canOpenLiveFicha = status === 'published' && currentPlan !== 'gratis' && Boolean(slug);
+  const country = countryOfCity(city);
+  const countryMeta = getCountryMeta(city);
+  const verificadoPrice = planPrice('verificado', country);
+  const verificadoLabelWithPrice = `${planName('verificado')} (${verificadoPrice.formatted}${country === 'VE' ? ' USD' : ''})`;
+  const currentPlanPrice = planPrice(currentPlan, country);
 
   const scrollToSection = (targetId: string) => {
     if (typeof document === 'undefined') return;
@@ -517,6 +513,7 @@ function DashboardContent() {
                   mode="select"
                   selectedPlanId={selectedPlan}
                   onSelectPlan={(id) => setSelectedPlan(id as any)}
+                  country={country}
                 />
               </div>
             )}
@@ -695,7 +692,7 @@ function DashboardContent() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {slug && (
+                {canOpenLiveFicha && (
                   <Link
                     href={`/proveedores/${slug}`}
                     target="_blank"
@@ -821,13 +818,13 @@ function DashboardContent() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {merchantUser.plan === 'vip' ? (
-                          <><Crown size={13} /> PLAN VIP ELITE ($149.900)</>
-                        ) : merchantUser.plan === 'verificado' ? (
-                          <><ShieldCheck size={13} /> PLAN VERIFICADO ($49.900)</>
-                        ) : (
-                          <><Sprout size={13} /> PLAN ESENCIAL ($0)</>
-                        )}
+                          {merchantUser.plan === 'vip' ? (
+                            <><Crown size={13} /> {planLabel('vip', country)}</>
+                          ) : merchantUser.plan === 'verificado' ? (
+                            <><ShieldCheck size={13} /> {planLabel('verificado', country)}</>
+                          ) : (
+                            <><Sprout size={13} /> {planLabel('gratis', country)}</>
+                          )}
                       </span>
                       <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary, fontWeight: 700 }}>
                         {merchantUser.plan === 'vip' ? 'Súper Botón VIP y Posicionamiento #1' : merchantUser.plan === 'verificado' ? 'Insignia Oficial de Verificación y Ficha Dedicada' : 'Presencia Básica en el Directorio'}
@@ -1000,8 +997,12 @@ function DashboardContent() {
                             outline: 'none',
                           }}
                         >
-                          {CITIES.map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                          {citiesByCountry().map((group) => (
+                            <optgroup key={group.country} label={`${group.meta.name} · ${group.meta.currency}`}>
+                              {group.cities.map((entry) => (
+                                <option key={entry.name} value={entry.name}>{entry.name}</option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </div>
@@ -1050,7 +1051,7 @@ function DashboardContent() {
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         id="field-direccion"
-                        placeholder="Ej. Carrera 43A # 14-27, El Poblado"
+                        placeholder={countryMeta.addressPlaceholder}
                         style={{
                           width: '100%',
                           padding: '11px 16px',
@@ -1079,7 +1080,7 @@ function DashboardContent() {
                           value={whatsapp}
                           onChange={(e) => setWhatsapp(e.target.value)}
                           id="field-whatsapp"
-                          placeholder="Ej. +57 300 123 4567"
+                          placeholder={countryMeta.phonePlaceholder}
                           style={{
                             width: '100%',
                             padding: '10px 14px',
@@ -1103,7 +1104,7 @@ function DashboardContent() {
                           type="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          placeholder="Ej. 604 444 0000"
+                          placeholder={countryMeta.landlinePlaceholder}
                           style={{
                             width: '100%',
                             padding: '10px 14px',
@@ -1708,7 +1709,7 @@ function DashboardContent() {
                           Multiplica hasta 3x tus contactos de clientes
                         </h3>
                         <p style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, lineHeight: 1.5, margin: 0 }}>
-                          Activa el <strong>Plan Verificado ($49.900)</strong> o <strong>Plan VIP Elite</strong> para desbloquear posicionamiento top y convertir más visitantes en clientes reales.
+                          Activa el <strong>{verificadoLabelWithPrice}</strong> o <strong>Plan VIP Elite</strong> para desbloquear posicionamiento top y convertir más visitantes en clientes reales.
                         </p>
                       </div>
 
@@ -1809,7 +1810,7 @@ function DashboardContent() {
                       Módulo de Reseñas disponible en Plan Verificado
                     </h3>
                     <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, lineHeight: 1.55, margin: '0 auto 22px', maxWidth: '520px' }}>
-                      En el <strong>Plan Esencial Gratis</strong> recibes contactos directos a tu WhatsApp. Para activar la recolección de reseñas de clientes, calificación por estrellas y respuestas oficiales de tu negocio, actualiza al <strong>Plan Verificado ($49.900/mes)</strong>.
+                      En el <strong>Plan Esencial Gratis</strong> recibes contactos directos a tu WhatsApp. Para activar la recolección de reseñas de clientes, calificación por estrellas y respuestas oficiales de tu negocio, actualiza al <strong>{`${verificadoLabelWithPrice}/mes`}</strong>.
                     </p>
                     <button
                       type="button"
@@ -1825,7 +1826,7 @@ function DashboardContent() {
                         gap: '6px',
                       }}
                     >
-                      <span>Activar Plan Verificado ($49.900)</span>
+                      <span>{`Activar ${verificadoLabelWithPrice}`}</span>
                       <ArrowRight size={15} />
                     </button>
                   </div>
@@ -1941,7 +1942,7 @@ function DashboardContent() {
                           {merchantUser.plan === 'vip' ? <Crown size={18} /> : merchantUser.plan === 'verificado' ? <ShieldCheck size={18} /> : <Sprout size={18} />}
                         </span>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0 }}>
-                          {merchantUser.plan === 'vip' ? 'Plan VIP Elite ($149.900 COP / mes)' : merchantUser.plan === 'verificado' ? 'Plan Verificado ($49.900 COP / mes)' : 'Plan Esencial ($0 COP / mes)'}
+                          {`${planName(currentPlan)} (${currentPlanPrice.formatted} ${countryMeta.currency} / mes)`}
                         </h3>
                       </div>
                       <p style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
@@ -1965,6 +1966,7 @@ function DashboardContent() {
                   <PlanCardsSection
                     mode="select"
                     selectedPlanId={merchantUser.plan}
+                    country={country}
                     onSelectPlan={async (newPlanId) => {
                       if (!id) {
                         setSuccessMessage('Primero guarda una ficha para asociar el plan al negocio.');

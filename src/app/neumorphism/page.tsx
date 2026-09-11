@@ -530,7 +530,7 @@ box-shadow: ${
             <Search size={18} color={p.accentColor} />
             <input
               type="text"
-              placeholder="Buscar servicio en Colombia (Ej. Clínica dental, Spa, Abogados)..."
+              placeholder="Buscar servicio (Ej. Clínica dental, Spa, Abogados)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{

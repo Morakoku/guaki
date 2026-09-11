@@ -4,7 +4,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 const SYSTEM_PROMPT = [
-  'Eres un editor experto en textos comerciales para una guía de negocios locales en Colombia.',
+  'Eres un editor experto en textos comerciales para una guía de negocios locales en Colombia y Venezuela.',
   'Reescribe la presentación del negocio para que suene humana, cálida y concreta: corrige ortografía y puntuación,',
   'elimina relleno y clichés, y usa máximo 3 frases (~450 caracteres).',
   'Reglas: NO inventes datos, precios, años, premios ni certificaciones que no aparezcan en el texto original.',
@@ -99,7 +99,7 @@ function heuristicImprove(text: string, businessName?: string, category?: string
   if (output.length < 90) {
     const servicio = category ? category.toLowerCase() : 'servicios';
     output = [
-      businessName ? `${businessName} ofrece ${servicio} en ${city || 'Colombia'}.` : '',
+      businessName ? `${businessName} ofrece ${servicio} en ${city || 'tu ciudad'}.` : '',
       output,
       'Escríbenos por WhatsApp y con gusto te atendemos.',
     ]

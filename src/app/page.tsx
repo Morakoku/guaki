@@ -587,7 +587,7 @@ export default function HomePage() {
       >
         <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textMuted }}>
-            © {new Date().getFullYear()} GUAKI 🥑 · El Directorio Local Más Fresco de Colombia
+            © {new Date().getFullYear()} GUAKI 🥑 · El Directorio Local Más Fresco de Colombia y Venezuela
           </span>
           <div style={{ display: 'flex', gap: '16px' }}>
             <Link href="/directorio" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
