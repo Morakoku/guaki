@@ -247,7 +247,7 @@ export class GuakiDataService {
     const client = getSupabaseClient();
     const { data, error } = await client
       .from('businesses')
-      .select('id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count')
+      .select('id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan')
       .eq('status', 'published')
       .limit(limit);
 
