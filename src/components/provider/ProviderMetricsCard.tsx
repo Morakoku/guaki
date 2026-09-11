@@ -34,7 +34,7 @@ export default function ProviderMetricsCard({
         {/* Tarjeta Principal: Contactos de Clientes */}
         <div
           style={{
-            padding: '24px',
+            padding: '20px 22px',
             borderRadius: TOKENS.radii.xl,
             background: 'linear-gradient(135deg, rgba(23, 56, 45, 0.06) 0%, rgba(21, 128, 61, 0.12) 100%)',
             border: '1px solid rgba(21, 128, 61, 0.22)',
@@ -73,7 +73,7 @@ export default function ProviderMetricsCard({
                 Contactos Directos
               </span>
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: 900, color: TOKENS.colors.textMain, lineHeight: 1.1 }}>
+            <div style={{ fontSize: '2.15rem', fontWeight: 900, color: TOKENS.colors.textMain, lineHeight: 1.1 }}>
               {totalDirectContacts}{' '}
               <span style={{ fontSize: '0.95rem', fontWeight: 600, color: TOKENS.colors.textSecondary }}>
                 clientes
@@ -103,7 +103,7 @@ export default function ProviderMetricsCard({
         {/* Tarjeta Secundaria: Eficiencia / Tasa de Conversión */}
         <div
           style={{
-            padding: '24px',
+            padding: '20px 22px',
             borderRadius: TOKENS.radii.xl,
             background: 'linear-gradient(135deg, rgba(231, 236, 231, 0.6) 0%, rgba(218, 226, 218, 0.9) 100%)',
             border: `1px solid ${TOKENS.colors.borderSubtle}`,
@@ -130,7 +130,7 @@ export default function ProviderMetricsCard({
                 Tasa de Contacto
               </span>
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: 900, color: TOKENS.colors.emeraldDark, lineHeight: 1.1 }}>
+            <div style={{ fontSize: '2.15rem', fontWeight: 900, color: TOKENS.colors.emeraldDark, lineHeight: 1.1 }}>
               {conversionRate}
             </div>
             <div style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary, marginTop: '4px', fontWeight: 500 }}>

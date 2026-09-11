@@ -44,6 +44,10 @@ export default function SoftBottomNav() {
     pathname.startsWith('/login');
   if (isHidden) return null;
 
+  // En el panel del comerciante el dock flota sobre el formulario en desktop;
+  // ahí la navegación superior ya cumple esa función. En móvil se conserva.
+  const authedDesktopClass = pathname.startsWith('/provider') ? ' guaki-dock-authed' : '';
+
   const openVoice = () => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(12);
     setIsVoiceOpen(true);
@@ -106,6 +110,7 @@ export default function SoftBottomNav() {
       {/* Sombra proyectada del dock (separada para que la muesca no la corte) */}
       <div
         aria-hidden
+        className={authedDesktopClass.trim() || undefined}
         style={{
           position: 'fixed',
           bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))',
@@ -124,7 +129,7 @@ export default function SoftBottomNav() {
 
       <nav
         aria-label="Navegación flotante"
-        className="soft-bottom-dock guaki-dock-enter"
+        className={`soft-bottom-dock guaki-dock-enter${authedDesktopClass}`}
         style={{
           position: 'fixed',
           bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
@@ -162,6 +167,7 @@ export default function SoftBottomNav() {
 
       {/* FAB de voz elevado sobre la muesca */}
       <div
+        className={`guaki-fab-dock-wrapper${authedDesktopClass}`}
         style={{
           position: 'fixed',
           bottom: 'calc(34px + env(safe-area-inset-bottom, 0px))',

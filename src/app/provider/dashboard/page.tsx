@@ -11,6 +11,18 @@ import {
   Check,
   LogOut,
   Share2,
+  Store,
+  BarChart3,
+  Star,
+  Gem,
+  Sprout,
+  ShieldCheck,
+  Crown,
+  Smartphone,
+  Clock,
+  Zap,
+  Palette,
+  Send,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import GuakiHeader from '@/components/ui/GuakiHeader';
@@ -420,33 +432,46 @@ function DashboardContent() {
 
   const completeness = calculateCompleteness();
 
+  const scrollToSection = (targetId: string) => {
+    if (typeof document === 'undefined') return;
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   return (
-    <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="page-fade-in provider-dashboard" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
 
-      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px 60px' }}>
+      <main className="provider-dashboard-main" style={{ maxWidth: '1100px', margin: '0 auto' }}>
         
         {/* Mensaje de Éxito Flotante */}
         {successMessage && (
           <div
+            role="status"
+            aria-live="polite"
+            className="gk-toast"
             style={{
-              padding: '14px 20px',
+              position: 'fixed',
+              top: '84px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 100001,
+              maxWidth: 'min(560px, calc(100vw - 32px))',
+              padding: '12px 20px',
               borderRadius: TOKENS.radii.pill,
-              backgroundColor: 'rgba(37, 211, 102, 0.14)',
-              border: '1px solid rgba(37, 211, 102, 0.35)',
-              color: '#15803D',
-              fontSize: '0.92rem',
+              backgroundColor: 'rgba(226, 238, 221, 0.97)',
+              border: '1px solid rgba(23, 56, 45, 0.18)',
+              color: TOKENS.colors.emeraldDark,
+              fontSize: '0.88rem',
               fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
               gap: '8px',
-              marginBottom: '24px',
-              textAlign: 'center',
-              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.15)',
+              boxShadow: '0 12px 32px rgba(18, 38, 28, 0.16)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
             }}
           >
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
             <span>{successMessage}</span>
           </div>
         )}
@@ -640,14 +665,30 @@ function DashboardContent() {
               }}
             >
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '1.4rem' }}>🏪</span>
-                  <h1 style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '13px',
+                      backgroundColor: 'rgba(23, 56, 45, 0.08)',
+                      color: TOKENS.colors.emeraldDark,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Store size={20} />
+                  </span>
+                  <h1 style={{ fontSize: 'clamp(1.35rem, 2.6vw, 1.7rem)', fontWeight: 900, letterSpacing: '-0.02em', color: TOKENS.colors.textMain, margin: 0 }}>
                     {businessName || 'Centro de Mando de tu Negocio'}
                   </h1>
                 </div>
-                <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
-                  Bienvenido, <strong>{merchantUser.name}</strong> ({merchantUser.email})
+                <p style={{ fontSize: '0.84rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
+                  Bienvenido, <strong>{merchantUser.name}</strong>{' '}
+                  <span style={{ color: TOKENS.colors.textMuted }}>· {merchantUser.email}</span>
                 </p>
               </div>
 
@@ -656,15 +697,17 @@ function DashboardContent() {
                   <Link
                     href={`/proveedores/${slug}`}
                     target="_blank"
-                    className="neu-btn-primary"
+                    className="soft-btn"
                     style={{
-                      padding: '10px 18px',
-                      fontSize: '0.84rem',
+                      padding: '10px 16px',
+                      fontSize: '0.82rem',
                       borderRadius: TOKENS.radii.pill,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px',
                       textDecoration: 'none',
+                      color: TOKENS.colors.emeraldDark,
+                      fontWeight: 800,
                     }}
                   >
                     <ExternalLink size={15} />
@@ -684,6 +727,7 @@ function DashboardContent() {
                     alignItems: 'center',
                     gap: '6px',
                     color: '#DC2626',
+                    fontWeight: 800,
                   }}
                 >
                   <LogOut size={14} />
@@ -694,63 +738,76 @@ function DashboardContent() {
 
             {/* Selector de Pestañas */}
             <div
+              className="gk-tabs"
+              role="tablist"
+              aria-label="Secciones del panel"
               style={{
                 display: 'flex',
                 gap: '10px',
-                marginBottom: '28px',
+                marginBottom: '24px',
                 overflowX: 'auto',
                 paddingBottom: '6px',
               }}
             >
               {[
-                { id: 'afiche', label: '📱 Mi Afiche & Catálogo' },
-                { id: 'metricas', label: '📊 Métricas & Leads' },
-                { id: 'resenas', label: '⭐ Reseñas & Reputación' },
-                { id: 'plan', label: '💎 Mi Plan & Verificación' },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setMerchantTab(t.id as any)}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: TOKENS.radii.pill,
-                    fontSize: '0.88rem',
-                    fontWeight: 800,
-                    backgroundColor: merchantTab === t.id ? TOKENS.colors.emeraldDark : TOKENS.colors.surfaceElevated,
-                    color: merchantTab === t.id ? TOKENS.colors.white : TOKENS.colors.textMain,
-                    border: `1px solid ${merchantTab === t.id ? TOKENS.colors.emeraldDark : TOKENS.colors.borderLight}`,
-                    boxShadow: merchantTab === t.id ? TOKENS.shadows.btnPrimary : TOKENS.shadows.btnConvex,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 160ms ease',
-                  }}
-                >
-                  {t.label}
-                </button>
-              ))}
+                { id: 'afiche', label: 'Mi Afiche & Catálogo', Icon: Store },
+                { id: 'metricas', label: 'Métricas & Leads', Icon: BarChart3 },
+                { id: 'resenas', label: 'Reseñas & Reputación', Icon: Star },
+                { id: 'plan', label: 'Mi Plan & Verificación', Icon: Gem },
+              ].map((t) => {
+                const active = merchantTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setMerchantTab(t.id as any)}
+                    style={{
+                      padding: '9px 16px',
+                      borderRadius: TOKENS.radii.pill,
+                      fontSize: '0.84rem',
+                      fontWeight: 800,
+                      backgroundColor: active ? TOKENS.colors.emeraldDark : TOKENS.colors.surfaceElevated,
+                      color: active ? TOKENS.colors.white : TOKENS.colors.textMain,
+                      border: `1px solid ${active ? TOKENS.colors.emeraldDark : TOKENS.colors.borderLight}`,
+                      boxShadow: active ? TOKENS.shadows.btnPrimary : TOKENS.shadows.btnConvex,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      transition: 'background-color 160ms ease, color 160ms ease, border-color 160ms ease',
+                    }}
+                  >
+                    <t.Icon size={15} />
+                    <span>{t.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* ── TAB 1: MI AFICHE & CATÁLOGO ── */}
             {merchantTab === 'afiche' && (
-              <div>
+              <div role="tabpanel" aria-label="Mi Afiche y Catálogo">
                 {/* Banner de Estado del Plan y Progreso del Perfil */}
                 <div
                   className="neu-level-2"
                   style={{
-                    padding: '20px 24px',
+                    padding: '18px 20px',
                     borderRadius: TOKENS.radii.xl,
-                    marginBottom: '24px',
+                    marginBottom: '20px',
                     backgroundColor: TOKENS.colors.surfaceElevated,
                     border: `1.5px solid ${merchantUser.plan === 'vip' ? '#F59E0B' : merchantUser.plan === 'verificado' ? '#15803D' : TOKENS.colors.borderLight}`,
                     boxShadow: merchantUser.plan === 'vip' ? '0 8px 24px rgba(245, 158, 11, 0.15)' : undefined,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <span
                         style={{
-                          fontSize: '0.82rem',
+                          fontSize: '0.78rem',
                           fontWeight: 900,
                           padding: '4px 12px',
                           borderRadius: TOKENS.radii.pill,
@@ -759,57 +816,76 @@ function DashboardContent() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {merchantUser.plan === 'vip' ? '👑 PLAN VIP ELITE ($149.900)' : merchantUser.plan === 'verificado' ? '✓ PLAN VERIFICADO ($49.900)' : '🌿 PLAN ESENCIAL ($0)'}
+                        {merchantUser.plan === 'vip' ? (
+                          <><Crown size={13} /> PLAN VIP ELITE ($149.900)</>
+                        ) : merchantUser.plan === 'verificado' ? (
+                          <><ShieldCheck size={13} /> PLAN VERIFICADO ($49.900)</>
+                        ) : (
+                          <><Sprout size={13} /> PLAN ESENCIAL ($0)</>
+                        )}
                       </span>
-                      <span style={{ fontSize: '0.84rem', color: TOKENS.colors.textSecondary, fontWeight: 700 }}>
+                      <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary, fontWeight: 700 }}>
                         {merchantUser.plan === 'vip' ? 'Súper Botón VIP y Posicionamiento #1' : merchantUser.plan === 'verificado' ? 'Insignia Oficial de Verificación y Ficha Dedicada' : 'Presencia Básica en el Directorio'}
                       </span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
-                        Completitud del Afiche:
+                      <span style={{ fontSize: '0.78rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>
+                        Completitud del Afiche
                       </span>
-                      <span style={{ fontSize: '0.86rem', fontWeight: 900, color: completeness === 100 ? '#15803D' : TOKENS.colors.emeraldDark }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 900, color: completeness === 100 ? '#15803D' : TOKENS.colors.emeraldDark }}>
                         {completeness}%
                       </span>
                     </div>
                   </div>
 
                   {/* Barra de Progreso */}
-                  <div style={{ width: '100%', height: '8px', backgroundColor: TOKENS.colors.surfaceInset, borderRadius: TOKENS.radii.pill, overflow: 'hidden', marginBottom: '14px' }}>
+                  <div style={{ width: '100%', height: '8px', backgroundColor: TOKENS.colors.surfaceInset, borderRadius: TOKENS.radii.pill, overflow: 'hidden', marginBottom: '12px' }}>
                     <div
                       style={{
-                        width: `${completeness}%`,
+                        width: '100%',
                         height: '100%',
                         backgroundColor: completeness === 100 ? '#15803D' : TOKENS.colors.emeraldDark,
                         borderRadius: TOKENS.radii.pill,
-                        transition: 'width 300ms ease',
+                        transform: `scaleX(${Math.max(0, Math.min(100, completeness)) / 100})`,
+                        transformOrigin: 'left center',
+                        transition: 'transform 360ms cubic-bezier(0.23, 1, 0.32, 1)',
+                        willChange: 'transform',
                       }}
                     />
                   </div>
 
-                  {/* Checklist Rápido */}
+                  {/* Checklist Rápido: cada pendiente lleva al campo que falta */}
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: businessName ? 'rgba(37,211,102,0.14)' : TOKENS.colors.surfaceInset, color: businessName ? '#15803D' : TOKENS.colors.textMuted, fontWeight: 700 }}>
-                      {businessName ? '✓ Nombre' : '• Falta Nombre'}
-                    </span>
-                    <span style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: address ? 'rgba(37,211,102,0.14)' : TOKENS.colors.surfaceInset, color: address ? '#15803D' : TOKENS.colors.textMuted, fontWeight: 700 }}>
-                      {address ? '✓ Dirección' : '• Falta Dirección'}
-                    </span>
-                    <span style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: whatsapp ? 'rgba(37,211,102,0.14)' : TOKENS.colors.surfaceInset, color: whatsapp ? '#15803D' : TOKENS.colors.textMuted, fontWeight: 700 }}>
-                      {whatsapp ? '✓ WhatsApp 1-Clic' : '• Falta WhatsApp'}
-                    </span>
-                    <span style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: services.length >= 2 ? 'rgba(37,211,102,0.14)' : TOKENS.colors.surfaceInset, color: services.length >= 2 ? '#15803D' : TOKENS.colors.textMuted, fontWeight: 700 }}>
-                      {services.length >= 2 ? `✓ Catálogo (${services.length})` : '• Falta Catálogo'}
-                    </span>
-                    {merchantUser.plan !== 'gratis' && (
-                      <span style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: description ? 'rgba(37,211,102,0.14)' : TOKENS.colors.surfaceInset, color: description ? '#15803D' : TOKENS.colors.textMuted, fontWeight: 700 }}>
-                        {description ? '✓ Presentación' : '• Falta Presentación'}
-                      </span>
-                    )}
+                    {[
+                      { done: Boolean(businessName), label: 'Nombre', target: 'field-negocio', visible: true },
+                      { done: Boolean(address), label: 'Dirección', target: 'field-direccion', visible: true },
+                      { done: Boolean(whatsapp), label: 'WhatsApp 1-Clic', target: 'field-whatsapp', visible: true },
+                      { done: services.length >= 2, label: services.length >= 2 ? `Catálogo (${services.length})` : 'Catálogo', target: 'field-catalogo', visible: true },
+                      { done: Boolean(description), label: 'Presentación', target: 'field-presentacion', visible: merchantUser.plan !== 'gratis' },
+                    ]
+                      .filter((item) => item.visible)
+                      .map((item) =>
+                        item.done ? (
+                          <span key={item.label} style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: 'rgba(37,211,102,0.14)', color: '#15803D', fontWeight: 700 }}>
+                            ✓ {item.label}
+                          </span>
+                        ) : (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => scrollToSection(item.target)}
+                            className="gk-chip-pending"
+                            title="Ir a completar este dato"
+                            style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: TOKENS.colors.surfaceInset, color: TOKENS.colors.textSecondary, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >
+                            {item.label === 'Catálogo' ? '• Falta Catálogo' : `• Falta ${item.label}`}
+                          </button>
+                        ),
+                      )}
                   </div>
                 </div>
 
@@ -835,7 +911,7 @@ function DashboardContent() {
                     }}
                   >
                     <div style={{ borderBottom: `1px solid ${TOKENS.colors.borderLight}`, paddingBottom: '10px' }}>
-                      <h2 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 4px' }}>
+                      <h2 style={{ fontSize: '1.05rem', fontWeight: 900, letterSpacing: '-0.01em', color: TOKENS.colors.textMain, margin: '0 0 4px' }}>
                         Datos del Afiche y Catálogo
                       </h2>
                       <p style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
@@ -853,6 +929,7 @@ function DashboardContent() {
                         required
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
+                        id="field-negocio"
                         placeholder="Ej. Peluquería & Estilo Laura"
                         style={{
                           width: '100%',
@@ -970,6 +1047,7 @@ function DashboardContent() {
                         required
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
+                        id="field-direccion"
                         placeholder="Ej. Carrera 43A # 14-27, El Poblado"
                         style={{
                           width: '100%',
@@ -998,6 +1076,7 @@ function DashboardContent() {
                           required
                           value={whatsapp}
                           onChange={(e) => setWhatsapp(e.target.value)}
+                          id="field-whatsapp"
                           placeholder="Ej. +57 300 123 4567"
                           style={{
                             width: '100%',
@@ -1042,8 +1121,8 @@ function DashboardContent() {
                     {/* 🕒 CONFIGURADOR VISUAL DE HORARIO DE ATENCIÓN */}
                     <div style={{ borderTop: `1px solid ${TOKENS.colors.borderLight}`, paddingTop: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <label style={{ fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, margin: 0 }}>
-                          🕒 Horario de Atención
+                        <label style={{ fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, margin: 0, display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+                          <Clock size={15} color={TOKENS.colors.emeraldDark} /> Horario de Atención
                         </label>
                         <span
                           style={{
@@ -1214,16 +1293,24 @@ function DashboardContent() {
                               border: is24h ? '1.5px solid #15803D' : `1px solid ${TOKENS.colors.borderLight}`,
                               backgroundColor: is24h ? '#DCFCE7' : TOKENS.colors.surfaceInset,
                               color: is24h ? '#15803D' : TOKENS.colors.textSecondary,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
                             }}
                           >
-                            {is24h ? '✓ 24 Horas Activo' : '⚡ 24 Horas'}
+                            {is24h ? (
+                              <><Check size={13} /> 24 Horas Activo</>
+                            ) : (
+                              <><Zap size={13} /> 24 Horas</>
+                            )}
                           </button>
                         </div>
                       </div>
                     </div>
 
                     {/* Catálogo de Servicios */}
-                    <div style={{ borderTop: `1px solid ${TOKENS.colors.borderLight}`, paddingTop: '14px' }}>
+                    <div id="field-catalogo" style={{ borderTop: `1px solid ${TOKENS.colors.borderLight}`, paddingTop: '14px' }}>
                       <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
                         Catálogo de Servicios ({services.length})
                       </label>
@@ -1295,8 +1382,8 @@ function DashboardContent() {
                     {/* SECCIÓN 2: PRESENTACIÓN, FOTO DE FONDO Y LOGO (DISPONIBLE PARA TODOS LOS PLANES) */}
                     <div style={{ borderTop: `1px solid ${TOKENS.colors.borderLight}`, paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.74rem', fontWeight: 800, padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: '#DCFCE7', color: '#15803D' }}>
-                          ✓ Personalización de Afiche
+                        <span style={{ fontSize: '0.74rem', fontWeight: 800, padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: '#DCFCE7', color: '#15803D', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          <Palette size={12} /> Personalización de Afiche
                         </span>
                         <span style={{ fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
                           Logo, Portada & Presentación Comercial
@@ -1353,6 +1440,7 @@ function DashboardContent() {
                           rows={3}
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
+                          id="field-presentacion"
                           placeholder="Describe la experiencia de tu negocio, qué te hace único y por qué los clientes deberían elegirte..."
                           style={{
                             width: '100%',
@@ -1419,8 +1507,8 @@ function DashboardContent() {
                       {/* EXCLUSIVO VIP ELITE */}
                       {merchantUser.plan === 'vip' && (
                         <div style={{ padding: '14px 16px', borderRadius: TOKENS.radii.lg, backgroundColor: '#FFFDF5', border: '1.5px solid #F59E0B' }}>
-                          <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 900, color: '#D97706', marginBottom: '6px' }}>
-                            👑 Servicio Estrella / Oferta VIP Destacada
+                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 900, color: '#D97706', marginBottom: '6px' }}>
+                            <Crown size={13} /> Servicio Estrella / Oferta VIP Destacada
                           </label>
                           <input
                             type="text"
@@ -1487,7 +1575,7 @@ function DashboardContent() {
                           boxShadow: '0 8px 20px rgba(183, 121, 31, 0.28)',
                         }}
                       >
-                        <span>🚀</span>
+                        <Send size={15} />
                         <span>Enviar a auditoría</span>
                       </button>
                     )}
@@ -1502,10 +1590,13 @@ function DashboardContent() {
                           color: '#8A5B10',
                           fontSize: '0.88rem',
                           fontWeight: 800,
-                          textAlign: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '7px',
                         }}
                       >
-                        ⏳ Ficha en revisión — el equipo de Guaki la está auditando.
+                        <Clock size={15} /> Ficha en revisión — el equipo de Guaki la está auditando.
                       </div>
                     )}
                     {hasBusiness && status === 'published' && (
@@ -1519,18 +1610,22 @@ function DashboardContent() {
                           color: TOKENS.colors.emeraldDark,
                           fontSize: '0.88rem',
                           fontWeight: 800,
-                          textAlign: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '7px',
                         }}
                       >
-                        ✓ Ficha publicada en Guaki — tus clientes ya pueden encontrarte.
+                        <CheckCircle2 size={15} /> Ficha publicada en Guaki — tus clientes ya pueden encontrarte.
                       </div>
                     )}
                   </form>
 
                   {/* Simulador Móvil en Vivo */}
                   <div style={{ position: 'sticky', top: '90px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>
-                      📱 Vista Previa Real en el Directorio
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', marginBottom: '10px', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>
+                      <Smartphone size={14} color={TOKENS.colors.emeraldDark} />
+                      <span>Vista Previa Real en el Directorio</span>
                     </div>
                     <ProviderLivePreview
                       data={{
@@ -1556,10 +1651,10 @@ function DashboardContent() {
 
             {/* ── TAB 2: MÉTRICAS & LEADS ── */}
             {merchantTab === 'metricas' && (
-              <div className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
+              <div role="tabpanel" aria-label="Métricas y Leads" className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
                 <div style={{ marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px' }}>
-                    📊 Rendimiento y Clientes Contactados
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BarChart3 size={18} color={TOKENS.colors.emeraldDark} /> Rendimiento y Clientes Contactados
                   </h2>
                   <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
                     Métricas en tiempo real de interacciones recibidas desde tu afiche comercial.
@@ -1649,16 +1744,16 @@ function DashboardContent() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <span style={{ color: '#15803D', fontWeight: 900 }}>✓</span> Sello Auditado (+40% clics WhatsApp)
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Sello Auditado (+40% clics WhatsApp)
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <span style={{ color: '#15803D', fontWeight: 900 }}>✓</span> Ficha indexable en Google
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Ficha indexable en Google
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <span style={{ color: '#15803D', fontWeight: 900 }}>✓</span> Posición #1 en búsquedas locales
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Posición #1 en búsquedas locales
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <span style={{ color: '#15803D', fontWeight: 900 }}>✓</span> Reseñas y testimonios oficiales
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Reseñas y testimonios oficiales
                       </div>
                     </div>
                   </div>
@@ -1670,10 +1765,10 @@ function DashboardContent() {
 
             {/* ── TAB 3: RESEÑAS & REPUTACIÓN ── */}
             {merchantTab === 'resenas' && (
-              <div className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
+              <div role="tabpanel" aria-label="Reseñas y Reputación" className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
                 <div style={{ marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px' }}>
-                    ⭐ Gestión de Opiniones y Reseñas
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Star size={18} color={TOKENS.colors.emeraldDark} /> Gestión de Opiniones y Reseñas
                   </h2>
                   <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
                     Sistema de valoraciones y reputación comercial en GUAKI.
@@ -1705,7 +1800,7 @@ function DashboardContent() {
                         fontSize: '1.4rem',
                       }}
                     >
-                      ⭐
+                      <Star size={26} color={TOKENS.colors.emeraldDark} />
                     </div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 8px' }}>
                       Módulo de Reseñas disponible en Plan Verificado
@@ -1803,10 +1898,10 @@ function DashboardContent() {
 
             {/* ── TAB 4: MI PLAN & VERIFICACIÓN ── */}
             {merchantTab === 'plan' && (
-              <div className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
+              <div role="tabpanel" aria-label="Mi Plan y Verificación" className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero }}>
                 <div style={{ marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px' }}>
-                    💎 Estado de Suscripción y Nivel de Verificación
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Gem size={18} color={TOKENS.colors.emeraldDark} /> Estado de Suscripción y Nivel de Verificación
                   </h2>
                   <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
                     Tu negocio cuenta actualmente con la suscripción <strong>PLAN {merchantUser.plan?.toUpperCase() || 'GRATIS'}</strong>.
@@ -1827,8 +1922,20 @@ function DashboardContent() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '1.3rem' }}>
-                          {merchantUser.plan === 'vip' ? '👑' : merchantUser.plan === 'verificado' ? '⭐' : '🌿'}
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '11px',
+                            backgroundColor: merchantUser.plan === 'vip' ? '#FEF3C7' : merchantUser.plan === 'verificado' ? 'rgba(37, 211, 102, 0.15)' : 'rgba(23, 56, 45, 0.08)',
+                            color: merchantUser.plan === 'vip' ? '#B45309' : merchantUser.plan === 'verificado' ? '#15803D' : TOKENS.colors.emeraldDark,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {merchantUser.plan === 'vip' ? <Crown size={18} /> : merchantUser.plan === 'verificado' ? <ShieldCheck size={18} /> : <Sprout size={18} />}
                         </span>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0 }}>
                           {merchantUser.plan === 'vip' ? 'Plan VIP Elite ($149.900 COP / mes)' : merchantUser.plan === 'verificado' ? 'Plan Verificado ($49.900 COP / mes)' : 'Plan Esencial ($0 COP / mes)'}

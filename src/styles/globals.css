@@ -852,3 +852,77 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .guaki-dock-enter, .guaki-fab-float.guaki-dock-enter { animation: none; }
 }
+
+/* ==========================================================================
+   Refinamiento del Panel del Comerciante (Operate)
+   - Foco visible y transiciones en campos
+   - Pestañas con scroll limpio en móvil
+   - Dock oculto en desktop dentro de /provider (la nav superior ya navega)
+   ========================================================================== */
+.provider-dashboard-main {
+  padding: 28px 16px 168px;
+}
+
+.provider-dashboard input,
+.provider-dashboard select,
+.provider-dashboard textarea {
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.provider-dashboard input:focus,
+.provider-dashboard select:focus,
+.provider-dashboard textarea:focus {
+  border-color: #17382D !important;
+  box-shadow: 0 0 0 3px rgba(23, 56, 45, 0.14) !important;
+}
+
+.provider-dashboard button:focus-visible,
+.provider-dashboard a:focus-visible,
+.provider-dashboard input:focus-visible,
+.provider-dashboard select:focus-visible,
+.provider-dashboard textarea:focus-visible {
+  outline: 2px solid #17382D;
+  outline-offset: 2px;
+}
+
+.gk-tabs {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+}
+
+.gk-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.gk-chip-pending {
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.gk-chip-pending:hover {
+  background-color: rgba(23, 56, 45, 0.08) !important;
+  color: #17382D !important;
+}
+
+@keyframes gkToastIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.gk-toast {
+  animation: gkToastIn 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@media (min-width: 1024px) {
+  .provider-dashboard-main {
+    padding: 40px 24px 96px;
+  }
+  .guaki-dock-authed {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gk-toast { animation: none; }
+}
