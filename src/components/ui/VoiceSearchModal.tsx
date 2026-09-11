@@ -67,9 +67,9 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
           setIsListening(false);
           if (event.error === 'not-allowed') {
             setErrorMessage('Permiso de micrófono denegado. Escribe tu búsqueda abajo.');
-            // Sin voz no hay flujo: mostramos el input y enfocamos una única vez.
+            // Sin voz: mostramos la barra de escritura, pero SIN autofocus
+            // (el foco abre el teclado del celular y arruina la experiencia).
             setTypingMode(true);
-            window.setTimeout(() => inputRef.current?.focus(), 150);
           } else if (event.error !== 'no-speech') {
             setErrorMessage('No detectamos audio claro. Intenta tocar de nuevo.');
           }
@@ -96,10 +96,11 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
       setTopThreeResults([]);
       setIsListening(false);
       setTypingMode(false);
-      let focusTimer: number | undefined;
+      // NUNCA autofocamos el input: el foco dispara el teclado del celular y
+      // tapa el modal. Si no hay voz soportada mostramos la barra, pero el
+      // usuario decide cuándo tocarla para escribir.
       if (!speechSupported || !recognitionRef.current) {
         setTypingMode(true);
-        focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
       }
       const listenTimer = speechSupported && recognitionRef.current
         ? window.setTimeout(() => {
@@ -111,7 +112,6 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
           }, 260)
         : undefined;
       return () => {
-        if (focusTimer) window.clearTimeout(focusTimer);
         if (listenTimer) window.clearTimeout(listenTimer);
       };
     } else if (!isOpen && recognitionRef.current) {
@@ -189,8 +189,8 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
       navigator.vibrate(10);
     }
     if (!speechSupported || !recognitionRef.current) {
+      setTypingMode(true);
       setErrorMessage('La voz no está disponible en este navegador. Escribe tu búsqueda abajo.');
-      inputRef.current?.focus();
       return;
     }
     if (isListening) {
