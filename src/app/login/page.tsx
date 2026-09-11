@@ -141,8 +141,9 @@ export default function LoginPage() {
 
   // Los cuentas recién registradas nacen 'client'; pedimos la provisión de rol
   // 'provider' (validada por sesión en servidor) para que el middleware permita
-  // /provider/dashboard. Después confirmamos con la sesión que el rol ya está
-  // aplicado antes de redirigir: evita el rebote a /login por propagación.
+  // /provider/dashboard. Después SONDEAMOS el propio middleware hasta que deje
+  // pasar: GoTrue puede tardar unos segundos en propagar el app_metadata y el
+  // primer redirect rebotaba a /login.
   const ensureProviderRole = async (result: { token: string; user?: { role?: string } | null }) => {
     if (result.user?.role === 'provider') return;
     try {
@@ -151,18 +152,20 @@ export default function LoginPage() {
         headers: { Authorization: `Bearer ${result.token}` },
       });
 
-      // Confirmación con reintentos cortos: hasta ~2.4s.
-      for (let attempt = 0; attempt < 6; attempt++) {
-        const res = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          const role = data?.user?.role;
-          if (role === 'provider' || role === 'admin') return;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 400));
+      // 20 intentos x 450ms ≈ 9s máximo: sonda al middleware real.
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const probe = await fetch('/provider/dashboard', {
+          method: 'GET',
+          redirect: 'manual',
+          cache: 'no-store',
+          credentials: 'include',
+        });
+        // Redirección del middleware => opaqueredirect (status 0). Si pasa, hay HTML 200.
+        if (probe.type !== 'opaqueredirect') return;
+        await new Promise((resolve) => setTimeout(resolve, 450));
       }
     } catch {
-      /* best-effort: el middleware reintentará en la navegación */
+      /* best-effort: si no confirma, se redirige igual y el usuario puede reintentar */
     }
   };
 
