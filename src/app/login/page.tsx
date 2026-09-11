@@ -391,6 +391,20 @@ export default function LoginPage() {
               required
               style={{ width: '100%' }}
             />
+            {mode === 'register' && (
+              <span
+                style={{
+                  display: 'block',
+                  marginTop: '6px',
+                  fontSize: '0.76rem',
+                  fontWeight: 600,
+                  color: TOKENS.colors.textSecondary,
+                  textAlign: 'left',
+                }}
+              >
+                Mínimo 6 caracteres. Usa algo que recuerdes fácil.
+              </span>
+            )}
           </div>
 
           {successMessage && (
@@ -462,7 +476,9 @@ export default function LoginPage() {
             }}
           >
             {busy
-              ? 'Verificando...'
+              ? mode === 'register'
+                ? 'Creando tu cuenta…'
+                : 'Preparando tu panel…'
               : mode === 'register'
               ? 'Crear Cuenta y Entrar'
               : 'Iniciar Sesión'}

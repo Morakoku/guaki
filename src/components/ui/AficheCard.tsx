@@ -158,7 +158,7 @@ export default function AficheCard({
         <button
           type="button"
           onClick={toggleSave}
-          aria-label={isSaved ? 'Quitar de guardados' : 'Guardar negocio en favoritos'}
+          aria-label={isSaved ? `Quitar ${afiche.name} de guardados` : `Guardar ${afiche.name} en favoritos`}
           style={{
             position: 'absolute',
             top: '12px',

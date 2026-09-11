@@ -11,6 +11,7 @@ interface SaveBusinessButtonProps {
 
 export default function SaveBusinessButton({
   businessId,
+  businessName,
 }: SaveBusinessButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
 
@@ -43,7 +44,15 @@ export default function SaveBusinessButton({
     <button
       type="button"
       onClick={toggleSave}
-      aria-label={isSaved ? 'Quitar de guardados' : 'Guardar negocio en favoritos'}
+      aria-label={
+        businessName
+          ? isSaved
+            ? `Quitar ${businessName} de guardados`
+            : `Guardar ${businessName} en favoritos`
+          : isSaved
+            ? 'Quitar de guardados'
+            : 'Guardar negocio en favoritos'
+      }
       style={{
         display: 'inline-flex',
         alignItems: 'center',
