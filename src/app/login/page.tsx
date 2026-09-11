@@ -139,15 +139,31 @@ export default function LoginPage() {
     }
   }
 
-  // Degradación: los cuentas recién registradas nacen 'client'; pedimos la
-  // provisión de rol 'provider' (validada por sesión en servidor) para que el
-  // middleware permita /provider/dashboard. Error tolerado: solo retrasa el bucle.
+  // Los cuentas recién registradas nacen 'client'; pedimos la provisión de rol
+  // 'provider' (validada por sesión en servidor) para que el middleware permita
+  // /provider/dashboard. Después confirmamos con la sesión que el rol ya está
+  // aplicado antes de redirigir: evita el rebote a /login por propagación.
   const ensureProviderRole = async (result: { token: string; user?: { role?: string } | null }) => {
     if (result.user?.role === 'provider') return;
-    await fetch('/api/provider/provision', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${result.token}` },
-    }).catch(() => undefined);
+    try {
+      await fetch('/api/provider/provision', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${result.token}` },
+      });
+
+      // Confirmación con reintentos cortos: hasta ~2.4s.
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const res = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const role = data?.user?.role;
+          if (role === 'provider' || role === 'admin') return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+    } catch {
+      /* best-effort: el middleware reintentará en la navegación */
+    }
   };
 
   return (
