@@ -32,8 +32,59 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
   const [typingMode, setTypingMode] = useState(false);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const suppressCueRef = useRef(false);
 
   const intent = parseSearchIntent(transcript, 'Medellín');
+
+  // 🔔 Señal sonora/háptica de "tu turno para hablar".
+  // Tono = funciona también en iOS (Safari no soporta vibrate).
+  const ensureAudio = () => {
+    if (typeof window === 'undefined') return null;
+    const Ctor = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctor) return null;
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctor();
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    } catch {
+      return null;
+    }
+    return audioCtxRef.current;
+  };
+
+  const playCue = (kind: 'ready' | 'done') => {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    try {
+      const t = ctx.currentTime + 0.01;
+      // 'ready': dos notas ascendentes suaves ("puedes hablar")
+      // 'done': una nota grave corta ("terminó la escucha")
+      const notes: Array<[number, number]> =
+        kind === 'ready' ? [[660, 0], [990, 0.11]] : [[523, 0], [392, 0.1]];
+      for (const [freq, offset] of notes) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t + offset);
+        gain.gain.exponentialRampToValueAtTime(0.055, t + offset + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + offset + 0.16);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + offset);
+        osc.stop(t + offset + 0.18);
+      }
+    } catch {}
+  };
+
+  const vibratePattern = (kind: 'ready' | 'done') => {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    try {
+      navigator.vibrate(kind === 'ready' ? 36 : [16, 70, 16]);
+    } catch {}
+  };
 
   // Inicializar Web Speech API
   useEffect(() => {
@@ -52,7 +103,9 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
         recognition.onstart = () => {
           setIsListening(true);
           setErrorMessage('');
-          autoSubmitRef.current = true;
+          // "Tu turno": tono + vibración para que el usuario sepa que puede hablar.
+          playCue('ready');
+          vibratePattern('ready');
         };
 
         recognition.onresult = (event: any) => {
@@ -77,11 +130,19 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
 
         recognition.onend = () => {
           setIsListening(false);
+          // Cue de cierre solo si seguimos abiertos (no cuando cerramos el modal).
+          if (!suppressCueRef.current) {
+            playCue('done');
+            vibratePattern('done');
+          }
+          suppressCueRef.current = false;
         };
 
         recognitionRef.current = recognition;
       }
     }
+    // playCue/vibratePattern usan refs estables; registrar una sola vez es intencional.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Preparar una búsqueda nueva al abrir el modal. Un solo tap = hablar:
@@ -96,6 +157,10 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
       setTopThreeResults([]);
       setIsListening(false);
       setTypingMode(false);
+      suppressCueRef.current = false;
+      // Calentamos el AudioContext dentro del gesto del usuario (iOS exige
+      // interacción para permitir audio); así el cue "puedes hablar" suena.
+      ensureAudio();
       // NUNCA autofocamos el input: el foco dispara el teclado del celular y
       // tapa el modal. Si no hay voz soportada mostramos la barra, pero el
       // usuario decide cuándo tocarla para escribir.
@@ -115,22 +180,17 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
         if (listenTimer) window.clearTimeout(listenTimer);
       };
     } else if (!isOpen && recognitionRef.current) {
+      // No queremos cue de "fin" al cerrar el modal con la escucha activa.
+      suppressCueRef.current = true;
       try {
         recognitionRef.current.stop();
       } catch {}
     }
   }, [isOpen, speechSupported]);
 
-  // Fin de la dictación → búsqueda automática. El usuario habla y obtiene
-  // resultados sin pasos intermedios (sin re-tocar el mic ni el botón de buscar).
-  const autoSubmitRef = useRef(false);
-  useEffect(() => {
-    if (!isListening && transcript.trim().length >= 3 && autoSubmitRef.current) {
-      autoSubmitRef.current = false;
-      const submitTimer = window.setTimeout(() => handleExecuteSearch(), 480);
-      return () => window.clearTimeout(submitTimer);
-    }
-  }, [isListening, transcript]);
+  // SIN auto-redirect: al terminar de dictar mostramos las tarjetas del Top-3
+  // dentro del modal para que el usuario elija (WhatsApp / ficha) o pulse
+  // "Buscar en el Directorio" si quiere la lista completa.
 
   // El modal debe comportarse como una capa de diálogo real: no desplazar el fondo
   // y permitir cerrarlo con Escape sin activar el micrófono de forma inesperada.
