@@ -35,7 +35,13 @@ export default function SoftBottomNav() {
   const pathname = usePathname();
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
 
-  const isHidden = pathname.startsWith('/admin') || pathname.startsWith('/command-center');
+  // El dock se oculta en flujos internos donde estorba: admin, command-center y
+  // autenticación (login/registro). En auth además resolvía oclusión del botón
+  // de "Crear Cuenta y Entrar" en viewports bajos.
+  const isHidden =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/command-center') ||
+    pathname.startsWith('/login');
   if (isHidden) return null;
 
   const openVoice = () => {
