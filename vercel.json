@@ -1,6 +1,12 @@
 {
   "framework": "nextjs",
   "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/cron/audit-reminders",
+      "schedule": "0 14 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/images/(.*)",

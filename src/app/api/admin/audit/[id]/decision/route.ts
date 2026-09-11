@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { GuakiDataService, getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import { validateAuditDecision } from '@/lib/validation';
+import { notifyBusinessAudit } from '@/lib/notifications';
 
 interface Props {
   params: { id: string };
@@ -50,6 +51,24 @@ export async function POST(request: NextRequest, { params }: Props) {
       auditNotes: notes,
       approvedAt: decision === 'approved' || decision === 'published' ? new Date().toISOString() : undefined,
     }, token);
+
+    // Loop transaccional (mensajes 2 y 3): aviso de aprobado / rechazo con checklist.
+    if (decision === 'rejected') {
+      await notifyBusinessAudit('audit_rejected', {
+        businessName: updated?.name || params.id,
+        businessId: params.id,
+        ownerName: updated?.ownerEmail ? updated.ownerEmail.split('@')[0] : null,
+        recipientEmail: updated?.ownerEmail || null,
+        notes: notes || null,
+      });
+    } else if (decision === 'approved' || decision === 'published') {
+      await notifyBusinessAudit('audit_approved', {
+        businessName: updated?.name || params.id,
+        businessId: params.id,
+        ownerName: updated?.ownerEmail ? updated.ownerEmail.split('@')[0] : null,
+        recipientEmail: updated?.ownerEmail || null,
+      });
+    }
 
     return NextResponse.json({
       message: `Decisión de auditoría procesada exitosamente: ${decision}`,

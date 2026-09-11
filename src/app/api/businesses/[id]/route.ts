@@ -7,6 +7,7 @@ import {
   validateBusinessPayload,
 } from '@/lib/validation';
 import { resolveInventoryAccess } from '@/lib/public_inventory_contract.mjs';
+import { notifyBusinessAudit } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -204,6 +205,13 @@ export async function PATCH(request: NextRequest, { params }: Props) {
           { status: 'in_audit', claimStatus: 'pending' },
           session,
         );
+        // Loop transaccional (mensaje 1): acuse de recepción a la cola de auditoría.
+        await notifyBusinessAudit('audit_received', {
+          businessName: updated?.name || params.id,
+          businessId: params.id,
+          ownerName: updated?.ownerEmail ? updated.ownerEmail.split('@')[0] : null,
+          recipientEmail: updated?.ownerEmail || null,
+        });
         return NextResponse.json({ business: updated, next: 'IN_AUDIT', persistence: 'supabase' });
       }
       if (action === 'audit_decision') {
