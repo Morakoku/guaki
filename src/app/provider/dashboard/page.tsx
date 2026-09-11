@@ -307,6 +307,37 @@ function DashboardContent() {
     }
   };
 
+  // 3. Enviar la ficha guardada (draft) a la cola de auditoría de Guaki.
+  // Sin este paso el admin no puede aprobar/publicar (CLAIM_PENDING_AUDIT_REQUIRED).
+  const handleSubmitAudit = async () => {
+    if (!id) {
+      setSuccessMessage('Guarda tu afiche primero para poder enviarlo a auditoría.');
+      setTimeout(() => setSuccessMessage(''), 4500);
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/businesses/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'submit_audit' }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'No se pudo enviar la ficha a auditoría.');
+      }
+      setStatus('in_audit');
+      setSuccessMessage('¡Ficha enviada a auditoría! El equipo de Guaki la revisará y la publicará si todo está correcto.');
+      setTimeout(() => setSuccessMessage(''), 6000);
+    } catch (err: any) {
+      setSuccessMessage(err?.message || 'Error al enviar a auditoría. Intenta de nuevo.');
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const completeness = calculateCompleteness();
 
   return (
@@ -1370,6 +1401,68 @@ function DashboardContent() {
                       <Check size={18} />
                       <span>{isSubmitting ? 'Guardando Catálogo...' : 'Guardar y Publicar Cambios'}</span>
                     </button>
+
+                    {/* Flujo de auditoría: borrador → en revisión → publicado */}
+                    {hasBusiness && status === 'draft' && (
+                      <button
+                        type="button"
+                        onClick={handleSubmitAudit}
+                        disabled={isSubmitting}
+                        style={{
+                          padding: '14px 28px',
+                          fontSize: '0.96rem',
+                          fontWeight: 800,
+                          borderRadius: TOKENS.radii.pill,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          marginTop: '4px',
+                          backgroundColor: '#B7791F',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          boxShadow: '0 8px 20px rgba(183, 121, 31, 0.28)',
+                        }}
+                      >
+                        <span>🚀</span>
+                        <span>Enviar a auditoría</span>
+                      </button>
+                    )}
+                    {hasBusiness && status === 'in_audit' && (
+                      <div
+                        style={{
+                          marginTop: '4px',
+                          padding: '12px 16px',
+                          borderRadius: TOKENS.radii.pill,
+                          backgroundColor: 'rgba(183, 121, 31, 0.12)',
+                          border: '1px solid rgba(183, 121, 31, 0.3)',
+                          color: '#8A5B10',
+                          fontSize: '0.88rem',
+                          fontWeight: 800,
+                          textAlign: 'center',
+                        }}
+                      >
+                        ⏳ Ficha en revisión — el equipo de Guaki la está auditando.
+                      </div>
+                    )}
+                    {hasBusiness && status === 'published' && (
+                      <div
+                        style={{
+                          marginTop: '4px',
+                          padding: '12px 16px',
+                          borderRadius: TOKENS.radii.pill,
+                          backgroundColor: 'rgba(46, 112, 82, 0.12)',
+                          border: '1px solid rgba(46, 112, 82, 0.3)',
+                          color: TOKENS.colors.emeraldDark,
+                          fontSize: '0.88rem',
+                          fontWeight: 800,
+                          textAlign: 'center',
+                        }}
+                      >
+                        ✓ Ficha publicada en Guaki — tus clientes ya pueden encontrarte.
+                      </div>
+                    )}
                   </form>
 
                   {/* Simulador Móvil en Vivo */}
