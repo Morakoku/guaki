@@ -192,7 +192,10 @@ export default function ProviderServicesView({
                   </div>
                 )}
 
-                {/* Acordeón '¿Qué incluye este procedimiento?' */}
+                {/* Acordeón '¿Qué incluye este servicio?' — solo si el servicio
+                    trae detalles reales. Sin includes, el botón desplegaba nada
+                    (UI muerta); se oculta hasta que el comerciante los publique. */}
+                {Array.isArray(srv.includes) && srv.includes.length > 0 && (
                 <div style={{ marginTop: '4px' }}>
                   <button
                     type="button"
@@ -214,7 +217,7 @@ export default function ProviderServicesView({
                     {isExpanded ? 'Ocultar detalles' : '¿Qué incluye este servicio?'}
                   </button>
 
-                  {isExpanded && srv.includes && (
+                  {isExpanded && (
                     <ul
                       style={{
                         margin: '8px 0 0',
@@ -237,6 +240,7 @@ export default function ProviderServicesView({
                     </ul>
                   )}
                 </div>
+                )}
               </div>
 
               {/* Fila Inferior: Precio + Botón WhatsApp */}
