@@ -86,6 +86,28 @@ export async function GET(request: NextRequest) {
     const publicInventory = filterPublicInventory(items, {});
     items = access.authorized ? filterInventoryItems(items, filters) : filterPublicInventory(items, filters);
 
+    // Ranking público: los planes de pago tienen prioridad prometida en búsquedas
+    // (VIP #1 absoluto, Verificado con prioridad, Gratis estándar). Dentro del
+    // mismo plan: guakiScore → rating → más reciente.
+    const PLAN_RANK: Record<string, number> = {
+      vip: 3, elite: 3, premium: 3,
+      pro: 2,
+      verificado: 1, verified: 1, presencia: 1, visibilidad: 1,
+      gratis: 0, free: 0, basico: 0, básico: 0,
+    };
+    if (Array.isArray(items) && (!access.authorized || status === 'published')) {
+      items = [...items].sort((a, b) => {
+        const rank = (item: typeof a) => PLAN_RANK[String(item.plan || '').toLowerCase()] ?? 1;
+        const rankDiff = rank(b) - rank(a);
+        if (rankDiff !== 0) return rankDiff;
+        const scoreDiff = Number(b.guakiScore ?? 0) - Number(a.guakiScore ?? 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        const ratingDiff = Number(b.rating ?? 0) - Number(a.rating ?? 0);
+        if (ratingDiff !== 0) return ratingDiff;
+        return String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? ''));
+      });
+    }
+
     if (limit && limit > 0) {
       items = items.slice(0, limit);
     }
