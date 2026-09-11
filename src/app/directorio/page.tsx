@@ -1,7 +1,22 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import GuakiHeader from '../../components/ui/GuakiHeader';
 import { TOKENS } from '../../lib/design-tokens';
+import { absoluteUrl } from '@/lib/site';
 import DirectoryClient from './DirectoryClient';
+
+export const metadata: Metadata = {
+  title: 'Directorio de Negocios y Servicios Verificados en Colombia | Guaki',
+  description:
+    'Explora comercios, profesionales y servicios en Colombia. Compara fichas con fotos, horarios y reseñas, y contacta directo por WhatsApp sin intermediarios.',
+  alternates: { canonical: absoluteUrl('/directorio') },
+  openGraph: {
+    title: 'Directorio de Negocios y Servicios Verificados | Guaki',
+    description: 'Comercios y profesionales cerca de ti, con contacto directo por WhatsApp.',
+    url: absoluteUrl('/directorio'),
+    type: 'website',
+  },
+};
 
 function DirectorySeoHeading() {
   return (

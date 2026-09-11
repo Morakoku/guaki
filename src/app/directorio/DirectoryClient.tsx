@@ -25,10 +25,13 @@ export default function DirectoryClient() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q') || '';
   const initialCity = searchParams.get('city') || '';
+  // Deep-link de categoría: /directorio?cat=veterinaria (usado por el home
+  // y por enlaces externos). Acepta también "category".
+  const initialCat = searchParams.get('cat') || searchParams.get('category') || 'todos';
 
   const [query, setQuery] = useState(initialQ);
   const [selectedCity, setSelectedCity] = useState(initialCity);
-  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCat);
   const [onlyOpenNow, setOnlyOpenNow] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'card' | 'list' | 'map'>('card');

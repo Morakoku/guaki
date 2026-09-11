@@ -217,7 +217,7 @@ export default function HomePage() {
         {/* Botón Ver Más */}
         <div style={{ textAlign: 'center', marginTop: '36px' }}>
           <Link
-            href="/directorio"
+            href={activeCategory === 'todos' ? '/directorio' : `/directorio?cat=${encodeURIComponent(activeCategory)}`}
             className="neu-btn-primary"
             style={{
               display: 'inline-flex',
