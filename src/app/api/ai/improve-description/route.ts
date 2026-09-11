@@ -11,6 +11,65 @@ const SYSTEM_PROMPT = [
   'Mantén el idioma español. Devuelve únicamente el texto final, sin comillas ni explicaciones.',
 ].join(' ');
 
+const ACCENT_FIXES: Record<string, string> = {
+  atencion: 'atención',
+  rapida: 'rápida',
+  rapido: 'rápido',
+  economicos: 'económicos',
+  economicas: 'económicas',
+  economico: 'económico',
+  economica: 'económica',
+  barberia: 'barbería',
+  odontologia: 'odontología',
+  peluqueria: 'peluquería',
+  clinica: 'clínica',
+  medico: 'médico',
+  medica: 'médica',
+  envio: 'envío',
+  envios: 'envíos',
+  unico: 'único',
+  unica: 'única',
+  facil: 'fácil',
+  tambien: 'también',
+  informacion: 'información',
+  direccion: 'dirección',
+  garantia: 'garantía',
+  numero: 'número',
+  telefono: 'teléfono',
+  visitanos: 'visítanos',
+  llamanos: 'llámanos',
+  contactanos: 'contáctanos',
+  agendate: 'agéndate',
+  pidelo: 'pídelo',
+  solicitalo: 'solicítalo',
+  exito: 'éxito',
+  anos: 'años',
+  servicio: 'servicio',
+  servicios: 'servicios',
+  experiencia: 'experiencia',
+  profesional: 'profesional',
+  profesion: 'profesión',
+};
+
+function fixAccents(output: string): string {
+  return output.replace(/\b([a-záéíóúñ]+)\b/gi, (word) => {
+    const replacement = ACCENT_FIXES[word.toLowerCase()];
+    if (!replacement) return word;
+    return word[0] === word[0].toUpperCase()
+      ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+      : replacement;
+  });
+}
+
+function restoreProperNames(output: string, values: string[]): string {
+  return values.filter(Boolean).reduce((acc, value) => {
+    const stripped = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!stripped || stripped.toLowerCase() === value.toLowerCase()) return acc;
+    const escaped = stripped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return acc.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), value);
+  }, output);
+}
+
 function heuristicImprove(text: string, businessName?: string, category?: string, city?: string): string {
   let output = text
     .replace(/\s+/g, ' ')
@@ -18,8 +77,17 @@ function heuristicImprove(text: string, businessName?: string, category?: string
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/([,.;:!?])(?=[^\s\d])/g, '$1 ')
     .replace(/\.{2,}/g, '.')
-    .replace(/([.!?]\s+)([a-záéíóúñ])/g, (_match, prefix: string, letter: string) => prefix + letter.toUpperCase());
+    .replace(/!{2,}/g, '!');
 
+  output = fixAccents(output);
+  output = restoreProperNames(output, [businessName || '', city || '', category || '']);
+
+  output = output.replace(
+    /[,;]?\s+(ven\b|visítanos\b|llámanos\b|contáctanos\b|escríbenos\b|agéndate\b|solicita\b|pide\b)/gi,
+    (_match, cta: string) => `. ${cta.charAt(0).toUpperCase()}${cta.slice(1)}`,
+  );
+
+  output = output.replace(/([.!?]\s+)([a-záéíóúñ])/g, (_match, prefix: string, letter: string) => prefix + letter.toUpperCase());
   output = output.charAt(0).toUpperCase() + output.slice(1);
   if (!/[.!?…]$/.test(output)) output += '.';
 

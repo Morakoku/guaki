@@ -404,8 +404,12 @@ function DashboardContent() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.text) throw new Error(data.error || 'No se pudo mejorar el texto.');
       setDescription(data.text);
-      setSuccessMessage('Propuesta del asistente lista. Revísala y guarda los cambios.');
-      setTimeout(() => setSuccessMessage(''), 5000);
+      setSuccessMessage(
+        data.engine === 'heuristic'
+          ? 'Se aplicó una mejora base (asistente IA sin activar). Revísala y guarda los cambios.'
+          : 'Propuesta del asistente lista. Revísala y guarda los cambios.',
+      );
+      setTimeout(() => setSuccessMessage(''), 5500);
     } catch (err: any) {
       setSuccessMessage(err?.message || 'No se pudo mejorar el texto. Intenta de nuevo.');
       setTimeout(() => setSuccessMessage(''), 5000);
