@@ -11,6 +11,26 @@ const ALLOWED_EVENTS = new Set([
 ]);
 
 const MAX_METADATA_BYTES = 4096;
+const FORBIDDEN_METADATA_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function sanitizeMetadata(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const output: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (!key || key.length > 64 || FORBIDDEN_METADATA_KEYS.has(key)) continue;
+    if (value === null || typeof value === 'number' || typeof value === 'boolean') {
+      output[key] = value;
+    } else if (typeof value === 'string') {
+      output[key] = value.slice(0, 500);
+    } else if (Array.isArray(value)) {
+      output[key] = value
+        .slice(0, 20)
+        .filter((item) => item === null || ['string', 'number', 'boolean'].includes(typeof item))
+        .map((item) => (typeof item === 'string' ? item.slice(0, 200) : item));
+    }
+  }
+  return output;
+}
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -29,10 +49,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'EVENT_NOT_ALLOWED' }, { status: 400 });
   }
 
-  const metadata =
-    payload?.metadata && typeof payload.metadata === 'object' && !Array.isArray(payload.metadata)
-      ? payload.metadata
-      : {};
+  const metadata = sanitizeMetadata(payload?.metadata);
 
   try {
     if (JSON.stringify(metadata).length > MAX_METADATA_BYTES) {

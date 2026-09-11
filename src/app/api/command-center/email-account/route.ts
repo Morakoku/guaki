@@ -17,6 +17,12 @@ function safeMapacheUrl(): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  // H-05 FIX (audit v2): defense in depth — this route handles SMTP credentials and
+  // must never run in production, independently of the middleware gate.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+  }
+
   const api = safeMapacheUrl();
   if (!api) return blocked('Solo se permite conectar Mapache en localhost.', 503);
 

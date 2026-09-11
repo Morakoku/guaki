@@ -221,10 +221,10 @@ export const VeyraStore = {
     return [...projects];
   },
   getProjectByToken(token: string): VeyraClientProject | null {
-    return projects.find((p) => p.token === token || p.id === token) ?? null;
+    return projects.find((p) => p.token === token) ?? null;
   },
   approveProjectOption(token: string, approvalId: string, selectedOption: string): VeyraClientProject | null {
-    const project = projects.find((p) => p.token === token || p.id === token);
+    const project = projects.find((p) => p.token === token);
     if (!project || !project.pendingApproval || project.pendingApproval.id !== approvalId) return null;
 
     project.pendingApproval.selectedOption = selectedOption;

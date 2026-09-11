@@ -50,13 +50,14 @@ export async function GET(request: NextRequest, { params }: Props) {
   try {
     const token = request.cookies.get('guaki_session')?.value;
     let business;
+    let actor: { id: string; role?: string } | null = null;
     if (isSupabaseConfigured()) {
       if (token && !token.startsWith('dev-') && !token.startsWith('usr_local_')) {
-        const { data: actor, error: actorError } = await getSupabaseClient().auth.getUser(token);
-        if (actorError || !actor.user) return NextResponse.json({ error: 'SESSION_INVALID' }, { status: 401 });
+        const { data: actorData, error: actorError } = await getSupabaseClient().auth.getUser(token);
+        if (actorError || !actorData.user) return NextResponse.json({ error: 'SESSION_INVALID' }, { status: 401 });
+        actor = { id: actorData.user.id, role: actorData.user.app_metadata?.role };
         business = await GuakiDataService.getBusinessByIdWithToken(params.id, token);
-        const role = actor.user.app_metadata?.role;
-        if (business && role === 'provider' && business.ownerId !== actor.user.id) {
+        if (business && actor.role === 'provider' && business.ownerId !== actor.id) {
           return NextResponse.json({ error: 'BUSINESS_NOT_ACCESSIBLE' }, { status: 404 });
         }
       } else {
@@ -77,9 +78,7 @@ export async function GET(request: NextRequest, { params }: Props) {
 
     // H-07 FIX: Strip sensitive PII (ownerEmail, ownerId, auditNotes) for public consumers
     let safeBusiness = business;
-    const actorId = token && isSupabaseConfigured() ? (await getSupabaseClient().auth.getUser(token)).data?.user?.id : null;
-    const actorRole = token && isSupabaseConfigured() ? (await getSupabaseClient().auth.getUser(token)).data?.user?.app_metadata?.role : null;
-    const isOwnerOrAdmin = actorRole === 'admin' || (actorId && business.ownerId === actorId);
+    const isOwnerOrAdmin = actor?.role === 'admin' || Boolean(actor?.id && business.ownerId === actor.id);
 
     if (!isOwnerOrAdmin) {
       const { ownerEmail, ownerId, auditNotes, ...publicFields } = business as any;

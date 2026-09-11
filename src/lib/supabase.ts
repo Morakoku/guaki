@@ -6,6 +6,7 @@ import type { BusinessRecord, BusinessInquiry, BusinessReview, BusinessStatus } 
 // ==============================================================================
 
 let cachedClient: SupabaseClient | null = null;
+let cachedClientKey = '';
 
 // H-01 FIX (audit v2): PostgREST filters are string-interpolated; reject any id/slug
 // that could inject filter operators (commas, dots, parentheses, quotes).
@@ -29,13 +30,15 @@ function getSupabaseConfig(): { url: string; anonKey: string } {
 }
 
 export function getSupabaseClient(): SupabaseClient {
-  if (cachedClient) return cachedClient;
   const { url, anonKey } = getSupabaseConfig();
+  const configKey = `${url}|${anonKey}`;
+  if (cachedClient && cachedClientKey === configKey) return cachedClient;
   cachedClient = createClient(url, anonKey, {
     auth: {
       persistSession: false,
     },
   });
+  cachedClientKey = configKey;
   return cachedClient;
 }
 

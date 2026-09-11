@@ -5,6 +5,19 @@ import { VEYRA_ENTERPRISE_LEADS } from '@/lib/veyra_enterprise_leads';
 const MAPACHE_API = (process.env.MAPACHE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
 const TENANT_ID = process.env.MAPACHE_TENANT_ID ?? '';
 
+// H-07 FIX (audit v2): the local fallback must not echo contact PII even to the
+// founder's browser; masks keep the shape while hiding emails and phones.
+function maskEmail(value: string): string {
+  const [user = '', domain] = value.split('@');
+  if (!domain) return '***';
+  return `${user.slice(0, 2)}***@${domain}`;
+}
+
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  return digits.length > 4 ? `***${digits.slice(-4)}` : '***';
+}
+
 export async function GET() {
   try {
     const response = await fetch(`${MAPACHE_API}/api/v1/command-center/trinidad/routing`, {
@@ -29,8 +42,8 @@ export async function GET() {
     name: l.name,
     category: l.category,
     city: l.city,
-    phone: l.phone,
-    email: l.email,
+    phone: maskPhone(l.phone),
+    email: maskEmail(l.email),
     rating: l.rating,
     score: l.score,
     destination: 'VEYRA' as const,

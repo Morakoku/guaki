@@ -14,7 +14,7 @@ function loginRedirect(request: NextRequest, status: 401 | 403 = 401, error: str
 }
 
 // 🚫 148. Detección perimetral de ataques (SQLi, XSS, Path Traversal)
-const THREAT_REGEX = /(\.\.\/|\.\.\\|union\s+select|information_schema|<script|alert\(|javascript:|wp-login|\.env|\.git)/i;
+const THREAT_REGEX = /(\.\.\/|\.\.\\|union\s+select|or\s+1=1|information_schema|<script|%3cscript|onerror\s*=|onload\s*=|javascript:|data:text\/html|wp-login|wp-admin|\.env|\.git|__proto__|etc\/passwd)/i;
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;

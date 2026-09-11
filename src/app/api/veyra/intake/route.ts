@@ -33,20 +33,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // H-13 FIX (audit v2): validate email format and bound every free-text field.
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailPattern.test(String(payload.email).trim())) {
+      return NextResponse.json({ error: 'INVALID_EMAIL' }, { status: 400 });
+    }
+
+    const cap = (value: unknown, max: number) =>
+      typeof value === 'string' ? value.trim().slice(0, max) : undefined;
+
     const newIntake = VeyraStore.createIntake({
-      name: payload.name,
-      companyName: payload.company_name || payload.companyName,
-      email: payload.email,
-      phone: payload.phone || '',
-      city: payload.city || '',
-      sector: payload.sector || '',
-      companySize: payload.company_size || payload.companySize,
-      priority: payload.priority,
-      goal: payload.goal || '',
-      bottleneck: payload.bottleneck || '',
-      servicesNeeded: payload.services_needed || payload.servicesNeeded,
-      systems: payload.systems,
-      budget: payload.budget,
+      name: cap(payload.name, 120) || '',
+      companyName: cap(payload.company_name || payload.companyName, 160) || '',
+      email: cap(payload.email, 160) || '',
+      phone: cap(payload.phone, 40) || '',
+      city: cap(payload.city, 80) || '',
+      sector: cap(payload.sector, 80) || '',
+      companySize: cap(payload.company_size || payload.companySize, 40),
+      priority: cap(payload.priority, 40),
+      goal: cap(payload.goal, 1200) || '',
+      bottleneck: cap(payload.bottleneck, 1200) || '',
+      servicesNeeded: cap(payload.services_needed || payload.servicesNeeded, 600),
+      systems: cap(payload.systems, 600),
+      budget: cap(payload.budget, 60),
     });
 
     const newReport = (newIntake as unknown as { report: { id: string } }).report;

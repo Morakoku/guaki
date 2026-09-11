@@ -4,7 +4,7 @@ import { getTrustedRole, isAuthorizationFailure } from '@/lib/authorization';
 
 export const dynamic = 'force-dynamic';
 
-async function resolveActor(request: NextRequest, email: string) {
+async function resolveActor(request: NextRequest) {
   const token = request.cookies.get('guaki_session')?.value;
   if (!token) return { error: 'AUTH_REQUIRED', status: 401 as const };
   if (!isSupabaseConfigured()) return { error: 'AUTH_PROVIDER_NOT_CONFIGURED', status: 503 as const };
@@ -12,20 +12,21 @@ async function resolveActor(request: NextRequest, email: string) {
   if (error || !data.user) return { error: 'SESSION_INVALID', status: 401 as const };
   const role = getTrustedRole(data.user);
   if (role !== 'provider') return { error: 'PROVIDER_REQUIRED', status: 403 as const };
+  // H-12 FIX (audit v2): identity email must come from the verified session, never the body.
+  const accountEmail = (data.user.email || '').trim().toLowerCase();
+  if (!accountEmail) return { error: 'VERIFIED_EMAIL_REQUIRED', status: 403 as const };
   return {
     token,
     actor: {
       userId: data.user.id,
-      email: data.user.email || email,
+      email: accountEmail,
       role,
     },
   };
 }
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const body = await request.json().catch(() => ({}));
-  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-  const resolved = await resolveActor(request, email);
+  const resolved = await resolveActor(request);
   if ('error' in resolved) return NextResponse.json({ error: resolved.error }, { status: resolved.status });
 
   if (resolved.token && isSupabaseConfigured()) {
