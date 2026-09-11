@@ -15,7 +15,12 @@ function providerImage(record) {
 }
 
 function planOrUndefined(value) {
-  return ['free', 'verificado', 'pro', 'vip'].includes(value) ? value : undefined;
+  const v = String(value ?? '').toLowerCase().trim();
+  if (['free', 'gratis', 'basico', 'básico'].includes(v)) return 'free';
+  if (['verificado', 'verified'].includes(v)) return 'verificado';
+  if (['pro', 'premium'].includes(v)) return 'pro';
+  if (v === 'vip' || v === 'elite') return 'vip';
+  return undefined;
 }
 
 export function mapPublicBusinessToAfiche(record) {
