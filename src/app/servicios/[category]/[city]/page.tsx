@@ -175,7 +175,7 @@ export default async function SeoCategoryCityPage({ params }: Props) {
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '36px 20px 80px' }}>
         {/* Breadcrumbs */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontSize: '0.85rem', color: TOKENS.colors.textSecondary }}>
+        <nav aria-label="Ruta de navegación" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontSize: '0.85rem', color: TOKENS.colors.textSecondary }}>
           <Link href="/" style={{ color: TOKENS.colors.textSecondary, textDecoration: 'none', fontWeight: 600 }}>Inicio</Link>
           <span>/</span>
           <Link href="/directorio" style={{ color: TOKENS.colors.textSecondary, textDecoration: 'none', fontWeight: 600 }}>Directorio</Link>
@@ -200,10 +200,57 @@ export default async function SeoCategoryCityPage({ params }: Props) {
         </SoftCard>
 
         {/* Providers Grid */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-          {providers.map((provider) => (
-            <BusinessCard key={provider.id} business={provider} />
-          ))}
+        <section aria-labelledby="resultados-heading">
+          <h2
+            id="resultados-heading"
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 800,
+              color: TOKENS.colors.textMain,
+              margin: '0 0 18px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {providers.length > 0
+              ? `${providers.length} ${providers.length === 1 ? 'negocio publicado' : 'negocios publicados'} en ${cityFormatted}`
+              : `Negocios en ${cityFormatted}`}
+          </h2>
+
+          {providers.length === 0 ? (
+            <div
+              style={{
+                padding: '44px 24px',
+                textAlign: 'center',
+                borderRadius: TOKENS.radii.lg,
+                backgroundColor: TOKENS.colors.surfaceElevated,
+                border: `1px dashed ${TOKENS.colors.borderLight}`,
+              }}
+            >
+              <p style={{ fontSize: '0.95rem', color: TOKENS.colors.textSecondary, margin: '0 0 14px' }}>
+                Aún no hay negocios publicados en esta categoría y ciudad. Muy pronto verás fichas aquí.
+              </p>
+              <Link
+                href="/directorio"
+                className="soft-btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  padding: '10px 20px',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  borderRadius: TOKENS.radii.pill,
+                }}
+              >
+                Explorar todo el Directorio
+              </Link>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+              {providers.map((provider) => (
+                <BusinessCard key={provider.id} business={provider} />
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>
