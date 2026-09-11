@@ -19,12 +19,21 @@ export async function POST(request: NextRequest) {
     const host = 'guakiweb.vercel.app';
     const key = process.env.INDEXNOW_KEY || 'guaki-indexnow-master-key-2026';
 
-    // H-09 FIX: Strictly validate that all URLs belong to the legitimate domain.
-    // Prevent open relay abuse.
+    const allowedHosts = new Set([
+      host,
+      'localhost',
+      'guaki.co',
+      'guaki.com.co',
+      'guaki.vercel.app',
+      'guaki-morakokus-projects.vercel.app',
+    ]);
+
+    // H-04 FIX (audit v2): no `endsWith('.vercel.app')` — that turned this route
+    // into an open relay for any third-party Vercel deployment.
     const sanitizedUrls = urls.filter((u) => {
       try {
         const parsed = new URL(u);
-        return parsed.hostname === host || parsed.hostname === 'localhost' || parsed.hostname === 'guaki.co' || parsed.hostname.endsWith('.vercel.app');
+        return allowedHosts.has(parsed.hostname);
       } catch {
         return false;
       }

@@ -7,6 +7,10 @@ import type { BusinessRecord, BusinessInquiry, BusinessReview, BusinessStatus } 
 
 let cachedClient: SupabaseClient | null = null;
 
+// H-01 FIX (audit v2): PostgREST filters are string-interpolated; reject any id/slug
+// that could inject filter operators (commas, dots, parentheses, quotes).
+const SAFE_BUSINESS_IDENTIFIER = /^[A-Za-z0-9_-]{1,120}$/;
+
 export function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // M-03 FIX: Never fall back to SERVICE_ROLE_KEY — it bypasses RLS.
@@ -293,6 +297,7 @@ export class GuakiDataService {
 
   static async getBusinessById(id: string): Promise<BusinessRecord | null> {
     if (!isSupabaseConfigured()) return null;
+    if (!SAFE_BUSINESS_IDENTIFIER.test(id)) return null;
     const client = getSupabaseClient();
     const { data, error } = await client
       .from('businesses')
@@ -337,6 +342,7 @@ export class GuakiDataService {
 
   static async getBusinessByIdWithToken(id: string, accessToken: string): Promise<BusinessRecord | null> {
     if (!isSupabaseConfigured()) return null;
+    if (!SAFE_BUSINESS_IDENTIFIER.test(id)) return null;
     const client = getSupabaseClientForAccessToken(accessToken);
     const { data, error } = await client.from('businesses').select('*').or(`id.eq.${id},slug.eq.${id}`).maybeSingle();
     if (error || !data) return null;

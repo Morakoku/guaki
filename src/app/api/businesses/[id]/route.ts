@@ -181,13 +181,15 @@ export async function PATCH(request: NextRequest, { params }: Props) {
       if (!accessibleBusiness) {
         return NextResponse.json({ error: 'FORBIDDEN', code: 'BUSINESS_NOT_ACCESSIBLE' }, { status: 403 });
       }
-      if (
-        actor.user.app_metadata?.role !== 'admin' &&
-        accessibleBusiness.ownerId &&
-        accessibleBusiness.ownerId !== actor.user.id &&
-        accessibleBusiness.ownerEmail !== actor.user.email
-      ) {
-        return NextResponse.json({ error: 'FORBIDDEN', code: 'BUSINESS_NOT_ACCESSIBLE' }, { status: 403 });
+      // H-02 FIX (audit v2): deny when the business has no owner on record — the
+      // previous `ownerId &&` short-circuit let ANY provider edit ownerless rows.
+      if (actor.user.app_metadata?.role !== 'admin') {
+        const isOwner =
+          (Boolean(accessibleBusiness.ownerId) && accessibleBusiness.ownerId === actor.user.id) ||
+          (Boolean(accessibleBusiness.ownerEmail) && accessibleBusiness.ownerEmail === actor.user.email);
+        if (!isOwner) {
+          return NextResponse.json({ error: 'FORBIDDEN', code: 'BUSINESS_NOT_ACCESSIBLE' }, { status: 403 });
+        }
       }
       if (action === 'update_inquiry') {
         const { inquiryId, status } = payload;

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         fullName: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'Usuario',
         role: getTrustedRole(data.user),
       },
-    });
+    }, { headers: { 'Cache-Control': 'no-store, private' } });
   } catch {
     return NextResponse.json({ error: 'AUTH_PROVIDER_UNAVAILABLE' }, { status: 503 });
   }

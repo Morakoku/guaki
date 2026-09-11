@@ -31,5 +31,5 @@ export async function GET(request: NextRequest) {
     summary,
     queue,
     refreshedAt: new Date().toISOString(),
-  });
+  }, { headers: { 'Cache-Control': 'no-store, private' } });
 }
