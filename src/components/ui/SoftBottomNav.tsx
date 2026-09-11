@@ -48,7 +48,7 @@ export default function SoftBottomNav() {
   const business = NAV_ITEMS[2];
   const about = NAV_ITEMS[3];
 
-  const renderItem = (item: NavItem, side: 'left' | 'right') => {
+  const renderItem = (item: NavItem) => {
     const active = item.match(pathname);
     const { Icon } = item;
     return (
@@ -144,14 +144,14 @@ export default function SoftBottomNav() {
           maskImage: 'radial-gradient(circle 34px at 50% 0, transparent 32px, black 33px)',
         }}
       >
-        {renderItem(left, 'left')}
-        {renderItem(explore, 'left')}
+        {renderItem(left)}
+        {renderItem(explore)}
 
         {/* Espacio del FAB */}
         <div style={{ width: '68px', flexShrink: 0 }} aria-hidden />
 
-        {renderItem(business, 'right')}
-        {renderItem(about, 'right')}
+        {renderItem(business)}
+        {renderItem(about)}
       </nav>
 
       {/* FAB de voz elevado sobre la muesca */}

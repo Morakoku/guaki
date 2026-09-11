@@ -1,26 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
   Search,
   MapPin,
   Star,
-  CheckCircle2,
-  Phone,
   MessageCircle,
-  Sliders,
   Palette,
-  Eye,
   ArrowRight,
   ShieldCheck,
   Zap,
   Globe,
-  RefreshCw,
-  Layers,
   ChevronRight,
-  Flame,
   LayoutGrid,
 } from 'lucide-react';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
@@ -147,7 +140,7 @@ export default function GradientMeshShowcase() {
   const [selectedTheme, setSelectedTheme] = useState<MeshTheme>(MESH_THEMES[0]);
   const [blurIntensity, setBlurIntensity] = useState<number>(60);
   const [meshAnimation, setMeshAnimation] = useState<boolean>(true);
-  const [meshOpacity, setMeshOpacity] = useState<number>(0.85);
+  const [meshOpacity] = useState<number>(0.85);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');

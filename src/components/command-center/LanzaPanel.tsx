@@ -4,7 +4,6 @@ import React from 'react';
 import {
   Rocket,
   CheckCircle2,
-  Zap,
   Layers,
   FileCheck,
   TrendingUp

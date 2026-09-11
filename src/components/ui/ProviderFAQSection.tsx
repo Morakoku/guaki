@@ -7,14 +7,12 @@ import { buildProviderFaqs, ProviderFaq } from '@/lib/provider_faq';
 
 interface ProviderFAQSectionProps {
   businessName: string;
-  category: string;
   city: string;
   phone: string;
 }
 
 export default function ProviderFAQSection({
   businessName,
-  category,
   city,
   phone,
 }: ProviderFAQSectionProps) {

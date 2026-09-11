@@ -6,12 +6,11 @@ import { TOKENS } from '../../lib/design-tokens';
 
 interface SaveBusinessButtonProps {
   businessId: string;
-  businessName: string;
+  businessName?: string;
 }
 
 export default function SaveBusinessButton({
   businessId,
-  businessName,
 }: SaveBusinessButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
 

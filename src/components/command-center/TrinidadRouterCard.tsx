@@ -9,8 +9,6 @@ import {
   RefreshCw,
   Send,
   CheckCircle2,
-  MapPin,
-  Check,
   AlertCircle,
 } from 'lucide-react';
 import { StatusPill } from './AdminDashboard';

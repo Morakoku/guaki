@@ -13,12 +13,16 @@ test('mapache control describes local activation without the blocked-gates messa
 test('pending panel reports evidence-backed states instead of permanent UNKNOWN cards', async () => {
   const page = await readFile(new URL('../src/components/command-center/AdminDashboard.tsx', import.meta.url), 'utf8');
   const pending = await readFile(new URL('../src/lib/command_center_pending.mjs', import.meta.url), 'utf8');
+  const pendingRoute = await readFile(new URL('../src/app/api/command-center/pending/route.ts', import.meta.url), 'utf8');
   assert.match(pending, /status: 'PASS'/);
   assert.match(pending, /BLOQUEADO/);
-  assert.match(pending, /Backup y verificación SHA-256/);
-  assert.match(page, /buildPendingItems/);
+  assert.match(pending, /Backup y verificaci.n SHA-256/);
+  // El panel consume estados reales: el endpoint construye las secciones
+  // y el dashboard refleja los pendientes por estado (backlog vivo).
+  assert.match(pendingRoute, /buildPendingSections/);
+  assert.match(page, /pendingCount/);
   assert.match(pending, /leads == null \|\| leads <= 0 \? 'PENDIENTE'/);
-  assert.match(pending, /estado UNKNOWN hasta la próxima ejecución real/);
+  assert.match(pending, /estado UNKNOWN hasta la pr.xima ejecuci.n real/);
 });
 
 test('mapache discovery command remains visible and uses the server-side bridge', async () => {

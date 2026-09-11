@@ -680,7 +680,6 @@ export default async function ProviderProfilePage(props: Props) {
           services={services}
           providerName={provider.name}
           cleanWhatsapp={cleanWhatsapp}
-          category={provider.category}
         />
 
         {/* ── 7. HORARIOS DINÁMICOS DE ATENCIÓN (CENTRADA) ── */}
@@ -811,7 +810,6 @@ export default async function ProviderProfilePage(props: Props) {
         {/* ❓ 10. PREGUNTAS FRECUENTES (FAQ) */}
         <ProviderFAQSection
           businessName={provider.name}
-          category={provider.category}
           city={provider.city}
           phone={rawPhone}
         />

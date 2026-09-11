@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle2, ShieldCheck, Sparkles, Crown, X, Check, Building2, MapPin, MessageCircle } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Sparkles, Crown, X, Check } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 
 export interface VerifiedBadgeProps {

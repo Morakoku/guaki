@@ -5,7 +5,6 @@ import type {
   BusinessInquiry,
   BusinessReview,
 } from './validation';
-import { GuakiDataService } from './supabase';
 
 export type {
   BusinessRecord,

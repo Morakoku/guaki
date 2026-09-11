@@ -8,8 +8,6 @@ import {
   Boxes,
   BrainCircuit,
   CheckCircle2,
-  ChevronRight,
-  Code2,
   Database,
   GitBranch,
   Cloud,
@@ -23,21 +21,16 @@ import {
   Radio,
   RefreshCw,
   Search,
-  Send,
   ShieldCheck,
   Sparkles,
   Server,
-  TerminalSquare,
   Users,
   Wrench,
-  XCircle,
   Zap,
 } from 'lucide-react';
 
 import { getEcosystemSummary } from '../../lib/command_center_ecosystem.mjs';
-import { buildPendingItems } from '../../lib/command_center_pending.mjs';
-import { buildCodexPrompt } from '../../lib/command_center_prompts.mjs';
-import { inventoryBadge, keepLastSuccessfulSnapshot, liveStatusLabel, sanitizeCoordinationSummary } from '../../lib/command_center_hardening.mjs';
+import { inventoryBadge, keepLastSuccessfulSnapshot, sanitizeCoordinationSummary } from '../../lib/command_center_hardening.mjs';
 import { INITIAL_ECOSYSTEM_BACKLOG, type BacklogItem } from '../../lib/command_center_backlog';
 import AuditCenter from './AuditCenter';
 import VeyraDiagnosticCenter from './VeyraDiagnosticCenter';
@@ -833,7 +826,7 @@ function Overview({ onOpen, liveProspects }: { onOpen: (id: TabId) => void; live
 }
 
 function OthersPanel() {
-  const [items, setItems] = useState<BacklogItem[]>(INITIAL_ECOSYSTEM_BACKLOG);
+  const [items] = useState<BacklogItem[]>(INITIAL_ECOSYSTEM_BACKLOG);
   const [filterProject, setFilterProject] = useState<string>('ALL');
   const [filterState, setFilterState] = useState<string>('ALL');
   const [search, setSearch] = useState('');

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Mic, MicOff } from 'lucide-react';
+import { Search, Mic } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TOKENS } from '../../lib/design-tokens';
 

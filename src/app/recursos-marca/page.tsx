@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import {
   ShieldCheck,
   Download,
@@ -9,9 +8,7 @@ import {
   Copy,
   Check,
   Sparkles,
-  ExternalLink,
   QrCode,
-  Layers,
   Palette,
 } from 'lucide-react';
 import GuakiHeader from '@/components/ui/GuakiHeader';

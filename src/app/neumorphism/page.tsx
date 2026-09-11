@@ -1,33 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
   Search,
   MapPin,
   Star,
-  CheckCircle2,
-  Phone,
   MessageCircle,
   Sliders,
-  Palette,
-  Eye,
   ArrowRight,
-  ShieldCheck,
   Zap,
-  Globe,
-  RefreshCw,
-  Layers,
-  ChevronRight,
-  Sun,
-  Moon,
   Copy,
   Check,
   Volume2,
   Power,
-  ToggleLeft,
-  ToggleRight,
   LayoutGrid,
 } from 'lucide-react';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';

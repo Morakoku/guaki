@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Phone, CheckCircle2, Star, ArrowUpRight } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 import SoftBadge from './SoftBadge';
 import VerifiedBadge from './VerifiedBadge';

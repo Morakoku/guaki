@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MessageCircle, ChevronDown, ChevronUp, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 
 export interface FormattedServiceItem {
@@ -17,14 +17,12 @@ interface ProviderServicesViewProps {
   services: FormattedServiceItem[];
   providerName: string;
   cleanWhatsapp: string;
-  category: string;
 }
 
 export default function ProviderServicesView({
   services,
   providerName,
   cleanWhatsapp,
-  category,
 }: ProviderServicesViewProps) {
   const [activeFilter, setActiveFilter] = useState<string>('Todos');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);

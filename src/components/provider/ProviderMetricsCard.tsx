@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MessageCircle, Phone, Eye, Search, TrendingUp, Sparkles, Zap, ArrowUpRight } from 'lucide-react';
+import { MessageCircle, Phone, Eye, Search, TrendingUp, Zap } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 
 interface MetricsProps {

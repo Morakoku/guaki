@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuditQueue, BusinessAuditItem } from '@/types/audit';
 import { StatusPill } from './AdminDashboard';
-import { CheckCircle2, XCircle, AlertCircle, Search, ShieldCheck, RefreshCw } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Search, ShieldCheck, RefreshCw } from 'lucide-react';
 import { NM_DARK as NM } from './neumorphism-styles';
 
 export default function AuditCenter() {

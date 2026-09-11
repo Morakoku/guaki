@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { MapPin, RefreshCw, AlertCircle } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 
 interface LocationButtonProps {

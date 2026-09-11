@@ -5,15 +5,6 @@ import { Star, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import { ProviderReviewForm } from './ProviderReviewForm';
 
-interface Review {
-  id: string;
-  authorName: string;
-  rating: number;
-  comment: string;
-  date?: string;
-  verified?: boolean;
-}
-
 interface Props {
   rating: number;
   reviewsCount: number;

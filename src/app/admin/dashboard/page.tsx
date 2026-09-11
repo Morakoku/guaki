@@ -3,36 +3,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  ShieldCheck,
   Store,
   Edit3,
-  Trash2,
-  Plus,
   Search,
   CheckCircle2,
-  Award,
-  Crown,
   DollarSign,
   Download,
-  ExternalLink,
-  Sparkles,
   Check,
-  Sliders,
-  Tag,
   Eye,
-  RefreshCw,
-  TrendingUp,
-  MapPin,
-  Phone,
   MessageCircle,
   Pin,
-  AlertCircle,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import GuakiHeader from '@/components/ui/GuakiHeader';
-import SoftCard from '@/components/ui/SoftCard';
-import SoftBadge from '@/components/ui/SoftBadge';
-import VerifiedBadge from '@/components/ui/VerifiedBadge';
 
 interface BusinessAdminRecord {
   id: string;
@@ -74,7 +57,6 @@ const CITIES = ['Todas las ciudades', 'Medellín', 'Bogotá', 'Cali', 'Barranqui
 
 export default function AdminGodModeDashboard() {
   const [businesses, setBusinesses] = useState<BusinessAdminRecord[]>([]);
-  const [isLoadingBusinesses, setIsLoadingBusinesses] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas las categorías');
   const [selectedCity, setSelectedCity] = useState('Todas las ciudades');
@@ -117,7 +99,6 @@ export default function AdminGodModeDashboard() {
   }), []);
 
   const refreshBusinesses = useCallback(async () => {
-    setIsLoadingBusinesses(true);
     try {
       const response = await fetch('/api/admin/audit', { credentials: 'include', cache: 'no-store' });
       if (!response.ok) throw new Error('ADMIN_AUDIT_UNAVAILABLE');
@@ -132,8 +113,6 @@ export default function AdminGodModeDashboard() {
     } catch {
       setBusinesses([]);
       showToast('No se pudieron cargar comercios persistidos. Revisa la sesión administrativa.');
-    } finally {
-      setIsLoadingBusinesses(false);
     }
   }, [mapApiBusiness, showToast]);
 

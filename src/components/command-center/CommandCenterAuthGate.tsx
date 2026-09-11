@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, KeyRound, Sparkles, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 
 const MASTER_DEFAULT_PIN = '7788';
 
@@ -9,7 +9,6 @@ export default function CommandCenterAuthGate({ children }: { children: React.Re
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [showPin, setShowPin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {

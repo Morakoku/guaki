@@ -275,7 +275,7 @@ export async function PUT(request: NextRequest, props: Props) {
   return PATCH(request, props);
 }
 
-export async function DELETE(request: NextRequest, { params }: Props) {
+export async function DELETE(_request: NextRequest, { params }: Props) {
   try {
     if (isSupabaseConfigured()) return NextResponse.json({ error: 'DELETE_FLOW_PENDING_ADMIN_ROUTE' }, { status: 409 });
     const deleted = BusinessStore.delete(params.id);

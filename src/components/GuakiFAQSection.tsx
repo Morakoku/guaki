@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { TOKENS } from '../lib/design-tokens';
-import SoftCard from './ui/SoftCard';
 
 interface FAQItem {
   id: string;

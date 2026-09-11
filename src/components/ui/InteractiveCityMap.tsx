@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  MapPin,
   Navigation,
   Maximize2,
   Minimize2,
   Train,
-  Clock,
   Compass,
-  Sparkles,
-  ExternalLink,
-  Layers,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import { getVisibleMapBounds, projectCoordinateToPercent } from '@/lib/map-projection';

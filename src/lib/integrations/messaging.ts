@@ -8,7 +8,7 @@ export class MessagingIntegrations {
     return { success: true, messageId: 'wa_msg_' + Math.random().toString(36).substring(2, 9) };
   }
 
-  public static async sendEmail(to: string, subject: string, html: string) {
+  public static async sendEmail(to: string, subject: string, _html: string) {
     if (IS_DEV) {
       console.log(`[EMAIL_API] 📧 Email sent to ${to} - Subject: "${subject}"`);
     }
