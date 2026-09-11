@@ -277,7 +277,6 @@ export async function PUT(request: NextRequest, props: Props) {
 
 export async function DELETE(request: NextRequest, { params }: Props) {
   try {
-    const session = request.cookies.get('guaki_session')?.value;
     if (isSupabaseConfigured()) return NextResponse.json({ error: 'DELETE_FLOW_PENDING_ADMIN_ROUTE' }, { status: 409 });
     const deleted = BusinessStore.delete(params.id);
     if (!deleted) {

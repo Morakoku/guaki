@@ -34,6 +34,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 🛡️ Rutas de diagnóstico de infraestructura: solo local.
+  // Exponen metadata interna (keys presentes, pool, IPs, errores) — nunca públicas.
+  if (path.startsWith('/api/debug')) {
+    if (!isLocal) {
+      return new NextResponse('Not Found', { status: 404 });
+    }
+  }
+
   // 141 & 71. Edge Geolocation por IP en Vercel
   const city = request.headers.get('x-vercel-ip-city') || (isLocal ? 'Medellín' : '');
   const country = request.headers.get('x-vercel-ip-country') || (isLocal ? 'CO' : '');

@@ -6,7 +6,7 @@ interface Props {
   params: { token: string };
 }
 
-export async function GET(request: NextRequest, { params }: Props) {
+export async function GET(_request: NextRequest, { params }: Props) {
   const project = VeyraStore.getProjectByToken(params.token);
   if (!project) {
     return NextResponse.json({ error: 'Proyecto no encontrado o token inválido.' }, { status: 404 });

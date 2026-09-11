@@ -9,14 +9,9 @@ import {
   MessageCircle,
   CheckCircle2,
   Star,
-  Clock,
   Globe,
-  Share2,
-  Calendar,
-  Sparkles,
   ShieldCheck,
   Navigation,
-  Award,
 } from 'lucide-react';
 import { getPublishedProviderBySlug } from '@/lib/published_providers';
 import { BusinessStore } from '@/lib/business_store';
@@ -30,7 +25,6 @@ import ProviderFAQSection from '@/components/ui/ProviderFAQSection';
 import DynamicScheduleView from '@/components/ui/DynamicScheduleView';
 import GuakiHeader from '@/components/ui/GuakiHeader';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
-import ProviderReviewsAccordion from '@/components/ProviderReviewsAccordion';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl, slugify } from '@/lib/site';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';

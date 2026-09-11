@@ -6,14 +6,6 @@ import {
   Store,
   ArrowRight,
   Sparkles,
-  Check,
-  CheckCircle2,
-  Crown,
-  X as XIcon,
-  ShieldCheck,
-  MessageCircle,
-  Globe,
-  Zap,
 } from 'lucide-react';
 import { TOKENS } from '../lib/design-tokens';
 import SearchBar from '../components/ui/SearchBar';

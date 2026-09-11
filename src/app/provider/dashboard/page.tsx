@@ -3,41 +3,21 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import {
-  Store,
   CheckCircle2,
-  MapPin,
-  Phone,
-  MessageCircle,
-  Clock,
   Sparkles,
   Plus,
-  Trash2,
   ExternalLink,
-  ShieldCheck,
-  Award,
   ArrowRight,
-  ChevronRight,
-  Info,
-  Edit3,
-  Lock,
-  User,
-  Mail,
-  Zap,
   Check,
   LogOut,
-  BarChart3,
-  Star,
   Share2,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import GuakiHeader from '@/components/ui/GuakiHeader';
-import SoftCard from '@/components/ui/SoftCard';
-import SoftBadge from '@/components/ui/SoftBadge';
 import ProviderLivePreview from '@/components/provider/ProviderLivePreview';
 import ProviderMetricsCard from '@/components/provider/ProviderMetricsCard';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import PlanCardsSection from '@/components/ui/PlanCardsSection';
-import { GUAKI_PLANS } from '@/lib/plans';
 import { parseScheduleText } from '@/lib/validation';
 
 const CATEGORIES = [
@@ -73,9 +53,6 @@ function DashboardContent() {
   const [selectedPlan, setSelectedPlan] = useState<'gratis' | 'verificado' | 'vip'>('gratis');
   const [merchantTab, setMerchantTab] = useState<'afiche' | 'metricas' | 'resenas' | 'plan'>('afiche');
   const [copiedLink, setCopiedLink] = useState(false);
-  const [customWhatsappMessage, setCustomWhatsappMessage] = useState(
-    'Hola, vi su perfil auditado en Guaki y me gustaría cotizar un servicio.'
-  );
 
   // Formulario de Registro / Suscripción
   const [ownerName, setOwnerName] = useState('');
@@ -84,7 +61,6 @@ function DashboardContent() {
 
   // Formulario de Negocio / Catálogo
   const [hasBusiness, setHasBusiness] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -296,7 +272,6 @@ function DashboardContent() {
         setSlug(generatedSlug);
       }
       setHasBusiness(true);
-      setIsEditing(false);
       setSuccessMessage('¡Catálogo y afiche comercial guardados con éxito!');
       setTimeout(() => setSuccessMessage(''), 4000);
     } catch (err: any) {

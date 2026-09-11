@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   LayoutGrid,
@@ -10,8 +9,6 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
-  X,
-  Sparkles,
 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 import SearchBar from '../../components/ui/SearchBar';

@@ -125,10 +125,6 @@ export const VeyraStore = {
     intakes.unshift(newRecord);
 
     // AI Dynamic Diagnostic Generation based on user answers
-    const sectorLower = (payload.sector || '').toLowerCase();
-    const bottleneckLower = (payload.bottleneck || '').toLowerCase();
-    const goalLower = (payload.goal || '').toLowerCase();
-
     let comparisonToday = [
       `1. Prospecto busca servicios de ${payload.sector || 'tu sector'} en Google o redes.`,
       `2. Contacta por canales manuales (${payload.systems || 'WhatsApp / Correo'}) pero la respuesta demora.`,

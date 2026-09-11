@@ -102,7 +102,6 @@ test('public contact CTAs use the shared strict WhatsApp validator instead of st
     'src/app/proveedores/[slug]/page.tsx',
     'src/components/ui/AficheCard.tsx',
     'src/components/ui/BusinessListItem.tsx',
-    'src/components/ui/RelatedProvidersSection.tsx',
     'src/components/ui/VoiceSearchModal.tsx',
     'src/app/gradient-mesh/page.tsx',
     'src/app/neumorphism/page.tsx',

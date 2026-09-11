@@ -9,8 +9,6 @@ import AficheCard from '@/components/ui/AficheCard';
 import { mapPublicBusinessToAfiche } from '@/lib/public_card_mapper.mjs';
 import type { AficheBusinessData } from '@/lib/demo_afiche';
 
-interface GuardadosClientProps {}
-
 export default function GuardadosPage() {
   const [saved, setSaved] = useState<AficheBusinessData[]>([]);
   const [loaded, setLoaded] = useState(false);

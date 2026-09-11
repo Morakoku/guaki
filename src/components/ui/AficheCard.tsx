@@ -8,15 +8,11 @@ import {
   MapPin,
   Clock,
   Star,
-  CheckCircle2,
-  Phone,
   MessageCircle,
   Sparkles,
-  ArrowRight,
   Heart,
 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
-import SoftBadge from './SoftBadge';
 import VerifiedBadge from './VerifiedBadge';
 import { AficheBusinessData } from '../../lib/demo_afiche';
 import { normalizeWhatsAppNumber } from '../../lib/whatsapp';

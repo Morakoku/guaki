@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 interface PoolerTestResult {
   connectionType: 'pooler' | 'direct' | 'unknown';
@@ -122,7 +122,7 @@ async function testConnectionType(url: string, anonKey: string): Promise<PoolerT
   };
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

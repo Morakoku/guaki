@@ -32,11 +32,13 @@ export class GuakiEventBus {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`[EVENT_BUS] ⚡ Event Emitted: ${fullEvent.eventType}`, {
-      userId: fullEvent.userId,
-      providerId: fullEvent.providerId,
-      timestamp: fullEvent.timestamp,
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[EVENT_BUS] ⚡ Event Emitted: ${fullEvent.eventType}`, {
+        userId: fullEvent.userId,
+        providerId: fullEvent.providerId,
+        timestamp: fullEvent.timestamp,
+      });
+    }
 
     // TODO: En Sprint 9 se conecta directamente a Apache Kafka / Redis Stream.
     return fullEvent;

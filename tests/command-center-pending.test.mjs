@@ -45,8 +45,10 @@ test('pending panel refreshes from its live endpoint', async () => {
   const fs = await import('node:fs/promises');
   const route = await fs.readFile(new URL('../src/app/api/command-center/pending/route.ts', import.meta.url), 'utf8');
   assert.match(route, /buildPendingSections/);
-  assert.match(route, /no-store/);
-  assert.match(route, /127\.0\.0\.1:8000/);
+  // Sin caché: los pendientes se recalculan por petición.
+  assert.match(route, /force-dynamic/);
+  // Consume el bridge HTTP interno de Mapache (cliente compartido, URL por env).
+  assert.match(route, /mapacheFetch/);
 });
 
 test('separates resolved work into history and leaves partial work pending', async () => {

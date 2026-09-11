@@ -1,7 +1,6 @@
 'use client';
 
 import React, { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/lib/auth_service';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -11,7 +10,6 @@ import SoftButton from '@/components/ui/SoftButton';
 import SoftInput from '@/components/ui/SoftInput';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

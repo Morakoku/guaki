@@ -62,7 +62,11 @@ test('persistent provider creation assigns the required business id', () => {
 test('provider business reads are owner-scoped while admin reads remain broad', () => {
   const route = read('src/app/api/businesses/route.ts');
   const service = read('src/lib/supabase.ts');
-  assert.match(route, /ownerId: isAdmin \? undefined : actor\.user\.id/);
+  // Catálogo público (?status=published) muestra todo el directorio aun con sesión;
+  // el alcance por dueño aplica al dashboard (sin status) y admins leen sin filtro.
+  assert.match(route, /status === 'published'/);
+  assert.match(route, /items = await GuakiDataService\.getAllBusinesses\(\{ status: 'published' \}\)/);
+  assert.match(route, /ownerId: actor\.user\.id/);
   assert.match(service, /query = query\.eq\('owner_id', filters\.ownerId\)/);
 });
 

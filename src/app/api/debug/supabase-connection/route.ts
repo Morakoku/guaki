@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import dns from 'dns/promises';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 // Type for detailed connection diagnostics
 interface ConnectionDiagnostics {
@@ -129,7 +129,7 @@ async function testConnection(url: string, anonKey: string, attemptNumber: numbe
     });
 
     // Test with a simple query that doesn't require auth
-    const { data, error } = await client.from('businesses').select('id').limit(1);
+    const { error } = await client.from('businesses').select('id').limit(1);
     
     const durationMs = Date.now() - start;
     
@@ -233,7 +233,7 @@ async function getPoolState(url: string, anonKey: string): Promise<ConnectionDia
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const diagnostics: ConnectionDiagnostics = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'unknown',

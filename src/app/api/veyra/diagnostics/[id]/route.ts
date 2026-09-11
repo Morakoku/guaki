@@ -6,7 +6,7 @@ interface Props {
   params: { id: string };
 }
 
-export async function GET(request: NextRequest, { params }: Props) {
+export async function GET(_request: NextRequest, { params }: Props) {
   const report = VeyraStore.getMriReportById(params.id);
   if (!report) {
     return NextResponse.json({ error: 'Reporte Business MRI no encontrado.' }, { status: 404 });

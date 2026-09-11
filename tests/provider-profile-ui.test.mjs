@@ -47,11 +47,8 @@ test('category city hub includes Schema.org ItemList structured data', async () 
   assert.match(hubPage, /notFound/);
 });
 
-test('provider schedule and booking avoid time-dependent server/client initial markup', async () => {
+test('provider schedule avoids time-dependent server/client initial markup', async () => {
   const schedule = await readFile('src/components/ui/DynamicScheduleView.tsx', 'utf8');
-  const booking = await readFile('src/components/ProviderBookingWidget.tsx', 'utf8');
   assert.match(schedule, /useEffect/);
   assert.match(schedule, /setNow/);
-  assert.match(booking, /useEffect/);
-  assert.match(booking, /setSelectedDate/);
 });
