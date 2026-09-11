@@ -145,6 +145,7 @@ export default function LoginPage() {
   const ensureProviderRole = async (result: { token: string; user?: { role?: string } | null }) => {
     if (result.user?.role === 'provider') return;
     await fetch('/api/provider/provision', {
+      method: 'POST',
       headers: { Authorization: `Bearer ${result.token}` },
     }).catch(() => undefined);
   };
