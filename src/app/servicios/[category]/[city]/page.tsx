@@ -61,10 +61,16 @@ function label(slug: string) {
 }
 
 function normalizeText(text: string) {
+  // Mismo criterio que slugify: "&" y "y" son equivalentes ("Odontología & Salud
+  // Dental" ↔ "odontologia-y-salud-dental") y la puntuación (comas) se descarta.
+  // Sin esto, 7 de 9 categorías con "&" daban 404 en las URLs del sitemap.
   return text
     .toLowerCase()
+    .replace(/&/g, ' y ')
+    .replace(/[.,]/g, ' ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
