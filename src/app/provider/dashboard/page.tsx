@@ -18,6 +18,7 @@ import ProviderLivePreview from '@/components/provider/ProviderLivePreview';
 import ProviderMetricsCard from '@/components/provider/ProviderMetricsCard';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import PlanCardsSection from '@/components/ui/PlanCardsSection';
+import ImageUploadField from '@/components/ui/ImageUploadField';
 import { parseScheduleText } from '@/lib/validation';
 
 const CATEGORIES = [
@@ -45,6 +46,52 @@ const CITIES = [
   'Pereira',
   'Manizales',
 ];
+
+const SCHEDULE_DAY_OPTIONS = [
+  'Lunes a Sábado',
+  'Lunes a Viernes',
+  'Todos los días',
+  'Martes a Domingo',
+  'Fines de Semana',
+  'Lunes a Jueves',
+];
+
+const SCHEDULE_OPEN_OPTIONS = ['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM'];
+
+const SCHEDULE_CLOSE_OPTIONS = ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '10:00 PM', '11:00 PM', '12:00 AM'];
+
+const SCHEDULE_PRESETS = [
+  'Lunes a Viernes · 8:00 AM – 6:00 PM',
+  'Lunes a Sábado · 8:00 AM – 6:00 PM',
+  'Lunes a Sábado · 9:00 AM – 8:00 PM',
+  'Todos los días · 24 Horas',
+  'Martes a Domingo · 12:00 PM – 10:00 PM',
+  'Lunes a Domingo · 8:00 AM – 8:00 PM',
+];
+
+function decodeSchedule(text: string) {
+  const first = (text || '').split(' | ')[0];
+  const [rawDays, hoursPart = ''] = first.split(' · ');
+  const days = rawDays === 'Lunes a Domingo' ? 'Todos los días' : rawDays;
+  const is24h = /24 horas/i.test(hoursPart);
+  let open = '8:00 AM';
+  let close = '6:00 PM';
+  if (!is24h) {
+    const match = hoursPart.match(/^(.+?)\s–\s(.+)$/);
+    if (match) {
+      const candidateOpen = match[1].trim();
+      const candidateClose = match[2].trim();
+      if (SCHEDULE_OPEN_OPTIONS.includes(candidateOpen)) open = candidateOpen;
+      if (SCHEDULE_CLOSE_OPTIONS.includes(candidateClose)) close = candidateClose;
+    }
+  }
+  return {
+    days: SCHEDULE_DAY_OPTIONS.includes(days) ? days : 'Lunes a Sábado',
+    open,
+    close,
+    is24h,
+  };
+}
 
 function DashboardContent() {
   // Estado de sesión del comerciante
@@ -87,6 +134,7 @@ function DashboardContent() {
   const [scheduleOpen, setScheduleOpen] = useState('8:00 AM');
   const [scheduleClose, setScheduleClose] = useState('6:00 PM');
   const [is24h, setIs24h] = useState(false);
+  const [isImprovingDescription, setIsImprovingDescription] = useState(false);
   const [status, setStatus] = useState<'draft' | 'in_audit' | 'published'>('draft');
 
   // The server session and Supabase-backed API are the only sources of identity/data.
@@ -125,7 +173,13 @@ function DashboardContent() {
       setWebsite(data.website || '');
       if (Array.isArray(data.services) && data.services.length > 0) setServices(data.services);
       if (data.schedule && data.schedule.length > 0) {
-        setScheduleText(data.schedule?.map((item: { day: string; hours: string }) => `${item.day} · ${item.hours}`).join(' | '));
+        const loadedSchedule = data.schedule?.map((item: { day: string; hours: string }) => `${item.day} · ${item.hours}`).join(' | ');
+        setScheduleText(loadedSchedule);
+        const decoded = decodeSchedule(loadedSchedule);
+        setScheduleDays(decoded.days);
+        setScheduleOpen(decoded.open);
+        setScheduleClose(decoded.close);
+        setIs24h(decoded.is24h);
       }
       setStatus(data.status || 'draft');
       setHasBusiness(true);
@@ -272,8 +326,28 @@ function DashboardContent() {
         setSlug(generatedSlug);
       }
       setHasBusiness(true);
-      setSuccessMessage('¡Catálogo y afiche comercial guardados con éxito!');
-      setTimeout(() => setSuccessMessage(''), 4000);
+
+      const targetId = savedBusiness?.id || id || generatedId;
+      let auditQueued = false;
+      try {
+        const auditResponse = await fetch(`/api/businesses/${encodeURIComponent(targetId)}`, {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submit_audit' }),
+        });
+        auditQueued = auditResponse.ok;
+      } catch {
+        auditQueued = false;
+      }
+
+      if (auditQueued) {
+        setStatus('in_audit');
+        setSuccessMessage('¡Afiche guardado y enviado a auditoría automáticamente! Publicaremos tu ficha cuando sea aprobada.');
+      } else {
+        setSuccessMessage('Afiche guardado. El envío automático a auditoría falló: usa el botón "Enviar a auditoría" de abajo.');
+      }
+      setTimeout(() => setSuccessMessage(''), 6500);
     } catch (err: any) {
       setSuccessMessage(err?.message || 'Error al guardar. Por favor intenta de nuevo.');
       setTimeout(() => setSuccessMessage(''), 5000);
@@ -310,6 +384,33 @@ function DashboardContent() {
       setTimeout(() => setSuccessMessage(''), 5000);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleImproveDescription = async () => {
+    if (!description.trim()) {
+      setSuccessMessage('Escribe primero una idea breve de tu negocio y el asistente la mejorará.');
+      setTimeout(() => setSuccessMessage(''), 4500);
+      return;
+    }
+    setIsImprovingDescription(true);
+    try {
+      const response = await fetch('/api/ai/improve-description', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: description, businessName, category, city }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.text) throw new Error(data.error || 'No se pudo mejorar el texto.');
+      setDescription(data.text);
+      setSuccessMessage('Propuesta del asistente lista. Revísala y guarda los cambios.');
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (err: any) {
+      setSuccessMessage(err?.message || 'No se pudo mejorar el texto. Intenta de nuevo.');
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } finally {
+      setIsImprovingDescription(false);
     }
   };
 
@@ -956,24 +1057,17 @@ function DashboardContent() {
 
                       {/* Chips de Selección Rápida (1-Clic) */}
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                        {[
-                          'Lunes a Viernes · 8:00 AM – 6:00 PM',
-                          'Lunes a Sábado · 8:00 AM – 6:00 PM',
-                          'Lunes a Sábado · 9:00 AM – 8:00 PM',
-                          'Todos los días · 24 Horas',
-                          'Martes a Domingo · 12:00 PM – 10:00 PM',
-                          'Lunes a Domingo · 8:00 AM – 8:00 PM',
-                        ].map((preset) => (
+                        {SCHEDULE_PRESETS.map((preset) => (
                           <button
                             key={preset}
                             type="button"
                             onClick={() => {
                               setScheduleText(preset);
-                              if (preset.includes('24 Horas')) {
-                                setIs24h(true);
-                              } else {
-                                setIs24h(false);
-                              }
+                              const decoded = decodeSchedule(preset);
+                              setScheduleDays(decoded.days);
+                              setScheduleOpen(decoded.open);
+                              setScheduleClose(decoded.close);
+                              setIs24h(decoded.is24h);
                             }}
                             style={{
                               padding: '5px 11px',
@@ -1028,12 +1122,9 @@ function DashboardContent() {
                               outline: 'none',
                             }}
                           >
-                            <option value="Lunes a Sábado">Lunes a Sábado</option>
-                            <option value="Lunes a Viernes">Lunes a Viernes</option>
-                            <option value="Todos los días">Todos los días (Lun - Dom)</option>
-                            <option value="Martes a Domingo">Martes a Domingo</option>
-                            <option value="Fines de Semana">Fines de Semana (Sáb - Dom)</option>
-                            <option value="Lunes a Jueves">Lunes a Jueves</option>
+                            {SCHEDULE_DAY_OPTIONS.map((d) => (
+                              <option key={d} value={d}>{d === 'Todos los días' ? 'Todos los días (Lun - Dom)' : d}</option>
+                            ))}
                           </select>
                         </div>
 
@@ -1061,7 +1152,7 @@ function DashboardContent() {
                               outline: 'none',
                             }}
                           >
-                            {['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM'].map((h) => (
+                            {SCHEDULE_OPEN_OPTIONS.map((h) => (
                               <option key={h} value={h}>{h}</option>
                             ))}
                           </select>
@@ -1091,7 +1182,7 @@ function DashboardContent() {
                               outline: 'none',
                             }}
                           >
-                            {['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '10:00 PM', '11:00 PM', '12:00 AM'].map((h) => (
+                            {SCHEDULE_CLOSE_OPTIONS.map((h) => (
                               <option key={h} value={h}>{h}</option>
                             ))}
                           </select>
@@ -1210,58 +1301,50 @@ function DashboardContent() {
 
                       {/* Logo y Portada en 2 Columnas */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-                        {/* Logo / Foto de Perfil */}
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
-                            Logo del Negocio / Avatar (URL)
-                          </label>
-                          <input
-                            type="url"
-                            value={logoUrl}
-                            onChange={(e) => setLogoUrl(e.target.value)}
-                            placeholder="https://.../logo.png"
-                            style={{
-                              width: '100%',
-                              padding: '10px 14px',
-                              borderRadius: TOKENS.radii.pill,
-                              backgroundColor: TOKENS.colors.surfaceInset,
-                              border: `1px solid ${TOKENS.colors.borderLight}`,
-                              color: TOKENS.colors.textMain,
-                              fontSize: '0.86rem',
-                              outline: 'none',
-                            }}
-                          />
-                        </div>
-
-                        {/* Foto de Fondo / Portada */}
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
-                            Foto de Fondo / Portada Comercial (URL)
-                          </label>
-                          <input
-                            type="url"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            placeholder="https://.../portada.jpg"
-                            style={{
-                              width: '100%',
-                              padding: '10px 14px',
-                              borderRadius: TOKENS.radii.pill,
-                              backgroundColor: TOKENS.colors.surfaceInset,
-                              border: `1px solid ${TOKENS.colors.borderLight}`,
-                              color: TOKENS.colors.textMain,
-                              fontSize: '0.86rem',
-                              outline: 'none',
-                            }}
-                          />
-                        </div>
+                        <ImageUploadField
+                          label="Logo del Negocio / Avatar"
+                          value={logoUrl}
+                          onChange={setLogoUrl}
+                          variant="logo"
+                          hint="Cuadrado, mínimo 300x300 px."
+                        />
+                        <ImageUploadField
+                          label="Foto de Fondo / Portada Comercial"
+                          value={imageUrl}
+                          onChange={setImageUrl}
+                          variant="cover"
+                          hint="Horizontal, mínimo 1200x600 px. Se ve en tu ficha y afiche."
+                        />
                       </div>
 
                       {/* Descripción / Presentación */}
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
-                          Presentación del Negocio / Historia
-                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                          <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, margin: 0 }}>
+                            Presentación del Negocio / Historia
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleImproveDescription}
+                            disabled={isImprovingDescription}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '7px 14px',
+                              borderRadius: TOKENS.radii.pill,
+                              border: `1px solid ${TOKENS.colors.borderLight}`,
+                              backgroundColor: '#DCFCE7',
+                              color: '#15803D',
+                              fontSize: '0.76rem',
+                              fontWeight: 800,
+                              cursor: isImprovingDescription ? 'wait' : 'pointer',
+                            }}
+                          >
+                            <Sparkles size={13} />
+                            {isImprovingDescription ? 'Mejorando...' : 'Mejorar con asistente'}
+                          </button>
+                        </div>
                         <textarea
                           rows={3}
                           value={description}
