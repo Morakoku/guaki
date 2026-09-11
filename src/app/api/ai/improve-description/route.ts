@@ -83,8 +83,13 @@ function heuristicImprove(text: string, businessName?: string, category?: string
   output = restoreProperNames(output, [businessName || '', city || '', category || '']);
 
   output = output.replace(
-    /[,;]?\s+(ven\b|visítanos\b|llámanos\b|contáctanos\b|escríbenos\b|agéndate\b|solicita\b|pide\b)/gi,
+    /\s+(?:y\s+)?(?:ven\s+y\s+)?(visítanos\b|llámanos\b|contáctanos\b|escríbenos\b|agéndate\b|solicita\b|pide\b)/gi,
     (_match, cta: string) => `. ${cta.charAt(0).toUpperCase()}${cta.slice(1)}`,
+  );
+
+  output = output.replace(
+    /((?:Visítanos|Llámanos|Contáctanos|Escríbenos|Agéndate))\s+(?!(?:en|por|de|a|hoy|ya|tu|nuestr[oa]s?)\b)(?=[a-záéíóúñ])/g,
+    '$1, ',
   );
 
   output = output.replace(/([.!?]\s+)([a-záéíóúñ])/g, (_match, prefix: string, letter: string) => prefix + letter.toUpperCase());
