@@ -1,3 +1,5 @@
+import { COUNTRY_META, CountryCode } from './geo';
+
 export interface GuakiPlan {
   id: 'gratis' | 'verificado' | 'vip';
   name: string;
@@ -11,6 +13,17 @@ export interface GuakiPlan {
   highlight?: boolean;
   vip?: boolean;
   ctaText: string;
+}
+
+export function getPlansForCountry(country: CountryCode = 'CO'): GuakiPlan[] {
+  const meta = COUNTRY_META[country];
+  return GUAKI_PLANS.map((plan) => {
+    if (plan.id === 'gratis') {
+      return { ...plan, period: `${meta.currency} / mes` };
+    }
+    const price = meta.plans[plan.id];
+    return { ...plan, priceFormatted: price.formatted, priceAmount: price.amount, period: `${meta.currency} / mes` };
+  });
 }
 
 export const GUAKI_PLANS: GuakiPlan[] = [

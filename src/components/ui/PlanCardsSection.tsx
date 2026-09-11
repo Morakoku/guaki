@@ -4,22 +4,26 @@ import React from 'react';
 import Link from 'next/link';
 import { Check, CheckCircle2, Crown, X as XIcon, ArrowRight, Sparkles } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
-import { GUAKI_PLANS, GuakiPlan } from '@/lib/plans';
+import { GUAKI_PLANS, GuakiPlan, getPlansForCountry } from '@/lib/plans';
+import type { CountryCode } from '@/lib/geo';
 
 interface PlanCardsSectionProps {
   mode?: 'display' | 'select';
   selectedPlanId?: string;
   onSelectPlan?: (planId: 'gratis' | 'verificado' | 'vip') => void;
+  country?: CountryCode;
 }
 
 export default function PlanCardsSection({
   mode = 'display',
   selectedPlanId = 'gratis',
   onSelectPlan,
+  country = 'CO',
 }: PlanCardsSectionProps) {
+  const plans = country === 'CO' ? GUAKI_PLANS : getPlansForCountry(country);
   return (
     <div className="guaki-plans-grid">
-      {GUAKI_PLANS.map((plan: GuakiPlan) => {
+      {plans.map((plan: GuakiPlan) => {
         const isSelected = selectedPlanId === plan.id;
         const isSelectMode = mode === 'select';
 

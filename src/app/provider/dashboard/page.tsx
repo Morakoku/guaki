@@ -431,6 +431,8 @@ function DashboardContent() {
   };
 
   const completeness = calculateCompleteness();
+  const currentPlan = (merchantUser?.plan || selectedPlan || 'gratis') as 'gratis' | 'verificado' | 'vip';
+  const canOpenLiveFicha = status === 'published' && currentPlan !== 'gratis' && Boolean(slug);
 
   const scrollToSection = (targetId: string) => {
     if (typeof document === 'undefined') return;
@@ -1628,6 +1630,7 @@ function DashboardContent() {
                       <span>Vista Previa Real en el Directorio</span>
                     </div>
                     <ProviderLivePreview
+                      previewMode={!canOpenLiveFicha}
                       data={{
                         id,
                         slug,
@@ -1640,7 +1643,7 @@ function DashboardContent() {
                         description,
                         services,
                         scheduleText,
-                        plan: merchantUser?.plan || selectedPlan || 'gratis',
+                        plan: currentPlan,
                         imageUrl,
                       }}
                     />

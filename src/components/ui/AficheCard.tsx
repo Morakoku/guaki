@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Sparkles,
   Heart,
+  Eye,
 } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
 import VerifiedBadge from './VerifiedBadge';
@@ -23,6 +24,7 @@ interface AficheCardProps {
   className?: string;
   style?: React.CSSProperties;
   source?: 'directory' | 'search_result' | 'category_page' | 'recent_search' | 'voice_top3';
+  previewMode?: boolean;
 }
 
 export default function AficheCard({
@@ -30,6 +32,7 @@ export default function AficheCard({
   className = '',
   style = {},
   source = 'directory',
+  previewMode = false,
 }: AficheCardProps) {
   const [imgSrc, setImgSrc] = useState(afiche.imageUrl);
   const [imgError, setImgError] = useState(false);
@@ -388,7 +391,29 @@ export default function AficheCard({
 
         {/* Botón Principal */}
         <div style={{ marginTop: 'auto', paddingTop: '8px', width: '100%' }}>
-          {afiche.plan === 'free' && whatsappNumber ? (
+          {previewMode ? (
+            <div
+              aria-disabled="true"
+              style={{
+                width: '100%',
+                borderRadius: TOKENS.radii.pill,
+                padding: '12px 18px',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: TOKENS.colors.surfaceInset,
+                color: TOKENS.colors.textSecondary,
+                border: `1px dashed ${TOKENS.colors.borderLight}`,
+                textAlign: 'center',
+              }}
+            >
+              <Eye size={16} />
+              <span>Vista previa — tu ficha se activa al publicarse</span>
+            </div>
+          ) : afiche.plan === 'free' && whatsappNumber ? (
             <a
               href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola ${afiche.name}, encontré su negocio en Guaki.`)}`}
               target="_blank"

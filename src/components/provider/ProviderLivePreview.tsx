@@ -21,7 +21,7 @@ export interface ProviderPreviewData {
   imageUrl?: string;
 }
 
-export default function ProviderLivePreview({ data }: { data: ProviderPreviewData }) {
+export default function ProviderLivePreview({ data, previewMode = true }: { data: ProviderPreviewData; previewMode?: boolean }) {
   const isFreePlan = data.plan === 'gratis' || data.plan === 'free';
   const categoryLower = (data.category || '').toLowerCase();
 
@@ -104,7 +104,7 @@ export default function ProviderLivePreview({ data }: { data: ProviderPreviewDat
           boxShadow: '0 12px 32px rgba(0, 0, 0, 0.12)',
         }}
       >
-        <AficheCard afiche={aficheObj} />
+        <AficheCard afiche={aficheObj} previewMode={previewMode} />
       </div>
     </div>
   );
