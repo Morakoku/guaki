@@ -14,6 +14,7 @@ import {
 import { TOKENS } from '@/lib/design-tokens';
 import { parseSearchIntent } from '@/lib/search_intent.mjs';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
+import { trackEvent } from '@/lib/analytics';
 
 interface VoiceSearchModalProps {
   isOpen: boolean;
@@ -267,6 +268,16 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
     if (e) e.preventDefault();
     const query = transcript.trim();
     if (!query) return;
+
+    trackEvent({
+      event_name: 'search_executed',
+      metadata: {
+        query,
+        source: 'voice_search',
+        category: intent.categoryHint || null,
+        nearby: intent.nearby || false,
+      },
+    });
 
     onClose();
     const params = new URLSearchParams();
@@ -668,6 +679,21 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                           href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola ${biz.name}, los vi en Guaki buscando: "${transcript.trim()}". ¿Tienen disponibilidad?`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => {
+                            trackEvent({
+                              event_name: 'whatsapp_clicked',
+                              business_id: biz.id,
+                              metadata: {
+                                slug: biz.slug,
+                                name: biz.name,
+                                source: 'voice_search',
+                                plan: biz.plan,
+                                destination: 'whatsapp',
+                                search_query: transcript.trim(),
+                                search_source: 'voice_search',
+                              },
+                            });
+                          }}
                           style={{
                             flex: 1,
                             padding: '6px 10px',
@@ -693,7 +719,20 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                       {!['free', 'gratis', 'basico'].includes(String(biz.plan || '').toLowerCase()) && (
                       <Link
                         href={`/proveedores/${biz.slug}`}
-                        onClick={onClose}
+                        onClick={() => {
+                          trackEvent({
+                            event_name: 'search_result_clicked',
+                            business_id: biz.id,
+                            metadata: {
+                              slug: biz.slug,
+                              name: biz.name,
+                              source: 'voice_search',
+                              search_query: transcript.trim(),
+                              destination: `/proveedores/${biz.slug}`,
+                            },
+                          });
+                          onClose();
+                        }}
                         style={{
                           padding: '6px 12px',
                           borderRadius: TOKENS.radii.pill,

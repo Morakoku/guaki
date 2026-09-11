@@ -19,6 +19,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import PlanCardsSection from '../../components/ui/PlanCardsSection';
 import { AficheBusinessData } from '../../lib/demo_afiche';
 import { mapPublicBusinessToAfiche } from '../../lib/public_card_mapper.mjs';
+import { trackEvent } from '../../lib/analytics';
 
 export default function DirectoryClient() {
   const searchParams = useSearchParams();
@@ -49,6 +50,15 @@ export default function DirectoryClient() {
     setQuery(q);
     if (city) setSelectedCity(city);
     if (q.trim()) {
+      trackEvent({
+        event_name: 'search_executed',
+        metadata: {
+          query: q.trim(),
+          city: city || selectedCity || '',
+          category: selectedCategory !== 'todos' ? selectedCategory : null,
+          source: 'search_bar',
+        },
+      });
       try {
         const next = Array.from(new Set([q.trim(), ...recentSearches])).slice(0, 4);
         setRecentSearches(next);
@@ -149,6 +159,15 @@ export default function DirectoryClient() {
                 type="button"
                 onClick={() => {
                   if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(8);
+                  trackEvent({
+                    event_name: 'search_executed',
+                    metadata: {
+                      query: sTerm,
+                      city: selectedCity || '',
+                      category: selectedCategory !== 'todos' ? selectedCategory : null,
+                      source: 'recent_search',
+                    },
+                  });
                   setQuery(sTerm);
                 }}
                 style={{
@@ -491,7 +510,7 @@ export default function DirectoryClient() {
             }}
           >
             {filteredBusinesses.map((b) => (
-              <AficheCard key={b.id} afiche={b} />
+              <AficheCard key={b.id} afiche={b} source={query.trim() ? 'search_result' : 'directory'} />
             ))}
           </div>
         ) : (

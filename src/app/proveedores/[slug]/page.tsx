@@ -25,6 +25,8 @@ import ProviderFAQSection from '@/components/ui/ProviderFAQSection';
 import DynamicScheduleView from '@/components/ui/DynamicScheduleView';
 import GuakiHeader from '@/components/ui/GuakiHeader';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
+import TrackedLink from '@/components/ui/TrackedLink';
+import EntityViewTracker from '@/components/ui/EntityViewTracker';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl, slugify } from '@/lib/site';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
@@ -239,6 +241,19 @@ export default async function ProviderProfilePage(props: Props) {
 
   return (
     <div className="page-fade-in" style={{ backgroundColor: 'transparent', color: TOKENS.colors.textMain, minHeight: '100vh' }}>
+      <EntityViewTracker
+        event={{
+          event_name: 'ficha_vista',
+          business_id: provider.id,
+          metadata: {
+            slug: provider.slug,
+            name: provider.name,
+            plan: String(fullDetails?.plan || (provider as any).plan || ''),
+            city: provider.city,
+            category: provider.category,
+          },
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -428,11 +443,22 @@ export default async function ProviderProfilePage(props: Props) {
                 alignItems: 'stretch',
               }}
             >
-              {whatsappUrl && <a
+              {whatsappUrl && <TrackedLink
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="neu-btn-primary"
+                event={{
+                  event_name: 'whatsapp_clicked',
+                  business_id: provider.id,
+                  metadata: {
+                    slug: provider.slug,
+                    name: provider.name,
+                    source: 'ficha',
+                    plan: String(fullDetails?.plan || (provider as any).plan || ''),
+                    destination: 'whatsapp',
+                  },
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -447,7 +473,7 @@ export default async function ProviderProfilePage(props: Props) {
                 }}
               >
                 <MessageCircle size={19} /> Hablar por WhatsApp
-              </a>}
+              </TrackedLink>}
 
               {cleanPhone && (
                 <a

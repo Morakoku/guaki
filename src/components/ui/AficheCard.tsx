@@ -16,21 +16,25 @@ import { TOKENS } from '../../lib/design-tokens';
 import VerifiedBadge from './VerifiedBadge';
 import { AficheBusinessData } from '../../lib/demo_afiche';
 import { normalizeWhatsAppNumber } from '../../lib/whatsapp';
+import { trackEvent } from '../../lib/analytics';
 
 interface AficheCardProps {
   afiche: AficheBusinessData;
   className?: string;
   style?: React.CSSProperties;
+  source?: 'directory' | 'search_result' | 'category_page' | 'recent_search' | 'voice_top3';
 }
 
 export default function AficheCard({
   afiche,
   className = '',
   style = {},
+  source = 'directory',
 }: AficheCardProps) {
   const [imgSrc, setImgSrc] = useState(afiche.imageUrl);
   const [imgError, setImgError] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
+  const viewTrackedRef = useRef(false);
   const router = useRouter();
   const whatsappNumber = normalizeWhatsAppNumber(afiche.whatsapp);
 
@@ -57,19 +61,36 @@ export default function AficheCard({
     } catch {}
   };
 
-  // ⚡ Prefetch predictivo al entrar en viewport (IntersectionObserver)
-  // Solo para planes con ficha; el plan gratuito no tiene página de ficha.
+  // 📊 Vista del afiche (telemetría) + ⚡ prefetch predictivo.
+  // El tracking corre para TODOS los planes (incluido gratis); el prefetch solo
+  // para planes con ficha.
   useEffect(() => {
     const el = cardRef.current;
-    if (!el || !afiche.slug || afiche.plan === 'free' || typeof IntersectionObserver === 'undefined') return;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            router.prefetch(`/proveedores/${afiche.slug}`);
-            observer.disconnect();
+          if (!entry.isIntersecting) return;
+          if (!viewTrackedRef.current) {
+            viewTrackedRef.current = true;
+            trackEvent({
+              event_name: 'afiche_vista',
+              business_id: afiche.id,
+              metadata: {
+                slug: afiche.slug,
+                name: afiche.name,
+                plan: afiche.plan,
+                city: afiche.city,
+                category: afiche.category,
+                source,
+              },
+            });
           }
+          if (afiche.slug && afiche.plan !== 'free') {
+            router.prefetch(`/proveedores/${afiche.slug}`);
+          }
+          observer.disconnect();
         });
       },
       { rootMargin: '100px' }
@@ -77,7 +98,7 @@ export default function AficheCard({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [afiche.slug, afiche.plan, router]);
+  }, [afiche.slug, afiche.plan, afiche.id, afiche.name, afiche.city, afiche.category, source, router]);
 
   const handleImageError = () => {
     if (!imgError && afiche.fallbackImageUrl) {
@@ -373,6 +394,18 @@ export default function AficheCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
+                trackEvent({
+                  event_name: 'whatsapp_clicked',
+                  business_id: afiche.id,
+                  metadata: {
+                    slug: afiche.slug,
+                    name: afiche.name,
+                    source: 'afiche_card',
+                    plan: afiche.plan,
+                    destination: 'whatsapp',
+                    origin: source,
+                  },
+                });
                 if (typeof navigator !== 'undefined' && navigator.vibrate) {
                   navigator.vibrate(10);
                 }
