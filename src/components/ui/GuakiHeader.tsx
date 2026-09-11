@@ -133,25 +133,31 @@ export default function GuakiHeader({ className = '', style = {} }: GuakiHeaderP
           <Link
             href="/guardados"
             aria-label="Tus negocios guardados"
+            className="guaki-save-link"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               width: '38px',
               height: '38px',
-              borderRadius: TOKENS.radii.pill,
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              color: '#EF4444',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 233, 213, 0.55)',
+              color: TOKENS.colors.emeraldDark,
+              border: `1px solid ${TOKENS.colors.borderLight}`,
+              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(28, 25, 23, 0.05)',
               textDecoration: 'none',
               flexShrink: 0,
-              transition: 'transform 160ms cubic-bezier(0.23, 1, 0.32, 1)',
+              transition: 'transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease',
             }}
-            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.95)')}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.92)')}
             onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.backgroundColor = 'rgba(220, 233, 213, 0.55)';
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(220, 233, 213, 0.9)')}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 20s-7-4.4-9.2-8.7C1.3 8.2 3.1 5 6.3 5c2 0 3.5 1.2 4.3 2.6C11.4 6.2 12.9 5 14.9 5 17.9 5 19.7 8 18.6 11.3 16.8 15.6 12 20 12 20Z" />
             </svg>
           </Link>

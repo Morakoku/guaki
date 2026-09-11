@@ -146,23 +146,25 @@ export default function AficheCard({
             position: 'absolute',
             top: '12px',
             right: '12px',
-            width: '36px',
-            height: '36px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
             cursor: 'pointer',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: `1px solid ${isSaved ? 'rgba(239, 68, 68, 0.45)' : TOKENS.colors.borderLight}`,
-            boxShadow: '0 3px 10px rgba(0,0,0,0.18)',
-            color: isSaved ? '#EF4444' : TOKENS.colors.textSecondary,
-            transition: 'transform 140ms cubic-bezier(0.23, 1, 0.32, 1)',
+            backgroundColor: isSaved ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.88)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: isSaved ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(255, 255, 255, 0.6)',
+            boxShadow: '0 2px 8px rgba(18, 38, 28, 0.14)',
+            color: isSaved ? '#EF4444' : TOKENS.colors.emeraldDark,
+            transition: 'transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease, border-color 160ms ease',
           }}
-          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.88)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          <Heart size={16} fill={isSaved ? '#EF4444' : 'transparent'} color={isSaved ? '#EF4444' : 'currentColor'} />
+          <Heart size={15} strokeWidth={isSaved ? 2 : 2.1} fill={isSaved ? '#EF4444' : 'transparent'} color={isSaved ? '#EF4444' : 'currentColor'} />
         </button>
 
         {/* Badge de Categoría (Pill Redondeado y sin icono, armonizado con Verificado) */}
