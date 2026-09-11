@@ -73,7 +73,7 @@ export default function ImageUploadField({ label, value, onChange, variant = 'co
 
   return (
     <div>
-      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
+      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px', minHeight: '2.2em' }}>
         {label}
       </label>
 
