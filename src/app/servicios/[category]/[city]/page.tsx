@@ -16,8 +16,48 @@ interface Props {
   };
 }
 
+// Diccionario de tildes para slugs de ciudades y categorías de Guaki.
+// El slug pierde tildes (slugify), así que restituimos la escritura correcta.
+const WORD_FIXES: Record<string, string> = {
+  medellin: 'Medellín',
+  bogota: 'Bogotá',
+  cali: 'Cali',
+  soacha: 'Soacha',
+  barranquilla: 'Barranquilla',
+  bucaramanga: 'Bucaramanga',
+  cartagena: 'Cartagena',
+  pereira: 'Pereira',
+  manizales: 'Manizales',
+  odontologia: 'Odontología',
+  estetica: 'Estética',
+  barberias: 'Barberías',
+  peluquerias: 'Peluquerías',
+  mecanica: 'Mecánica',
+  laser: 'Láser',
+  gastronomia: 'Gastronomía',
+  tecnicos: 'Técnicos',
+  logistica: 'Logística',
+  distribucion: 'Distribución',
+  educacion: 'Educación',
+  asesoria: 'Asesoría',
+  tecnologia: 'Tecnología',
+  energia: 'Energía',
+  psicologia: 'Psicología',
+  juridica: 'Jurídica',
+  diseno: 'Diseño',
+};
+const LOWERCASE_WORDS = new Set(['y', 'de', 'en', 'la', 'las', 'los', 'el', 'del', 'para']);
+
 function label(slug: string) {
-  return decodeURIComponent(slug).replace(/-/g, ' ');
+  const words = decodeURIComponent(slug).replace(/-/g, ' ').toLowerCase().trim().split(/\s+/);
+  return words
+    .map((word, index) => {
+      const fixed = WORD_FIXES[word];
+      if (fixed) return fixed;
+      if (index > 0 && LOWERCASE_WORDS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
 }
 
 function normalizeText(text: string) {
