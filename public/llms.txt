@@ -1,0 +1,37 @@
+# Guaki
+
+> Directorio local que conecta a las personas con comercios y profesionales verificados en Colombia y Venezuela, con contacto directo por WhatsApp, sin intermediarios ni comisiones.
+
+## Qué es Guaki
+
+- Directorio / marketplace local de servicios (Colombia y Venezuela).
+- Buscador por texto, voz y geolocalización.
+- Ficha verificada por negocio con fotos, horarios, catálogo, ubicación y reseñas.
+- Contacto 1-clic por WhatsApp o llamada, sin comisión por venta.
+
+## Planes para proveedores
+
+- **Plan Esencial**: $0 COP/mes. Presencia básica en el directorio y botón directo a WhatsApp.
+- **Plan Verificado**: $49.900 COP/mes. Insignia ✓ Verificado, ficha web propia, horarios y reseñas, prioridad en los resultados.
+- **Plan VIP Elite**: $149.900 COP/mes. Badge TOP VIP, posicionamiento #1 en búsquedas de tu ciudad y panel de métricas y leads.
+
+Los precios de la lista aplican para Colombia (COP). Para Venezuela los planes se expresan en USD.
+
+## Mapa del Sitio Oficial
+
+- Sitio Oficial: https://guaki.online/
+- Directorio de negocios: https://guaki.online/directorio
+- Únete / publica tu negocio: https://guaki.online/unete
+- Quiénes somos y preguntas frecuentes: https://guaki.online/nosotros
+- Recursos de marca: https://guaki.online/recursos-marca
+- Ficha de ejemplo publicada: https://guaki.online/proveedores/veterinaria-pets-care-poblado
+- Búsqueda por servicio y ciudad: https://guaki.online/servicios/{categoria}/{ciudad}
+- Privacidad: https://guaki.online/privacidad
+- Términos: https://guaki.online/terminos
+- Estado del directorio (conteo público en JSON): https://guaki.online/api/businesses?status=published&metrics=true
+
+## Límites de la Información
+
+- El número real de comercios publicados cambia con el tiempo. El conteo verificable es el del endpoint público de estado, no una cifra fija de este documento.
+- Las métricas de rendimiento (por ejemplo, tasas de clics o de conversión) solo se publican cuando tienen una fuente medible. Este documento no contiene cifras inventadas ni testimonios fabricados.
+- Las fichas y los datos de contacto provienen de registros auditados. No se exponen credenciales, llaves ni datos personales de clientes.

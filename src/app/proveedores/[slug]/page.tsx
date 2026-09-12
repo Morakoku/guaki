@@ -111,22 +111,23 @@ export default async function ProviderProfilePage(props: Props) {
       '@type': 'PostalAddress',
       ...(provider.address ? { streetAddress: provider.address } : {}),
       addressLocality: provider.city,
-      addressCountry: 'CO',
+      addressCountry: getCountryMeta(provider.city).code,
     },
     ...(provider.description ? { description: provider.description } : {}),
     ...(provider.phone ? { telephone: provider.phone } : {}),
   };
-  if (
-    !freePlan &&
-    provider.rating !== null &&
-    provider.rating !== undefined &&
-    provider.review_count &&
-    provider.review_count > 0
-  ) {
+  // Reputación pública: solo desde reseñas con moderación aprobada. Si no hay
+  // reseñas aprobadas se omite AggregateRating por completo (nunca se emiten
+  // las columnas denormalizadas businesses.rating/review_count, que pueden
+  // contener valores sembrados fabricados).
+  const approvedReviewStats = GuakiDataService.isConfigured()
+    ? await GuakiDataService.getApprovedReviewStats(provider.id)
+    : null;
+  if (!freePlan && approvedReviewStats) {
     localBusiness.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: provider.rating,
-      reviewCount: provider.review_count,
+      ratingValue: approvedReviewStats.rating,
+      reviewCount: approvedReviewStats.reviewCount,
       bestRating: 5,
       worstRating: 1,
     };
@@ -156,8 +157,8 @@ export default async function ProviderProfilePage(props: Props) {
   const cleanWhatsapp = normalizeWhatsAppNumber(rawWhatsapp) ?? '';
   const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
 
-  const rating = freePlan ? null : (fullDetails?.rating ?? provider.rating ?? null);
-  const reviewsCount = fullDetails?.reviewCount ?? provider.review_count ?? 0;
+  const rating = freePlan ? null : (approvedReviewStats?.rating ?? null);
+  const reviewsCount = freePlan ? 0 : (approvedReviewStats?.reviewCount ?? 0);
   const address = fullDetails?.address || provider.address || '';
   // H-03 FIX: Verification badge must depend on actual audit approval, not payment plan.
   const isVerified = Boolean(fullDetails?.approvedAt || fullDetails?.isVerified);

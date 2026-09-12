@@ -343,6 +343,28 @@ export class GuakiDataService {
     return mapSupabaseRowToBusiness(data, inquiries, reviews);
   }
 
+  // Estadística pública de reputación calculada SOLO desde reseñas con
+  // moderación aprobada. Nunca se debe derivar de las columnas denormalizadas
+  // businesses.rating / businesses.review_count, que pueden arrastrar valores
+  // sembrados no verificados. Devuelve null si no hay reseñas aprobadas.
+  static async getApprovedReviewStats(businessId: string): Promise<{ rating: number; reviewCount: number } | null> {
+    if (!isSupabaseConfigured()) return null;
+    if (!SAFE_BUSINESS_IDENTIFIER.test(businessId)) return null;
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from('reviews')
+      .select('rating')
+      .eq('business_id', businessId)
+      .eq('moderation_status', 'approved');
+
+    if (error || !data || data.length === 0) return null;
+    const sum = data.reduce((acc: number, row: any) => acc + Number(row.rating || 0), 0);
+    return {
+      rating: Math.round((sum / data.length) * 100) / 100,
+      reviewCount: data.length,
+    };
+  }
+
   static async getBusinessByIdWithToken(id: string, accessToken: string): Promise<BusinessRecord | null> {
     if (!isSupabaseConfigured()) return null;
     if (!SAFE_BUSINESS_IDENTIFIER.test(id)) return null;

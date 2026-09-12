@@ -42,7 +42,7 @@ const STEPS = [
 
 const BENEFITS = [
   { icon: TrendingUp, text: 'Aparece cuando busquen tu servicio en tu ciudad' },
-  { icon: BadgeCheck, text: 'Insignia Verificado que genera confianza y +40% de clics' },
+  { icon: BadgeCheck, text: 'Insignia Verificado que genera confianza y credibilidad' },
   { icon: Clock, text: 'Ficha web propia con horarios, fotos y catálogo editable' },
   { icon: MessageCircle, text: 'Contacto directo por WhatsApp 1-clic, sin intermediarios' },
 ];

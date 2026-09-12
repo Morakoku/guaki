@@ -4,6 +4,7 @@ import SoftBottomNav from '@/components/ui/SoftBottomNav';
 import DynamicFavicon from '@/components/ui/DynamicFavicon';
 import AttributionTracker from '@/components/ui/AttributionTracker';
 import { absoluteUrl, SITE_URL } from '@/lib/site';
+import { buildPlansStructuredData } from '@/lib/structured-data';
 
 const siteStructuredData = {
   '@context': 'https://schema.org',
@@ -26,6 +27,7 @@ const siteStructuredData = {
         'query-input': 'required name=search_term_string',
       },
     },
+    ...buildPlansStructuredData(),
   ],
 };
 

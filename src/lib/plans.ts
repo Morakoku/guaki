@@ -42,7 +42,7 @@ export const GUAKI_PLANS: GuakiPlan[] = [
       'Información básica de contacto y teléfono',
     ],
     notIncluded: [
-      'Sin insignia de Verificación Oficial (Regla de Ley)',
+      'Sin insignia ✓ Verificado (disponible al mejorar de plan)',
       'Posicionamiento estándar',
     ],
     ctaText: 'Registrar Negocio Gratis',
@@ -59,7 +59,7 @@ export const GUAKI_PLANS: GuakiPlan[] = [
       'Todo lo del Plan Esencial',
       'Insignia oficial ✓ Verificado por Guaki',
       'Ficha Web propia dedicada (ej. /proveedores/tu-negocio)',
-      'Mayor tasa de clics a WhatsApp (+40%)',
+      'Contactos directos por WhatsApp desde tu ficha web',
       'Horarios dinámicos y módulo de reseñas',
       'Prioridad en los resultados del directorio',
     ],

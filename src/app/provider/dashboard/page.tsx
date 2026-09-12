@@ -1801,7 +1801,7 @@ function DashboardContent() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Sello Auditado (+40% clics WhatsApp)
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Sello Auditado de Verificación por Guaki
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
                         <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Ficha indexable en Google

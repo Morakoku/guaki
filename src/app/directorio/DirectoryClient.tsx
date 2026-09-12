@@ -463,7 +463,7 @@ export default function DirectoryClient() {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '22px' }}>
           <span style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, fontWeight: 700, textAlign: 'center' }}>
             {loading
-              ? 'Buscando comercios verificados…'
+              ? 'Cargando comercios…'
               : `${filteredBusinesses.length} ${filteredBusinesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}`}
           </span>
         </div>

@@ -4,16 +4,25 @@ import GuakiHeader from '@/components/ui/GuakiHeader';
 import { GuakiCorporateIdentity } from '@/components/GuakiCorporateIdentity';
 import { GuakiFAQSection } from '@/components/GuakiFAQSection';
 import { TOKENS } from '@/lib/design-tokens';
+import { absoluteUrl } from '@/lib/site';
+import { buildGuakiFaqStructuredData } from '@/lib/guaki_faq';
 
 export const metadata: Metadata = {
   title: 'Quiénes Somos, Dónde Estamos y Preguntas Frecuentes | Guaki',
   description:
     'Conoce a Guaki: Directorio local transparente y verificado en Colombia y Venezuela. Presencia en Medellín, Bogotá y Caracas, protocolo 0% cartón y FAQ oficial.',
+  alternates: { canonical: absoluteUrl('/nosotros') },
 };
 
 export default function NosotrosPage() {
   return (
     <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent', color: TOKENS.colors.textMain }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildGuakiFaqStructuredData()).replace(/</g, '\\u003c'),
+        }}
+      />
       <GuakiHeader />
 
       {/* ── CONTENIDO PRINCIPAL ── */}

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const page = await readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8');
+const page = await readFile(new URL('../src/app/HomeClient.tsx', import.meta.url), 'utf8');
+const homeServer = await readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8');
 const searchBar = await readFile(new URL('../src/components/ui/SearchBar.tsx', import.meta.url), 'utf8');
 const locationBtn = await readFile(new URL('../src/components/ui/LocationButton.tsx', import.meta.url), 'utf8');
 const demoAfiche = await readFile(new URL('../src/lib/demo_afiche.ts', import.meta.url), 'utf8');
@@ -17,6 +18,11 @@ test('Guaki Home has clean hero without unnecessary badge text', () => {
   assert.match(page, /Busca o Habla/);
   assert.match(page, /Compara Opciones/);
   assert.match(page, /Contacta al Instante/);
+});
+
+test('Home server wrapper declares the root canonical', () => {
+  assert.match(homeServer, /alternates:\s*\{\s*canonical:\s*absoluteUrl\('\/'\)/);
+  assert.match(homeServer, /<HomeClient \/>/);
 });
 
 test('LocationButton implements real browser geolocation API', () => {

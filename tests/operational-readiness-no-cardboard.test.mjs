@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const businessStoreCode = await readFile(new URL('../src/lib/business_store.ts', import.meta.url), 'utf8');
-const homePage = await readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8');
+const homePage = await readFile(new URL('../src/app/HomeClient.tsx', import.meta.url), 'utf8');
 const profilePage = await readFile(new URL('../src/app/proveedores/[slug]/page.tsx', import.meta.url), 'utf8');
 const dashboardPage = await readFile(new URL('../src/app/provider/dashboard/page.tsx', import.meta.url), 'utf8');
 
