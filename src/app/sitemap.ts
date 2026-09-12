@@ -15,6 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/directorio`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/nosotros`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/recursos-marca`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/privacidad`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/terminos`, changeFrequency: 'yearly', priority: 0.3 },
   ];
 
   const providers = await getPublishedProviders();

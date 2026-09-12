@@ -589,7 +589,7 @@ export default function HomePage() {
           <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textMuted }}>
             © {new Date().getFullYear()} GUAKI 🥑 · El Directorio Local Más Fresco de Colombia y Venezuela
           </span>
-          <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/directorio" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
               Directorio
             </Link>
@@ -598,6 +598,12 @@ export default function HomePage() {
             </Link>
             <Link href="/provider/dashboard" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
               Registrar Negocio
+            </Link>
+            <Link href="/privacidad" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
+              Privacidad
+            </Link>
+            <Link href="/terminos" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
+              Términos
             </Link>
           </div>
         </div>
