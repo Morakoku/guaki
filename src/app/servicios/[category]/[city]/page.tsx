@@ -114,6 +114,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Encuentra especialistas verificados de ${categoryFormatted} en ${cityFormatted}.`,
       url: absoluteUrl(`/servicios/${slugify(categoryFormatted)}/${slugify(cityFormatted)}`),
       type: 'website',
+      images: [
+        {
+          url: absoluteUrl(`/api/og?title=${encodeURIComponent(`${categoryFormatted} en ${cityFormatted}`)}&category=Guaki`),
+          width: 1200,
+          height: 630,
+          alt: `${categoryFormatted} en ${cityFormatted} — Guaki`,
+        },
+      ],
     },
   };
 }
