@@ -39,9 +39,35 @@ function slideHtml(slide, index, total) {
   const bg = slide.bg;
   const isCover = slide.layout === 'cover-dark';
   const isCta = slide.layout === 'cta-emerald';
+  const isStory = slide.layout === 'story';
   const number = slide.number || `${index + 1}/${total}`;
 
-  const inner = isCover
+  const optionsHtml = (slide.options || [])
+    .map(
+      (option, optionIndex) =>
+        `<div class="option"><span class="opt-letter">${String.fromCharCode(65 + optionIndex)}</span><span>${escapeHtml(option)}</span></div>`,
+    )
+    .join('');
+
+  const inner = isStory
+    ? `
+      <div class="scrim ${slide.scrim === 'light' ? 'scrim-light' : 'scrim-dark'}"></div>
+      <div class="content content-cover">
+        <div class="topbar">
+          <span class="logo">🥑 GUAKI</span>
+          <span class="counter counter-light">${escapeHtml(slide.topRight || 'HISTORIA')}</span>
+        </div>
+        ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
+        <h1 class="title title-cover story-title">${escapeHtml(slide.title)}</h1>
+        ${slide.body ? `<p class="sub sub-light">${escapeHtml(slide.body)}</p>` : ''}
+        ${optionsHtml ? `<div class="options">${optionsHtml}</div>` : ''}
+        ${slide.url ? `<div class="url-pill">👉 ${escapeHtml(slide.url)}</div>` : ''}
+        <div class="footer-row">
+          <span class="hint">${escapeHtml(slide.hint || '')}</span>
+          <span class="counter">guaki.online</span>
+        </div>
+      </div>`
+    : isCover
     ? `
       <div class="scrim scrim-dark"></div>
       <div class="content content-cover">
@@ -126,6 +152,10 @@ function slideHtml(slide, index, total) {
   .bullets { list-style: none; margin-top: 3.15vw; display: flex; flex-direction: column; gap: 1.85vw; }
   .bullets li { display: flex; align-items: center; gap: 1.67vw; color: ${COLORS.ink}; font-size: 3.7vw; font-weight: 800; }
   .check { display: inline-flex; width: 4.26vw; height: 4.26vw; border-radius: 50%; background: ${COLORS.green}; color: #fff; align-items: center; justify-content: center; font-size: 2.41vw; flex-shrink: 0; }
+  .story-title { font-size: 6.8vw; max-width: 88vw; }
+  .options { display: flex; flex-direction: column; gap: 1.7vw; margin-top: 1.5vw; }
+  .option { display: flex; align-items: center; gap: 1.5vw; background: rgba(244,247,242,0.14); border: 1px solid rgba(244,247,242,0.38); border-radius: 999px; padding: 1.7vw 2.4vw; color: ${COLORS.cream}; font-size: 3.1vw; font-weight: 700; }
+  .opt-letter { display: inline-flex; width: 4.3vw; height: 4.3vw; border-radius: 50%; background: ${COLORS.sage}; color: ${COLORS.emerald}; align-items: center; justify-content: center; font-family: 'Outfit'; font-weight: 900; font-size: 2.6vw; flex-shrink: 0; }
 </style>
 </head>
 <body>
