@@ -160,6 +160,34 @@ async function openAiImprove(apiKey: string, prompt: string): Promise<string | n
   }
 }
 
+// Alibaba Cloud Model Studio (Qwen) — endpoint OpenAI-compatible.
+// Región por defecto: US (Virginia), la más cercana a Colombia/Venezuela.
+async function dashscopeImprove(apiKey: string, prompt: string): Promise<string | null> {
+  try {
+    const baseUrl = (process.env.DASHSCOPE_BASE_URL?.trim() || 'https://dashscope-us.aliyuncs.com/compatible-mode/v1').replace(/\/$/, '');
+    const model = process.env.DASHSCOPE_MODEL?.trim() || 'qwen-plus';
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0.7,
+        max_tokens: 400,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => null);
+    const text = data?.choices?.[0]?.message?.content?.trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!isSupabaseConfigured()) {
@@ -202,11 +230,16 @@ export async function POST(request: NextRequest) {
 
     const geminiKey = process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_AI_API_KEY?.trim() || '';
     const openAiKey = process.env.OPENAI_API_KEY?.trim() || '';
+    const dashscopeKey = process.env.DASHSCOPE_API_KEY?.trim() || '';
 
     let improved: string | null = null;
     let engine = 'heuristic';
 
-    if (geminiKey) {
+    if (dashscopeKey) {
+      improved = await dashscopeImprove(dashscopeKey, prompt);
+      if (improved) engine = 'qwen';
+    }
+    if (!improved && geminiKey) {
       improved = await geminiImprove(geminiKey, prompt);
       if (improved) engine = 'gemini';
     }
