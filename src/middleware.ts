@@ -16,6 +16,17 @@ function loginRedirect(request: NextRequest, status: 401 | 403 = 401, error: str
 // 🚫 148. Detección perimetral de ataques (SQLi, XSS, Path Traversal)
 const THREAT_REGEX = /(\.\.\/|\.\.\\|union\s+select|or\s+1=1|information_schema|<script|%3cscript|onerror\s*=|onload\s*=|javascript:|data:text\/html|wp-login|wp-admin|\.env|\.git|__proto__|etc\/passwd)/i;
 
+// Next entrega path/search ya percent-encoded: se evalúa también la versión
+// decodificada para cubrir payloads como `?x=onerror%3D1` o `javascript%3A`.
+function containsThreat(value: string): boolean {
+  if (THREAT_REGEX.test(value)) return true;
+  try {
+    return THREAT_REGEX.test(decodeURIComponent(value));
+  } catch {
+    return false;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const search = request.nextUrl.search;
@@ -23,7 +34,7 @@ export async function middleware(request: NextRequest) {
   const isLocal = process.env.NODE_ENV !== 'production';
 
   // 148. Bloqueo de amenazas perimetrales
-  if (THREAT_REGEX.test(`${path}${search}`)) {
+  if (containsThreat(`${path}${search}`)) {
     return new NextResponse('Acceso denegado por seguridad perimetral Guaki.', { status: 403 });
   }
 
