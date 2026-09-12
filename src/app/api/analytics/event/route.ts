@@ -16,6 +16,7 @@ const ALLOWED_EVENTS = new Set([
   'claim_started',
   'claim_completed',
   'plan_interest',
+  'merchant_cta_clicked',
 ]);
 
 const MAX_METADATA_BYTES = 4096;

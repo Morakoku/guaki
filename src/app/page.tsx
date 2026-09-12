@@ -599,6 +599,9 @@ export default function HomePage() {
             <Link href="/provider/dashboard" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
               Registrar Negocio
             </Link>
+            <Link href="/unete" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
+              Únete a Guaki
+            </Link>
             <Link href="/privacidad" style={{ fontSize: '0.8rem', color: TOKENS.colors.textSecondary, textDecoration: 'none' }}>
               Privacidad
             </Link>
