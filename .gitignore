@@ -5,3 +5,5 @@ dev-server*.log
 .env*
 node_modules/
 .vercel
+
+.opencode/
