@@ -10,6 +10,8 @@ if (!batchPath || !outputDir) {
 const batch = JSON.parse(fs.readFileSync(batchPath, 'utf8'));
 fs.mkdirSync(outputDir, { recursive: true });
 
+const BG_PREFIX = process.env.IG_BG_PREFIX || '../../../03_FONDOS_IA/';
+
 const COLORS = {
   emerald: '#17382D',
   emeraldMid: '#2A5A4A',
@@ -159,7 +161,7 @@ function slideHtml(slide, index, total) {
 </style>
 </head>
 <body>
-  <img class="bg" src="../${escapeHtml(bg)}" alt="" />
+  <img class="bg" src="${BG_PREFIX}${escapeHtml(bg)}" alt="" />
   ${inner}
 </body>
 </html>`;
