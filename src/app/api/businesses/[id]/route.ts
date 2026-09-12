@@ -8,6 +8,8 @@ import {
 } from '@/lib/validation';
 import { resolveInventoryAccess } from '@/lib/public_inventory_contract.mjs';
 import { notifyBusinessAudit } from '@/lib/notifications';
+import { pingIndexNow } from '@/lib/indexnow';
+import { slugify } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -240,6 +242,17 @@ export async function PATCH(request: NextRequest, { params }: Props) {
           },
           session,
         );
+
+        // SEO: al publicar/aprobar, avisar a IndexNow (Bing/Yandex) de la ficha nueva.
+        if (decision === 'approved' || decision === 'published') {
+          const slug = updated?.slug || params.id;
+          const urls = [`https://guaki.online/proveedores/${slug}`];
+          if (updated?.category && updated?.city) {
+            urls.push(`https://guaki.online/servicios/${slugify(updated.category)}/${slugify(updated.city)}`);
+          }
+          await pingIndexNow(urls);
+        }
+
         return NextResponse.json({ business: updated, next: decision.toUpperCase(), persistence: 'supabase' });
       }
       const validation = validateBusinessPayload(payload, true);

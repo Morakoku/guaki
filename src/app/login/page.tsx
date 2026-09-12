@@ -4,6 +4,7 @@ import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/lib/auth_service';
 import { getSupabaseClient } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 import { TOKENS } from '@/lib/design-tokens';
 import SoftCard from '@/components/ui/SoftCard';
 import SoftButton from '@/components/ui/SoftButton';
@@ -95,6 +96,10 @@ export default function LoginPage() {
     const userPass = password;
     const userName = fullName.trim() || 'Comerciante Guaki';
 
+    if (mode === 'register') {
+      trackEvent({ event_name: 'register_started', metadata: { mode: 'register' } });
+    }
+
     try {
       if (mode === 'register') {
         const result = await authService.register(userEmail, userPass, userName);
@@ -121,7 +126,9 @@ export default function LoginPage() {
         }
 
         await ensureProviderRole({ token: result.token, user: result.user });
-        window.location.href = '/provider/dashboard';
+        trackEvent({ event_name: 'register_completed', metadata: { mode: 'register' } });
+        const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
+        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : '/provider/dashboard';
       } else {
         const result = await authService.login(userEmail, userPass);
         if (!result.token) {
@@ -142,7 +149,8 @@ export default function LoginPage() {
         }
 
         await ensureProviderRole({ token: result.token, user: result.user });
-        window.location.href = '/provider/dashboard';
+        const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
+        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : '/provider/dashboard';
       }
     } catch {
       setError('Tuvimos un inconveniente al conectar con el servidor. Intenta nuevamente.');

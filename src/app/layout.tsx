@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '@/styles/globals.css';
 import SoftBottomNav from '@/components/ui/SoftBottomNav';
 import DynamicFavicon from '@/components/ui/DynamicFavicon';
+import AttributionTracker from '@/components/ui/AttributionTracker';
 import { absoluteUrl, SITE_URL } from '@/lib/site';
 
 const siteStructuredData = {
@@ -99,6 +100,7 @@ export default function RootLayout({
       </head>
       <body>
         <DynamicFavicon />
+        <AttributionTracker />
         <div className="has-bottom-dock" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           {children}
         </div>

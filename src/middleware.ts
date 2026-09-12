@@ -8,8 +8,12 @@ function loginRedirect(request: NextRequest, status: 401 | 403 = 401, error: str
     return NextResponse.json({ error }, { status });
   }
   const loginUrl = request.nextUrl.clone();
+  // Preserva el destino original (ej. /provider/dashboard?claim=GKI-...) para
+  // continuar el flujo después del login.
+  const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   loginUrl.pathname = '/login';
   loginUrl.search = '';
+  loginUrl.searchParams.set('next', nextPath);
   return NextResponse.redirect(loginUrl);
 }
 

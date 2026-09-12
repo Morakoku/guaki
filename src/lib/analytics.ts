@@ -16,9 +16,25 @@ function isQaBusiness(id?: string | null, name?: string | null): boolean {
   return false;
 }
 
+// Atribución de canal (utm_* / ref) capturada por AttributionTracker y guardada 30 días.
+function readAttribution(): Record<string, unknown> | null {
+  try {
+    const match = document.cookie.split('; ').find((row) => row.startsWith('guaki_attr='));
+    if (!match) return null;
+    const parsed = JSON.parse(decodeURIComponent(match.slice('guaki_attr='.length)));
+    if (!parsed || typeof parsed !== 'object') return null;
+    const { ts: _ts, ...attr } = parsed as Record<string, unknown>;
+    return Object.keys(attr).length > 0 ? attr : null;
+  } catch {
+    return null;
+  }
+}
+
 export function trackEvent(event: AnalyticsEvent): void {
   if (DISABLED) return;
   if (typeof window === 'undefined') return;
+
+  const attribution = readAttribution();
 
   const payload = {
     event_name: event.event_name,
@@ -28,6 +44,7 @@ export function trackEvent(event: AnalyticsEvent): void {
       ...(isQaBusiness(event.business_id, typeof event.metadata?.name === 'string' ? (event.metadata.name as string) : null)
         ? { is_qa: true }
         : {}),
+      ...(attribution ? { attr: attribution } : {}),
       page: window.location.pathname,
       ts_client: new Date().toISOString(),
     },

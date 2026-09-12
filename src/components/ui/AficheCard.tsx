@@ -490,6 +490,18 @@ export default function AficheCard({
                 if (typeof navigator !== 'undefined' && navigator.vibrate) {
                   navigator.vibrate(10);
                 }
+                if (source === 'search_result') {
+                  trackEvent({
+                    event_name: 'search_result_clicked',
+                    business_id: afiche.id,
+                    metadata: {
+                      slug: afiche.slug,
+                      name: afiche.name,
+                      source: 'afiche_card_from_search',
+                      destination: `/proveedores/${afiche.slug}`,
+                    },
+                  });
+                }
               }}
               className="neu-btn-primary"
               style={{

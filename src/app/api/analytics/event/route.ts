@@ -8,6 +8,14 @@ const ALLOWED_EVENTS = new Set([
   'ficha_vista',
   'search_executed',
   'search_result_clicked',
+  'call_clicked',
+  'register_started',
+  'register_completed',
+  'ficha_saved',
+  'audit_submitted',
+  'claim_started',
+  'claim_completed',
+  'plan_interest',
 ]);
 
 const MAX_METADATA_BYTES = 4096;

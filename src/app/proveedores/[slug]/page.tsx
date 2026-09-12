@@ -477,7 +477,12 @@ export default async function ProviderProfilePage(props: Props) {
               </TrackedLink>}
 
               {cleanPhone && (
-                <a
+                <TrackedLink
+                  event={{
+                    event_name: 'call_clicked',
+                    business_id: provider.id,
+                    metadata: { slug: provider.slug, name: provider.name, destination: 'phone' },
+                  }}
                   href={`tel:${cleanPhone}`}
                   className="neu-level-3"
                   style={{
@@ -498,7 +503,7 @@ export default async function ProviderProfilePage(props: Props) {
                   }}
                 >
                   <Phone size={18} color={TOKENS.colors.emeraldDark} /> Llamar Directo
-                </a>
+                </TrackedLink>
               )}
 
               {websiteUrl && (
@@ -534,6 +539,59 @@ export default async function ProviderProfilePage(props: Props) {
             </div>
           </div>
         </section>
+
+        {/* ── 3.5 RECLAMO DE FICHA (negocios sin dueño registrado) ── */}
+        {!fullDetails?.ownerId && (
+          <section
+            className="neu-level-2"
+            style={{
+              marginBottom: '32px',
+              padding: '18px 22px',
+              borderRadius: TOKENS.radii.xl,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '14px',
+              flexWrap: 'wrap',
+              backgroundColor: TOKENS.colors.surfaceElevated,
+              border: `1px solid ${TOKENS.colors.borderLight}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <ShieldCheck size={22} color={TOKENS.colors.emeraldDark} />
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.92rem', color: TOKENS.colors.textMain }}>
+                  ¿Eres el dueño de {provider.name}?
+                </strong>
+                <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary }}>
+                  Reclama esta ficha gratis para editar tus datos, servicios y recibir contactos directos.
+                </span>
+              </div>
+            </div>
+            <TrackedLink
+              event={{
+                event_name: 'claim_started',
+                business_id: provider.id,
+                metadata: { slug: provider.slug, name: provider.name, entry: 'ficha' },
+              }}
+              href={`/provider/dashboard?claim=${encodeURIComponent(provider.id)}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 20px',
+                borderRadius: TOKENS.radii.pill,
+                backgroundColor: TOKENS.colors.emeraldDark,
+                color: '#FFFFFF',
+                fontSize: '0.86rem',
+                fontWeight: 800,
+                textDecoration: 'none',
+              }}
+            >
+              Reclamar mi ficha
+            </TrackedLink>
+          </section>
+        )}
 
         {/* ── 4. MÉTRICAS RÁPIDAS & ACCIONES (OPINIONES & UBICACIÓN GPS) ── */}
         <section

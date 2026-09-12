@@ -32,6 +32,7 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import PlanCardsSection from '@/components/ui/PlanCardsSection';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 import { parseScheduleText } from '@/lib/validation';
+import { trackEvent } from '@/lib/analytics';
 import { CITY_CATALOG, citiesByCountry, countryOfCity, getCountryMeta, planLabel, planName, planPrice } from '@/lib/geo';
 
 const CATEGORIES = [
@@ -138,6 +139,13 @@ function DashboardContent() {
   const [scheduleClose, setScheduleClose] = useState('6:00 PM');
   const [is24h, setIs24h] = useState(false);
   const [isImprovingDescription, setIsImprovingDescription] = useState(false);
+  const [providerMetrics, setProviderMetrics] = useState<{
+    whatsappClicks: number;
+    phoneCalls: number;
+    profileViews: number;
+    searchImpressions: number;
+    conversionRate: string;
+  } | null>(null);
   const [status, setStatus] = useState<'draft' | 'in_audit' | 'published'>('draft');
 
   // The server session and Supabase-backed API are the only sources of identity/data.
@@ -186,6 +194,45 @@ function DashboardContent() {
       }
       setStatus(data.status || 'draft');
       setHasBusiness(true);
+
+      // Reclamo de ficha: /provider/dashboard?claim=<business-id> (viene del CTA en la ficha).
+      const claimId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('claim') : null;
+      if (claimId && active) {
+        try {
+          const claimResponse = await fetch(`/api/businesses/${encodeURIComponent(claimId)}/claim`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          if (claimResponse.ok) {
+            trackEvent({ event_name: 'claim_completed', business_id: claimId, metadata: { entry: 'ficha' } });
+            setSuccessMessage('¡Ficha reclamada! Quedó en revisión; publicaremos los cambios al aprobarlos.');
+            if (typeof window !== 'undefined') window.history.replaceState(null, '', '/provider/dashboard');
+            setTimeout(() => {
+              if (active) window.location.reload();
+            }, 1600);
+          } else {
+            const claimError = await claimResponse.json().catch(() => ({}));
+            setSuccessMessage(
+              claimError?.error === 'PROVIDER_WRITE_REQUIRED'
+                ? 'Tu cuenta aún se está habilitando como comerciante. Espera unos segundos y vuelve a intentar.'
+                : 'No pudimos reclamar la ficha. Escríbenos a contacto@guaki.online.',
+            );
+          }
+        } catch {
+          setSuccessMessage('No pudimos reclamar la ficha. Intenta de nuevo.');
+        }
+      }
+
+      // Métricas reales del negocio (últimos 30 días). Nunca bloquean el panel.
+      try {
+        const metricsResponse = await fetch('/api/provider/metrics', { credentials: 'include' });
+        if (metricsResponse.ok) {
+          const metricsData = await metricsResponse.json();
+          if (active && metricsData?.metrics) setProviderMetrics(metricsData.metrics);
+        }
+      } catch {
+        /* silencioso */
+      }
     })().catch(() => undefined);
     return () => { active = false; };
   }, []);
@@ -331,6 +378,11 @@ function DashboardContent() {
       setHasBusiness(true);
 
       const targetId = savedBusiness?.id || id || generatedId;
+      trackEvent({
+        event_name: 'ficha_saved',
+        business_id: targetId,
+        metadata: { name: businessName, slug: savedBusiness?.slug || generatedSlug },
+      });
       let auditQueued = false;
       try {
         const auditResponse = await fetch(`/api/businesses/${encodeURIComponent(targetId)}`, {
@@ -345,6 +397,7 @@ function DashboardContent() {
       }
 
       if (auditQueued) {
+        trackEvent({ event_name: 'audit_submitted', business_id: targetId, metadata: { name: businessName } });
         setStatus('in_audit');
         setSuccessMessage('¡Afiche guardado y enviado a auditoría automáticamente! Publicaremos tu ficha cuando sea aprobada.');
       } else {
@@ -1666,11 +1719,11 @@ function DashboardContent() {
                 </div>
 
                 <ProviderMetricsCard
-                  whatsappClicks={merchantUser?.plan === 'vip' ? 6 : merchantUser?.plan === 'verificado' ? 2 : 0}
-                  phoneCalls={0}
-                  profileViews={merchantUser?.plan === 'vip' ? 28 : merchantUser?.plan === 'verificado' ? 12 : 1}
-                  searchImpressions={merchantUser?.plan === 'vip' ? 140 : merchantUser?.plan === 'verificado' ? 45 : 3}
-                  conversionRate={merchantUser?.plan === 'gratis' ? '0%' : '14.2%'}
+                  whatsappClicks={providerMetrics?.whatsappClicks ?? 0}
+                  phoneCalls={providerMetrics?.phoneCalls ?? 0}
+                  profileViews={providerMetrics?.profileViews ?? 0}
+                  searchImpressions={providerMetrics?.searchImpressions ?? 0}
+                  conversionRate={providerMetrics?.conversionRate ?? '0%'}
                 />
 
                 {merchantUser?.plan === 'gratis' && (
@@ -1968,6 +2021,7 @@ function DashboardContent() {
                     selectedPlanId={merchantUser.plan}
                     country={country}
                     onSelectPlan={async (newPlanId) => {
+                      trackEvent({ event_name: 'plan_interest', metadata: { plan: newPlanId } });
                       if (!id) {
                         setSuccessMessage('Primero guarda una ficha para asociar el plan al negocio.');
                         return;
