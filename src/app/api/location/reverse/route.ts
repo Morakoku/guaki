@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`;
       const response = await fetch(nominatimUrl, {
         headers: {
-          'User-Agent': 'GUAKI-Marketplace-LocationService/1.0 (contacto@guaki.co)',
+          'User-Agent': 'GUAKI-Marketplace-LocationService/1.0 (contacto@guaki.online)',
           'Accept-Language': 'es-CO,es;q=0.9',
         },
         signal: AbortSignal.timeout(3500),

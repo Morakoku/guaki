@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
               )}
             </div>
             <span style={{ fontSize: '20px', color: '#AFC8AD', fontWeight: 700 }}>
-              guaki.co · WhatsApp 1-Clic
+              guaki.online · WhatsApp 1-Clic
             </span>
           </div>
         </div>

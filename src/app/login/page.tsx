@@ -63,7 +63,7 @@ export default function LoginPage() {
     }
     setBusy(true);
     try {
-      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://guakiweb.vercel.app/login';
+      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://guaki.online/login';
       const { error: resendErr } = await getSupabaseClient().auth.resend({
         type: 'signup',
         email: userEmail,

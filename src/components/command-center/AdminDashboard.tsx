@@ -1183,7 +1183,7 @@ function LeadsPanel({ data, onOpen }: { data: LiveProspects | null; onOpen: (id:
 
 function ConnectionsPanel() {
   const connections = [
-    ['Vercel', 'Deployment / Hosting', 'PROD LIVE', 'Desplegado en producción con 32 rutas activas (guakiweb.vercel.app)', Cloud, 'green'],
+    ['Vercel', 'Deployment / Hosting', 'PROD LIVE', 'Desplegado en producción con 32 rutas activas (guaki.online)', Cloud, 'green'],
     ['PostgreSQL 5435', 'Base de Datos CRM Mapache', 'ONLINE', '355 empresas persistidas con validación SHA-256', Database, 'green'],
     ['Hermes Bridge', 'Gateway de Sincronización', 'ONLINE', 'Puerto 9121 activo con token de servicio', Radio, 'green'],
     ['Mapache FastAPI', 'Backend de Prospección', 'ONLINE', 'FastAPI en puerto 8000 con enrutador La Trinidad', Server, 'green'],
@@ -1220,7 +1220,7 @@ function GatesPanel() {
     ['Procedencia & Hashes', 'PASS', 'Manifests, hashes SHA-256 y arquitectura preservados.'],
     ['Build Local & Tipos', 'PASS', 'Guaki 32 rutas compiladas, 0 errores TypeScript/ESLint.'],
     ['Auth & Sesiones', 'PASS', 'Sesión HttpOnly, middleware de seguridad y roles.'],
-    ['Deployment Producción', 'PASS', 'Vercel Producción Live (guakiweb.vercel.app).'],
+    ['Deployment Producción', 'PASS', 'Vercel Producción Live (guaki.online).'],
     ['Datos Reales & CRM', 'PASS', '355 prospectos reales en PostgreSQL 5435 con scoring DQS.'],
     ['Enrutador La Trinidad', 'PASS', 'Clasificación 3 puertas (Veyra, Guaki, Lanza) y despacho automático.'],
     ['Aislamiento y Seguridad', 'PASS', 'Command Center aislado y protegido en localhost (404 en Vercel).'],

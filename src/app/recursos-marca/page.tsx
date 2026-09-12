@@ -31,7 +31,7 @@ export default function BrandResourcesPage() {
   };
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-    `https://guakiweb.vercel.app/proveedores/${slug}`
+    `https://guaki.online/proveedores/${slug}`
   )}&bgcolor=FFFFFF&color=17382D&margin=2`;
 
   const handlePrint = () => {
@@ -297,7 +297,7 @@ export default function BrandResourcesPage() {
                     Escanea para ver horarios & WhatsApp
                   </span>
                   <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>
-                    guaki.co · Verificado
+                    guaki.online · Verificado
                   </span>
                 </div>
               ) : (

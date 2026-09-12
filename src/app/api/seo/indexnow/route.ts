@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Debes proporcionar al menos una URL para notificar' }, { status: 400 });
     }
 
-    const host = 'guakiweb.vercel.app';
+    const host = 'guaki.online';
     const key = process.env.INDEXNOW_KEY || 'guaki-indexnow-master-key-2026';
 
     const allowedHosts = new Set([
       host,
+      'www.guaki.online',
       'localhost',
-      'guaki.co',
-      'guaki.com.co',
+      'guakiweb.vercel.app',
       'guaki.vercel.app',
       'guaki-morakokus-projects.vercel.app',
     ]);
