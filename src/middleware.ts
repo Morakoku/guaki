@@ -57,6 +57,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // WEB1: /register es convención pública → redirección HTTP real (308 con
+  // Location). El redirect() del Server Component generaba 307 sin Location en
+  // el edge (meta-refresh), invisible para browsers pero roto para crawlers.
+  if (path === '/register' || path.startsWith('/register/')) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.search = '';
+    return NextResponse.redirect(loginUrl, 308);
+  }
+
   // 141 & 71. Edge Geolocation por IP en Vercel
   const city = request.headers.get('x-vercel-ip-city') || (isLocal ? 'Medellín' : '');
   const country = request.headers.get('x-vercel-ip-country') || (isLocal ? 'CO' : '');
