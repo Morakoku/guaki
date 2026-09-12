@@ -6,7 +6,9 @@ import { ArrowRight, MessageCircle, Store } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import { trackEvent } from '@/lib/analytics';
 
-const WHATSAPP_NUMBER = '573043338899';
+// Número oficial de WhatsApp de Guaki (pendiente de compra).
+// Se configura con NEXT_PUBLIC_GUAKI_WHATSAPP en Vercel; si no existe, el CTA se oculta.
+const WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_GUAKI_WHATSAPP || '').replace(/\D/g, '');
 
 function readRef(): string | null {
   try {
@@ -23,6 +25,8 @@ function readRef(): string | null {
 }
 
 export default function UneteCTAs() {
+  const hasWhatsApp = WHATSAPP_NUMBER.length >= 10;
+
   const buildWhatsAppHref = () => {
     const ref = readRef();
     const message = ref
@@ -53,28 +57,30 @@ export default function UneteCTAs() {
         <ArrowRight size={16} />
       </Link>
 
-      <a
-        href={buildWhatsAppHref()}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => trackEvent({ event_name: 'merchant_cta_clicked', metadata: { channel: 'whatsapp', entry: 'unete' } })}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '9px',
-          padding: '15px 26px',
-          borderRadius: TOKENS.radii.pill,
-          fontSize: '0.98rem',
-          fontWeight: 900,
-          textDecoration: 'none',
-          backgroundColor: '#25D366',
-          color: '#FFFFFF',
-          boxShadow: '0 8px 22px rgba(37, 211, 102, 0.28)',
-        }}
-      >
-        <MessageCircle size={18} />
-        Hablar por WhatsApp
-      </a>
+      {hasWhatsApp && (
+        <a
+          href={buildWhatsAppHref()}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent({ event_name: 'merchant_cta_clicked', metadata: { channel: 'whatsapp', entry: 'unete' } })}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '9px',
+            padding: '15px 26px',
+            borderRadius: TOKENS.radii.pill,
+            fontSize: '0.98rem',
+            fontWeight: 900,
+            textDecoration: 'none',
+            backgroundColor: '#25D366',
+            color: '#FFFFFF',
+            boxShadow: '0 8px 22px rgba(37, 211, 102, 0.28)',
+          }}
+        >
+          <MessageCircle size={18} />
+          Hablar por WhatsApp
+        </a>
+      )}
     </div>
   );
 }

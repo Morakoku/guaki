@@ -48,6 +48,8 @@ const BENEFITS = [
 ];
 
 export default function UnetePage() {
+  const hasWhatsApp = (process.env.NEXT_PUBLIC_GUAKI_WHATSAPP || '').replace(/\D/g, '').length >= 10;
+
   return (
     <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent', color: TOKENS.colors.textMain }}>
       <GuakiHeader />
@@ -170,7 +172,9 @@ export default function UnetePage() {
         <section style={{ textAlign: 'center' }}>
           <h2 style={{ fontSize: '1.3rem', fontWeight: 900, margin: '0 0 10px' }}>¿Listo para recibir clientes?</h2>
           <p style={{ fontSize: '0.92rem', color: TOKENS.colors.textSecondary, margin: '0 0 22px' }}>
-            Si prefieres, un asesor te acompaña por WhatsApp y creamos la ficha contigo.
+            {hasWhatsApp
+              ? 'Si prefieres, un asesor te acompaña por WhatsApp y creamos la ficha contigo.'
+              : 'Crea tu ficha en 2 minutos. Es 100% gratis y sin comisiones.'}
           </p>
           <UneteCTAs />
         </section>
