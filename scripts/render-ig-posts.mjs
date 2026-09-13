@@ -4,6 +4,7 @@ import path from 'node:path';
 const [, , batchPath, outputDir] = process.argv;
 if (!batchPath || !outputDir) {
   console.error('Uso: node scripts/render-ig-posts.mjs <batch.json> <outputDir>');
+  console.error('El batch debe llevar "theme": "guaki" | "veyra" | "brenda" (ver 04_COPY_Y_REFERENCIAS/BIBLIAS/).');
   process.exit(1);
 }
 
@@ -12,14 +13,94 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 const BG_PREFIX = process.env.IG_BG_PREFIX || '../../../03_FONDOS_IA/';
 
-const COLORS = {
-  emerald: '#17382D',
-  emeraldMid: '#2A5A4A',
-  green: '#15803D',
-  sage: '#DCE9D5',
-  cream: '#F4F7F2',
-  ink: '#10241C',
+// Temas = las biblias de marca (BIBLIAS/*.md). Cambiar un color aqui sin
+// actualizar la biblia se considera bug, no feature.
+const THEMES = {
+  guaki: {
+    logo: '🥑 GUAKI',
+    url: 'guaki.online',
+    fonts: { head: 'Outfit', body: 'Inter', kicker: 'Outfit' },
+    fontImport: 'family=Outfit:wght@600;700;900&family=Inter:wght@400;600;800',
+    colors: {
+      emerald: '#17382D',
+      emeraldMid: '#2A5A4A',
+      green: '#15803D',
+      sage: '#DCE9D5',
+      cream: '#F4F7F2',
+      ink: '#10241C',
+      kickerLight: '#B9E4C6',
+      scrimDarkTop: 'rgba(16,36,28,0.72)',
+      scrimDarkMid: 'rgba(16,36,28,0.35)',
+      scrimDarkBottom: 'rgba(16,36,28,0.82)',
+      scrimBrandTop: 'rgba(23,56,45,0.88)',
+      scrimBrandMid: 'rgba(23,56,45,0.62)',
+      scrimBrandBottom: 'rgba(21,74,52,0.92)',
+      scrimLightTop: 'rgba(244,247,242,0.28)',
+      scrimLightBottom: 'rgba(244,247,242,0.42)',
+      panelShadow: 'rgba(16,36,28,0.22)',
+    },
+  },
+  veyra: {
+    logo: '🧭 VEYRA',
+    url: 'veyrasoluciones.com',
+    fonts: { head: 'Outfit', body: 'Inter', kicker: 'JetBrains Mono' },
+    fontImport: 'family=Outfit:wght@600;700;900&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700;800',
+    colors: {
+      emerald: '#0A0A0A',
+      emeraldMid: '#1F1F1F',
+      green: '#FF5722',
+      sage: '#F8FAFC',
+      cream: '#FFFFFF',
+      ink: '#0A0A0A',
+      kickerLight: '#FF5722',
+      scrimDarkTop: 'rgba(10,10,10,0.78)',
+      scrimDarkMid: 'rgba(10,10,10,0.42)',
+      scrimDarkBottom: 'rgba(10,10,10,0.86)',
+      scrimBrandTop: 'rgba(10,10,10,0.9)',
+      scrimBrandMid: 'rgba(10,10,10,0.66)',
+      scrimBrandBottom: 'rgba(10,10,10,0.94)',
+      scrimLightTop: 'rgba(255,255,255,0.3)',
+      scrimLightBottom: 'rgba(255,255,255,0.46)',
+      panelShadow: 'rgba(10,10,10,0.18)',
+    },
+  },
+  brenda: {
+    logo: '💅 BRENDA',
+    url: 'lista de espera en la bio',
+    fonts: { head: 'Fraunces', body: 'Manrope', kicker: 'Manrope' },
+    fontImport: 'family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;600;800',
+    colors: {
+      emerald: '#241A1E',
+      emeraldMid: '#3A2A31',
+      green: '#9E2B4E',
+      sage: '#E7C8CF',
+      cream: '#F7F1EA',
+      ink: '#241A1E',
+      kickerLight: '#C6A15B',
+      scrimDarkTop: 'rgba(36,26,30,0.74)',
+      scrimDarkMid: 'rgba(36,26,30,0.36)',
+      scrimDarkBottom: 'rgba(36,26,30,0.84)',
+      scrimBrandTop: 'rgba(158,43,78,0.9)',
+      scrimBrandMid: 'rgba(158,43,78,0.66)',
+      scrimBrandBottom: 'rgba(36,26,30,0.92)',
+      scrimLightTop: 'rgba(247,241,234,0.3)',
+      scrimLightBottom: 'rgba(247,241,234,0.44)',
+      panelShadow: 'rgba(36,26,30,0.2)',
+    },
+  },
 };
+
+let themeName = batch.theme;
+if (!themeName) {
+  console.warn('AVISO: batch sin "theme" → usando "guaki" (retrocompatible; los batches nuevos DEBEN declarar theme).');
+  themeName = 'guaki';
+}
+const theme = THEMES[themeName];
+if (!theme) {
+  console.error(`Tema desconocido: "${themeName}". Validos: ${Object.keys(THEMES).join(', ')}`);
+  process.exit(1);
+}
+const COLORS = theme.colors;
 
 function escapeHtml(value = '') {
   return String(value)
@@ -56,7 +137,7 @@ function slideHtml(slide, index, total) {
       <div class="scrim ${slide.scrim === 'light' ? 'scrim-light' : 'scrim-dark'}"></div>
       <div class="content content-cover">
         <div class="topbar">
-          <span class="logo">🥑 GUAKI</span>
+          <span class="logo">${escapeHtml(theme.logo)}</span>
           <span class="counter counter-light">${escapeHtml(slide.topRight || 'HISTORIA')}</span>
         </div>
         ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
@@ -66,7 +147,7 @@ function slideHtml(slide, index, total) {
         ${slide.url ? `<div class="url-pill">👉 ${escapeHtml(slide.url)}</div>` : ''}
         <div class="footer-row">
           <span class="hint">${escapeHtml(slide.hint || '')}</span>
-          <span class="counter">guaki.online</span>
+          <span class="counter">${escapeHtml(theme.url)}</span>
         </div>
       </div>`
     : isCover
@@ -74,7 +155,7 @@ function slideHtml(slide, index, total) {
       <div class="scrim scrim-dark"></div>
       <div class="content content-cover">
         <div class="topbar">
-          <span class="logo">🥑 GUAKI</span>
+          <span class="logo">${escapeHtml(theme.logo)}</span>
           ${slide.badge ? `<span class="badge">${escapeHtml(slide.badge)}</span>` : ''}
         </div>
         ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
@@ -90,13 +171,13 @@ function slideHtml(slide, index, total) {
       <div class="scrim scrim-emerald"></div>
       <div class="content content-cover">
         <div class="topbar">
-          <span class="logo">🥑 GUAKI</span>
+          <span class="logo">${escapeHtml(theme.logo)}</span>
           <span class="counter counter-light">${escapeHtml(number)}</span>
         </div>
         ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
         <h1 class="title title-cover">${escapeHtml(slide.title)}</h1>
         ${slide.body ? `<p class="sub sub-light">${escapeHtml(slide.body)}</p>` : ''}
-        <div class="url-pill">👉 ${escapeHtml(slide.url || 'guaki.online')}</div>
+        <div class="url-pill">👉 ${escapeHtml(slide.url || theme.url)}</div>
       </div>`
       : `
       <div class="scrim scrim-light"></div>
@@ -119,45 +200,45 @@ function slideHtml(slide, index, total) {
 <title>${escapeHtml(slide.title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?${theme.fontImport}&display=swap" rel="stylesheet" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100vw; height: 100vh; overflow: hidden; }
-  body { position: relative; background: ${COLORS.emerald}; font-family: 'Inter', system-ui, sans-serif; }
+  body { position: relative; background: ${COLORS.emerald}; font-family: '${theme.fonts.body}', system-ui, sans-serif; }
   .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .scrim { position: absolute; inset: 0; }
-  .scrim-dark { background: linear-gradient(180deg, rgba(16,36,28,0.72) 0%, rgba(16,36,28,0.35) 38%, rgba(16,36,28,0.82) 100%); }
-  .scrim-emerald { background: linear-gradient(180deg, rgba(23,56,45,0.88) 0%, rgba(23,56,45,0.62) 45%, rgba(21,74,52,0.92) 100%); }
-  .scrim-light { background: linear-gradient(180deg, rgba(244,247,242,0.28) 0%, rgba(244,247,242,0.42) 100%); }
+  .scrim-dark { background: linear-gradient(180deg, ${COLORS.scrimDarkTop} 0%, ${COLORS.scrimDarkMid} 38%, ${COLORS.scrimDarkBottom} 100%); }
+  .scrim-emerald { background: linear-gradient(180deg, ${COLORS.scrimBrandTop} 0%, ${COLORS.scrimBrandMid} 45%, ${COLORS.scrimBrandBottom} 100%); }
+  .scrim-light { background: linear-gradient(180deg, ${COLORS.scrimLightTop} 0%, ${COLORS.scrimLightBottom} 100%); }
   .content { position: absolute; inset: 0; padding: 7.78vw 7.04vw; display: flex; flex-direction: column; }
   .content-cover { justify-content: flex-end; gap: 2.4vw; }
   .topbar { position: absolute; top: 7.04vw; left: 7.04vw; right: 7.04vw; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-family: 'Outfit'; font-weight: 900; font-size: 3.15vw; letter-spacing: 0.02em; color: ${COLORS.cream}; }
-  .badge { font-family: 'Outfit'; font-weight: 900; font-size: 2.22vw; letter-spacing: 0.14em; color: ${COLORS.emerald}; background: ${COLORS.sage}; padding: 0.93vw 2.04vw; border-radius: 999px; }
-  .kicker { font-family: 'Outfit'; font-weight: 700; font-size: 2.41vw; letter-spacing: 0.16em; text-transform: uppercase; }
-  .kicker-light { color: #B9E4C6; }
+  .logo { font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.15vw; letter-spacing: 0.02em; color: ${COLORS.cream}; }
+  .badge { font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 2.22vw; letter-spacing: 0.14em; color: ${COLORS.emerald}; background: ${COLORS.sage}; padding: 0.93vw 2.04vw; border-radius: 999px; }
+  .kicker { font-family: '${theme.fonts.kicker}'; font-weight: 700; font-size: 2.41vw; letter-spacing: 0.16em; text-transform: uppercase; }
+  .kicker-light { color: ${COLORS.kickerLight}; }
   .kicker-dark { color: ${COLORS.green}; }
-  .title { font-family: 'Outfit'; font-weight: 900; letter-spacing: -0.02em; }
+  .title { font-family: '${theme.fonts.head}'; font-weight: 900; letter-spacing: -0.02em; }
   .title-cover { color: ${COLORS.cream}; font-size: 8.52vw; line-height: 1.02; max-width: 83vw; }
   .title-slide { color: ${COLORS.ink}; font-size: 6.67vw; line-height: 1.06; }
   .sub { font-weight: 600; }
-  .sub-light { color: rgba(244,247,242,0.92); font-size: 3.52vw; line-height: 1.4; max-width: 72vw; }
+  .sub-light { color: ${COLORS.cream}E8; font-size: 3.52vw; line-height: 1.4; max-width: 72vw; }
   .footer-row { display: flex; align-items: center; justify-content: space-between; margin-top: 1.3vw; }
-  .hint { color: rgba(244,247,242,0.85); font-weight: 800; font-size: 2.96vw; }
-  .counter { font-family: 'Outfit'; font-weight: 700; font-size: 2.59vw; color: rgba(244,247,242,0.8); }
-  .counter-light { color: rgba(244,247,242,0.85); }
-  .counter-dark { color: rgba(16,36,28,0.55); }
-  .url-pill { margin-top: 1.7vw; align-self: flex-start; background: ${COLORS.sage}; color: ${COLORS.emerald}; font-family: 'Outfit'; font-weight: 900; font-size: 3.7vw; padding: 2.04vw 3.7vw; border-radius: 999px; }
-  .panel { background: rgba(244,247,242,0.94); border-radius: 4.44vw; padding: 5.93vw 5.37vw; box-shadow: 0 2.78vw 7.41vw rgba(16,36,28,0.22); margin-top: auto; }
+  .hint { color: ${COLORS.cream}D8; font-weight: 800; font-size: 2.96vw; }
+  .counter { font-family: '${theme.fonts.head}'; font-weight: 700; font-size: 2.59vw; color: ${COLORS.cream}CC; }
+  .counter-light { color: ${COLORS.cream}D8; }
+  .counter-dark { color: ${COLORS.ink}8C; }
+  .url-pill { margin-top: 1.7vw; align-self: flex-start; background: ${COLORS.sage}; color: ${COLORS.emerald}; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.7vw; padding: 2.04vw 3.7vw; border-radius: 999px; }
+  .panel { background: ${COLORS.cream}F0; border-radius: 4.44vw; padding: 5.93vw 5.37vw; box-shadow: 0 2.78vw 7.41vw ${COLORS.panelShadow}; margin-top: auto; }
   .panel-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3.15vw; }
-  .body { color: rgba(16,36,28,0.86); font-size: 3.7vw; line-height: 1.42; font-weight: 600; margin-top: 2.4vw; }
+  .body { color: ${COLORS.ink}DB; font-size: 3.7vw; line-height: 1.42; font-weight: 600; margin-top: 2.4vw; }
   .bullets { list-style: none; margin-top: 3.15vw; display: flex; flex-direction: column; gap: 1.85vw; }
   .bullets li { display: flex; align-items: center; gap: 1.67vw; color: ${COLORS.ink}; font-size: 3.7vw; font-weight: 800; }
   .check { display: inline-flex; width: 4.26vw; height: 4.26vw; border-radius: 50%; background: ${COLORS.green}; color: #fff; align-items: center; justify-content: center; font-size: 2.41vw; flex-shrink: 0; }
   .story-title { font-size: 6.8vw; max-width: 88vw; }
   .options { display: flex; flex-direction: column; gap: 1.7vw; margin-top: 1.5vw; }
-  .option { display: flex; align-items: center; gap: 1.5vw; background: rgba(244,247,242,0.14); border: 1px solid rgba(244,247,242,0.38); border-radius: 999px; padding: 1.7vw 2.4vw; color: ${COLORS.cream}; font-size: 3.1vw; font-weight: 700; }
-  .opt-letter { display: inline-flex; width: 4.3vw; height: 4.3vw; border-radius: 50%; background: ${COLORS.sage}; color: ${COLORS.emerald}; align-items: center; justify-content: center; font-family: 'Outfit'; font-weight: 900; font-size: 2.6vw; flex-shrink: 0; }
+  .option { display: flex; align-items: center; gap: 1.5vw; background: ${COLORS.cream}24; border: 1px solid ${COLORS.cream}60; border-radius: 999px; padding: 1.7vw 2.4vw; color: ${COLORS.cream}; font-size: 3.1vw; font-weight: 700; }
+  .opt-letter { display: inline-flex; width: 4.3vw; height: 4.3vw; border-radius: 50%; background: ${COLORS.sage}; color: ${COLORS.emerald}; align-items: center; justify-content: center; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 2.6vw; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -174,4 +255,4 @@ for (const slide of batch.slides) {
   fs.writeFileSync(path.join(outputDir, fileName), slideHtml(slide, index - 1, batch.slides.length));
   console.log(`wrote ${fileName} -> ${slide.title.slice(0, 48)}`);
 }
-console.log(`Total: ${index} slides en ${outputDir}`);
+console.log(`Total: ${index} slides (tema: ${themeName}) en ${outputDir}`);
