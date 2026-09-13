@@ -15,14 +15,20 @@ interface MetricsProps {
 export default function ProviderMetricsCard({
   whatsappClicks = 0,
   phoneCalls = 0,
-  profileViews = 1,
-  searchImpressions = 3,
+  profileViews = 0,
+  searchImpressions = 0,
   conversionRate = '0%',
 }: MetricsProps) {
   const totalDirectContacts = whatsappClicks + phoneCalls;
+  const sinDatos = totalDirectContacts === 0 && profileViews === 0 && searchImpressions === 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {sinDatos ? (
+        <p style={{ fontSize: '0.86rem', color: TOKENS.colors.textMuted, margin: 0 }}>
+          Aún sin datos: cuando alguien vea o contacte tu ficha, verás aquí el movimiento real.
+        </p>
+      ) : null}
       {/* ── 1. Hero KPI Bar: Resumen de Conversión Directa ── */}
       <div
         style={{

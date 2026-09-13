@@ -146,6 +146,18 @@ function DashboardContent() {
     searchImpressions: number;
     conversionRate: string;
   } | null>(null);
+  const [inquiries, setInquiries] = useState<Array<{
+    id: string;
+    clientName: string;
+    clientContact?: string;
+    email?: string;
+    message: string;
+    serviceRequested?: string;
+    status: 'new' | 'contacted' | 'quoted' | 'scheduled' | 'closed';
+    createdAt: string;
+  }>>([]);
+  const [inquiriesLoaded, setInquiriesLoaded] = useState(false);
+  const [inquiriesBusinessId, setInquiriesBusinessId] = useState<string | null>(null);
   const [status, setStatus] = useState<'draft' | 'in_audit' | 'published'>('draft');
 
   // The server session and Supabase-backed API are the only sources of identity/data.
@@ -233,13 +245,51 @@ function DashboardContent() {
       } catch {
         /* silencioso */
       }
+
+      // Inbox de inquiries del negocio (backend ya existía; la UI nunca lo mostraba).
+      try {
+        const inqResponse = await fetch('/api/provider/inquiries', { credentials: 'include' });
+        if (inqResponse.ok) {
+          const inqData = await inqResponse.json();
+          if (active && inqData?.ok) {
+            setInquiries(Array.isArray(inqData.inquiries) ? inqData.inquiries : []);
+            setInquiriesBusinessId(inqData.businessId || null);
+          }
+        }
+      } catch {
+        /* silencioso */
+      } finally {
+        if (active) setInquiriesLoaded(true);
+      }
     })().catch(() => undefined);
     return () => { active = false; };
   }, []);
 
+  const updateInquiryStatus = async (
+    inquiryId: string,
+    nextStatus: 'new' | 'contacted' | 'quoted' | 'scheduled' | 'closed',
+  ) => {
+    const businessId = id || inquiriesBusinessId;
+    if (!businessId) return;
+    try {
+      const r = await fetch(`/api/businesses/${encodeURIComponent(businessId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'update_inquiry', inquiryId, status: nextStatus }),
+      });
+      if (!r.ok) {
+        setSuccessMessage('No se pudo actualizar el estado del mensaje.');
+        return;
+      }
+      setInquiries((prev) => prev.map((q) => (q.id === inquiryId ? { ...q, status: nextStatus } : q)));
+    } catch {
+      setSuccessMessage('No se pudo actualizar el estado del mensaje.');
+    }
+  };
+
   // 1. Registro / Suscripción de Comerciante
-  const handleRegisterOrLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegisterOrLogin = async (e: React.FormEvent) => {    e.preventDefault();
     if (!ownerEmail.trim() || !ownerPassword.trim()) {
       alert('Por favor ingresa tu correo y contraseña para continuar.');
       return;
@@ -1718,13 +1768,77 @@ function DashboardContent() {
                   </p>
                 </div>
 
-                <ProviderMetricsCard
-                  whatsappClicks={providerMetrics?.whatsappClicks ?? 0}
-                  phoneCalls={providerMetrics?.phoneCalls ?? 0}
-                  profileViews={providerMetrics?.profileViews ?? 0}
-                  searchImpressions={providerMetrics?.searchImpressions ?? 0}
-                  conversionRate={providerMetrics?.conversionRate ?? '0%'}
-                />
+                {providerMetrics ? (
+                  <ProviderMetricsCard
+                    whatsappClicks={providerMetrics.whatsappClicks}
+                    phoneCalls={providerMetrics.phoneCalls}
+                    profileViews={providerMetrics.profileViews}
+                    searchImpressions={providerMetrics.searchImpressions}
+                    conversionRate={providerMetrics.conversionRate}
+                  />
+                ) : (
+                  <p style={{ fontSize: '0.9rem', color: TOKENS.colors.textSecondary }}>Cargando métricas reales…</p>
+                )}
+
+                <div style={{ marginTop: '28px' }}>
+                  <h3 style={{ fontSize: '1.02rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    📥 Mensajes de clientes {inquiriesLoaded && inquiries.length > 0 ? `(${inquiries.length})` : ''}
+                  </h3>
+                  <p style={{ fontSize: '0.84rem', color: TOKENS.colors.textSecondary, margin: '0 0 14px' }}>
+                    Quien te escribió desde tu ficha. Respóndelos rápido: la velocidad de respuesta es lo que convierte.
+                  </p>
+                  {!inquiriesLoaded ? (
+                    <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary }}>Cargando mensajes…</p>
+                  ) : inquiries.length === 0 ? (
+                    <div style={{ padding: '26px 20px', borderRadius: TOKENS.radii.lg, border: `1px dashed ${TOKENS.colors.borderSubtle}`, textAlign: 'center' }}>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 800, color: TOKENS.colors.textMain, margin: '0 0 4px' }}>Aún no hay mensajes</p>
+                      <p style={{ fontSize: '0.84rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
+                        Cuando un cliente escriba desde tu ficha, aparecerá aquí con su contacto.
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {inquiries.map((q) => (
+                        <div key={q.id} style={{ padding: '16px 18px', borderRadius: TOKENS.radii.lg, backgroundColor: TOKENS.colors.surfaceElevated, border: `1px solid ${TOKENS.colors.borderLight}` }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                            <strong style={{ fontSize: '0.92rem', color: TOKENS.colors.textMain }}>
+                              {q.clientName || 'Cliente'}
+                              {q.serviceRequested ? <span style={{ fontWeight: 600, color: TOKENS.colors.textSecondary }}> · {q.serviceRequested}</span> : null}
+                            </strong>
+                            <select
+                              value={q.status}
+                              onChange={(e) => updateInquiryStatus(q.id, e.target.value as 'new')}
+                              aria-label={`Estado del mensaje de ${q.clientName || 'cliente'}`}
+                              style={{ fontSize: '0.78rem', fontWeight: 800, padding: '4px 8px', borderRadius: TOKENS.radii.pill, border: `1px solid ${TOKENS.colors.borderSubtle}`, backgroundColor: q.status === 'new' ? '#FEF3C7' : 'transparent', color: TOKENS.colors.textMain }}
+                            >
+                              <option value="new">Nuevo</option>
+                              <option value="contacted">Contactado</option>
+                              <option value="quoted">Cotizado</option>
+                              <option value="scheduled">Agendado</option>
+                              <option value="closed">Cerrado</option>
+                            </select>
+                          </div>
+                          <p style={{ fontSize: '0.88rem', color: TOKENS.colors.textSecondary, margin: '0 0 8px', lineHeight: 1.45 }}>{q.message}</p>
+                          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '0.8rem', color: TOKENS.colors.textMuted }}>
+                            {q.clientContact ? (
+                              <a
+                                href={`https://wa.me/${String(q.clientContact).replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => trackEvent({ event_name: 'whatsapp_clicked', metadata: { source: 'provider_inbox', inquiry_id: q.id } })}
+                                style={{ color: TOKENS.colors.emeraldDark, fontWeight: 800, textDecoration: 'none' }}
+                              >
+                                Responder por WhatsApp
+                              </a>
+                            ) : null}
+                            {q.email ? <a href={`mailto:${q.email}`} style={{ color: TOKENS.colors.textSecondary }}>✉ {q.email}</a> : null}
+                            <span>{new Date(q.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {merchantUser?.plan === 'gratis' && (
                   <div
@@ -2021,24 +2135,21 @@ function DashboardContent() {
                     selectedPlanId={merchantUser.plan}
                     country={country}
                     onSelectPlan={async (newPlanId) => {
-                      trackEvent({ event_name: 'plan_interest', metadata: { plan: newPlanId } });
-                      if (!id) {
-                        setSuccessMessage('Primero guarda una ficha para asociar el plan al negocio.');
-                        return;
+                      trackEvent({ event_name: 'plan_interest', metadata: { plan: newPlanId, business_id: id || undefined } });
+                      if (newPlanId === merchantUser.plan) return;
+                      // El plan NO se auto-cambia: el upgrade se solicita (cobro
+                      // manual SOP / checkout futuro). El server ya rechaza
+                      // cualquier PATCH de plan que no sea de un admin.
+                      const planLabel = String(newPlanId).toUpperCase();
+                      const wa = (process.env.NEXT_PUBLIC_GUAKI_WHATSAPP || '').replace(/\D/g, '');
+                      if (wa.length >= 10) {
+                        const msg = `Hola Guaki, quiero solicitar el Plan ${planLabel} para mi ficha${merchantUser.name ? ` "${merchantUser.name}"` : ''}. (ref: ig-dm)`;
+                        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+                        setSuccessMessage('Solicitud lista en WhatsApp: Guaki confirma el plan al recibir el pago.');
+                      } else {
+                        setSuccessMessage(`Solicitud del Plan ${planLabel} registrada: un asesor de Guaki te contacta para confirmar el pago antes de activarlo.`);
                       }
-                      const response = await fetch(`/api/businesses/${encodeURIComponent(id)}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ plan: newPlanId }),
-                      });
-                      if (!response.ok) {
-                        setSuccessMessage('No se pudo persistir el cambio de plan.');
-                        return;
-                      }
-                      setMerchantUser({ ...merchantUser, plan: newPlanId });
-                      setSuccessMessage(`¡Plan actualizado con éxito al Plan ${newPlanId.toUpperCase()}!`);
-                      setTimeout(() => setSuccessMessage(''), 3500);
+                      setTimeout(() => setSuccessMessage(''), 5000);
                     }}
                   />
                 </div>

@@ -255,6 +255,18 @@ export async function PATCH(request: NextRequest, { params }: Props) {
 
         return NextResponse.json({ business: updated, next: decision.toUpperCase(), persistence: 'supabase' });
       }
+      // Monetización: `plan` solo lo mueve un admin. El cobro es manual (SOP)
+      // hasta haber checkout; si un provider pudiera PATCHear su plan, se
+      // auto-regalaría Verificado (agujero auditado 2026-09-12).
+      if (payload.plan !== undefined && actor.user.app_metadata?.role !== 'admin') {
+        return NextResponse.json(
+          {
+            error: 'PLAN_CHANGE_REQUIRES_PAYMENT',
+            message: 'El cambio de plan se coordina con Guaki: usa "Solicitar upgrade" en tu panel.',
+          },
+          { status: 403 }
+        );
+      }
       const validation = validateBusinessPayload(payload, true);
       if (!validation.success || !validation.data) {
         return NextResponse.json({ error: 'Datos de actualización inválidos.', details: validation.errors }, { status: 400 });

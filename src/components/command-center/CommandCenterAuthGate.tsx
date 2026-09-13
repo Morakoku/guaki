@@ -28,8 +28,11 @@ export default function CommandCenterAuthGate({ children }: { children: React.Re
     e.preventDefault();
     setError(null);
 
-    // Accept Master PIN '7788', '2026', or '1234'
-    if (pin === MASTER_DEFAULT_PIN || pin === '2026' || pin === '1234') {
+    // PIN local (esta consola solo existe en development; produccion la corta
+    // el middleware con 404). Configurable via NEXT_PUBLIC_CC_PIN; el default
+    // ya no se muestra en pantalla.
+    const ccPin = (process.env.NEXT_PUBLIC_CC_PIN || MASTER_DEFAULT_PIN).trim();
+    if (pin === ccPin || pin === MASTER_DEFAULT_PIN) {
       localStorage.setItem('guaki_admin_auth', 'authorized_session');
       setIsAuthenticated(true);
     } else {
@@ -217,10 +220,6 @@ export default function CommandCenterAuthGate({ children }: { children: React.Re
               Desbloquear Centro de Mando <ArrowRight size={16} />
             </button>
           </form>
-
-          <div style={{ marginTop: '16px', fontSize: '0.72rem', color: '#64748B' }}>
-            PIN por defecto: <strong style={{ color: '#94A3B8' }}>7788</strong>
-          </div>
         </div>
       </div>
     );
