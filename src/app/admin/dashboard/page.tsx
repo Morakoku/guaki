@@ -13,9 +13,13 @@ import {
   Eye,
   MessageCircle,
   Pin,
+  Gauge,
+  Users,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import GuakiHeader from '@/components/ui/GuakiHeader';
+import AdminResumen from '@/components/admin/AdminResumen';
+import AdminUsuarios from '@/components/admin/AdminUsuarios';
 
 interface BusinessAdminRecord {
   id: string;
@@ -60,7 +64,7 @@ export default function AdminGodModeDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas las categorías');
   const [selectedCity, setSelectedCity] = useState('Todas las ciudades');
-  const [adminTab, setAdminTab] = useState<'comercios' | 'precios' | 'exportar'>('comercios');
+  const [adminTab, setAdminTab] = useState<'resumen' | 'comercios' | 'usuarios' | 'precios' | 'exportar'>('resumen');
 
   // Precios Maestros del Sistema
   const [priceVerificado, setPriceVerificado] = useState('49900');
@@ -169,6 +173,35 @@ export default function AdminGodModeDashboard() {
       showToast('✓ Comercio aprobado y publicado en Supabase');
     } catch {
       showToast('No se pudo completar la decisión de auditoría.');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const business = businesses.find((item) => item.id === id);
+    if (!business) return;
+    const reason = window.prompt(
+      `Rechazar la ficha de "${business.name}". El motivo es OBLIGATORIO: se le envía al comercio para que pueda corregir (mínimo 10 caracteres).`,
+    );
+    if (!reason || reason.trim().length < 10) {
+      if (reason !== null) showToast('El motivo del rechazo debe tener al menos 10 caracteres.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/audit/' + encodeURIComponent(id) + '/decision', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision: 'rejected', notes: reason.trim().slice(0, 500) }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        showToast(String(data?.message || data?.error || 'No se pudo registrar el rechazo.'));
+        return;
+      }
+      await refreshBusinesses();
+      showToast('Ficha rechazada: el comercio recibió el motivo por correo.');
+    } catch {
+      showToast('No se pudo registrar el rechazo.');
     }
   };
 
@@ -374,7 +407,9 @@ export default function AdminGodModeDashboard() {
         {/* Pestañas de Navegación del Panel */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
           {[
+            { id: 'resumen', label: '📋 Resumen operativo', icon: Gauge },
             { id: 'comercios', label: '🏪 Gestor Universal de Comercios', icon: Store },
+            { id: 'usuarios', label: '👥 Usuarios', icon: Users },
             { id: 'precios', label: '💰 Control de Precios & Ofertas', icon: DollarSign },
             { id: 'exportar', label: '📊 Exportador Excel / CSV', icon: Download },
           ].map((t) => {
@@ -410,7 +445,13 @@ export default function AdminGodModeDashboard() {
         {/* ═════════════════════════════════════════════════════════════════════════════
             TAB 1: GESTOR UNIVERSAL DE COMERCIOS (Hot CRUD & Overrides)
            ═════════════════════════════════════════════════════════════════════════════ */}
-        {adminTab === 'comercios' && (
+        {adminTab === 'resumen' && (
+        <div style={{ padding: '6px 2px 30px' }}>
+          <AdminResumen />
+        </div>
+      )}
+
+      {adminTab === 'comercios' && (
           <div className="neu-level-2" style={{ padding: '28px', borderRadius: TOKENS.radii.hero }}>
             {/* Barra de Filtros */}
             <div
@@ -625,6 +666,25 @@ export default function AdminGodModeDashboard() {
                             <span>Editar</span>
                           </button>
 
+                            {b.workflowStatus === 'in_audit' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleReject(b.id)}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: TOKENS.radii.pill,
+                                border: '1px solid rgba(220, 38, 38, 0.35)',
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                backgroundColor: 'transparent',
+                                color: '#DC2626',
+                              }}
+                            >
+                              Rechazar
+                            </button>
+                            ) : null}
+
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(b.id)}
@@ -654,7 +714,13 @@ export default function AdminGodModeDashboard() {
         {/* ═════════════════════════════════════════════════════════════════════════════
             TAB 2: CONTROL DE PRECIOS & OFERTAS
            ═════════════════════════════════════════════════════════════════════════════ */}
-        {adminTab === 'precios' && (
+        {adminTab === 'usuarios' && (
+        <div style={{ padding: '6px 2px 30px' }}>
+          <AdminUsuarios />
+        </div>
+      )}
+
+      {adminTab === 'precios' && (
           <div className="neu-level-2" style={{ padding: '32px 28px', borderRadius: TOKENS.radii.hero, maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ marginBottom: '24px' }}>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 6px' }}>

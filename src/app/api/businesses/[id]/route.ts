@@ -227,6 +227,11 @@ export async function PATCH(request: NextRequest, { params }: Props) {
         if (!['approved', 'rejected', 'published'].includes(decision)) {
           return NextResponse.json({ error: 'INVALID_AUDIT_DECISION' }, { status: 400 });
         }
+        // Razon obligatoria al rechazar (patron de colas de moderacion): sin
+        // motivo no se puede rechazar — el comerciante merece saber que corregir.
+        if (decision === 'rejected' && (typeof payload.auditNotes !== 'string' || !payload.auditNotes.trim())) {
+          return NextResponse.json({ error: 'AUDIT_REASON_REQUIRED', message: 'Describe el motivo del rechazo para que el negocio pueda corregirlo.' }, { status: 400 });
+        }
         const current = await GuakiDataService.getBusinessByIdWithToken(params.id, session);
         if (!current) return NextResponse.json({ error: 'BUSINESS_NOT_FOUND' }, { status: 404 });
         if (decision === 'published' && current.claimStatus !== 'verified') {
@@ -253,6 +258,16 @@ export async function PATCH(request: NextRequest, { params }: Props) {
           await pingIndexNow(urls);
         }
 
+        // Audit log append-only (fuente de evidencia cuando un provider dispute).
+        await GuakiDataService.recordEvent('admin_action', {
+          action: `audit_${decision}`,
+          target: updated?.name || params.id,
+          target_id: params.id,
+          actor_id: actor.user.id,
+          reason: typeof payload.auditNotes === 'string' ? payload.auditNotes.slice(0, 500) : null,
+          origen: 'admin-panel',
+        }).catch(() => undefined);
+
         return NextResponse.json({ business: updated, next: decision.toUpperCase(), persistence: 'supabase' });
       }
       // Monetización: `plan` solo lo mueve un admin. El cobro es manual (SOP)
@@ -272,6 +287,17 @@ export async function PATCH(request: NextRequest, { params }: Props) {
         return NextResponse.json({ error: 'Datos de actualización inválidos.', details: validation.errors }, { status: 400 });
       }
       const updated = await GuakiDataService.updateBusinessWithToken(params.id, validation.data, session);
+      if (payload.plan !== undefined) {
+        await GuakiDataService.recordEvent('admin_action', {
+          action: 'plan_change',
+          target: updated?.name || params.id,
+          target_id: params.id,
+          actor_id: actor.user.id,
+          before: accessibleBusiness.plan ?? 'gratis',
+          after: updated?.plan ?? payload.plan,
+          origen: 'admin-panel',
+        }).catch(() => undefined);
+      }
       return NextResponse.json({ business: updated, progress: calculateProfileProgress(updated), persistence: 'supabase' });
     }
 

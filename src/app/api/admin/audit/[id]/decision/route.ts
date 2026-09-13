@@ -37,6 +37,14 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
 
     const { decision, notes } = validation.data;
+    // Razon obligatoria al rechazar (patron de colas de moderacion): el
+    // comerciante debe recibir que corregir, y el audit log queda con motivo.
+    if (decision === 'rejected' && !String(notes || '').trim()) {
+      return NextResponse.json(
+        { error: 'AUDIT_REASON_REQUIRED', message: 'Describe el motivo del rechazo para que el negocio pueda corregirlo.' },
+        { status: 400 },
+      );
+    }
     const current = await GuakiDataService.getBusinessByIdWithToken(params.id, token);
     if (!current) return NextResponse.json({ error: 'Negocio no encontrado para auditoría.' }, { status: 404 });
     if (decision === 'approved' && (current.claimStatus !== 'pending' || current.status !== 'in_audit')) {
@@ -69,6 +77,16 @@ export async function POST(request: NextRequest, { params }: Props) {
         recipientEmail: updated?.ownerEmail || null,
       });
     }
+
+    // Audit log append-only de toda decision del admin.
+    await GuakiDataService.recordEvent('admin_action', {
+      action: `audit_${decision}`,
+      target: updated?.name || params.id,
+      target_id: params.id,
+      actor_id: actor.user.id,
+      reason: String(notes || '').slice(0, 500) || null,
+      origen: 'admin-panel',
+    }).catch(() => undefined);
 
     return NextResponse.json({
       message: `Decisión de auditoría procesada exitosamente: ${decision}`,
