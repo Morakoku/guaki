@@ -66,7 +66,7 @@ const THEMES = {
   },
   brenda: {
     logo: '💅 BRENDA',
-    url: 'lista de espera en la bio',
+    url: 'link en la bio',
     fonts: { head: 'Fraunces', body: 'Manrope', kicker: 'Manrope' },
     fontImport: 'family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;600;800',
     colors: {
