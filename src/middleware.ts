@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getTrustedRole } from './lib/authorization';
+import { verifyOwnerBypassCookie } from './lib/owner_bypass';
 
 function loginRedirect(request: NextRequest, status: 401 | 403 = 401, error: string = 'AUTH_REQUIRED'): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -88,6 +89,14 @@ export async function middleware(request: NextRequest) {
       response.cookies.set('guaki_geo_city', decodeURIComponent(city), { path: '/', maxAge: 86400 * 7 });
     }
     return response;
+  }
+
+  // ⚙️ Acceso temporal del dueño (botón oculto al pie + env ADMIN_BYPASS_TOKEN). Revocable.
+  if (
+    (path.startsWith('/admin') || path.startsWith('/api/admin')) &&
+    (await verifyOwnerBypassCookie(request.cookies.get('guaki_admin_bypass')?.value))
+  ) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   const token = request.cookies.get('guaki_session')?.value;
