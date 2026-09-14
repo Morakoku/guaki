@@ -75,11 +75,11 @@ export default function UnetePage() {
           </span>
 
           <h1 style={{ fontSize: 'clamp(1.9rem, 4vw, 2.7rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.12, margin: '0 auto 14px', maxWidth: '820px' }}>
-            Tu negocio en Guaki, <span style={{ color: TOKENS.colors.emeraldDark }}>gratis</span>. Clientes directos por WhatsApp.
+            <span style={{ color: TOKENS.colors.emeraldDark }}>0% de comisión</span>. Tus clientes te escriben directo.
           </h1>
 
           <p style={{ fontSize: '1.02rem', color: TOKENS.colors.textSecondary, lineHeight: 1.6, maxWidth: '620px', margin: '0 auto 26px' }}>
-            Crea tu ficha en 2 minutos, la auditamos y empiezas a recibir contactos. Sin comisiones por venta, sin intermediarios.
+            El directorio de tu ciudad que no se lleva una parte de tu venta. Tu ficha, gratis en 2 minutos.
           </p>
 
           <UneteCTAs />
