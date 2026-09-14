@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
   if (!isProtectedPage && !isProtectedApi) {
     const response = NextResponse.next({ request: { headers: requestHeaders } });
     if (city && !request.cookies.get('guaki_geo_city')) {
-      response.cookies.set('guaki_geo_city', decodeURIComponent(city), { path: '/', maxAge: 86400 * 7 });
+      response.cookies.set('guaki_geo_city', decodeURIComponent(city), { path: '/', maxAge: 86400 * 7, sameSite: 'lax', secure: !isLocal });
     }
     return response;
   }
