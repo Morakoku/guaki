@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Inbox, MessageCircle, Search } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Inbox, MessageCircle, Search } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -38,19 +38,26 @@ export default function AdminInquiries() {
   const [debouncedQ, setDebouncedQ] = useState('');
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const seqRef = useRef(0);
 
-  const load = useCallback(async (nextStatus: string, nextQ: string) => {
+  const load = useCallback(async (nextStatus: string, nextQ: string, nextPage: number) => {
+    const seq = ++seqRef.current;
     try {
       const params = new URLSearchParams();
       if (nextStatus !== 'all') params.set('status', nextStatus);
       if (nextQ.trim()) params.set('q', nextQ.trim());
+      if (nextPage > 1) params.set('page', String(nextPage));
       const d = await fetch(`/api/admin/inquiries?${params.toString()}`, { credentials: 'include', cache: 'no-store' }).then((r) => r.json());
+      if (seq !== seqRef.current) return;
       if (d?.ok) {
         setInquiries(d.inquiries || []);
         setSummary(d.summary || {});
+        setHasMore(Boolean(d.hasMore));
       }
     } catch {
-      setMsg('No se pudieron cargar los contactos. Revisa tu conexión.');
+      if (seq === seqRef.current) setMsg('No se pudieron cargar los contactos. Revisa tu conexión.');
     }
   }, []);
 
@@ -59,7 +66,10 @@ export default function AdminInquiries() {
     return () => clearTimeout(t);
   }, [q]);
 
-  useEffect(() => { load(status, debouncedQ); }, [load, status, debouncedQ]);
+  // Cambio de filtro o búsqueda vuelve a la primera página.
+  useEffect(() => { setPage(1); }, [status, debouncedQ]);
+
+  useEffect(() => { load(status, debouncedQ, page); }, [load, status, debouncedQ, page]);
 
   const changeStatus = async (inquiry: AdminInquiry, nextStatus: string) => {
     setBusy(inquiry.id);
@@ -73,7 +83,7 @@ export default function AdminInquiries() {
       const d = await r.json();
       if (!r.ok || d.error) setMsg(d.message || d.error || 'No se pudo actualizar el estado.');
       else setMsg(`Contacto de ${inquiry.clientName} → ${STATUS_META[nextStatus]?.label || nextStatus}.`);
-      await load(status, debouncedQ);
+      await load(status, debouncedQ, page);
     } catch {
       setMsg('Error de red.');
     } finally {
@@ -181,6 +191,23 @@ export default function AdminInquiries() {
           </tbody>
         </table>
       </div>
+
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <button type="button" aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
+            cursor: page <= 1 ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
+            color: page <= 1 ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+          <ChevronLeft size={14} /> Anterior
+        </button>
+        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>Página {page}</span>
+        <button type="button" aria-label="Página siguiente" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
+            cursor: !hasMore ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
+            color: !hasMore ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+          Siguiente <ChevronRight size={14} />
+        </button>
+      </div>
+
       <div style={{ fontSize: '0.76rem', color: TOKENS.colors.textMuted, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
         <MessageCircle size={12} /> Los contactos llegan directo a WhatsApp del negocio; aquí solo se registra el seguimiento.
       </div>

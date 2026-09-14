@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Search, Star, X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, Search, Star, X } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 
 const STATE_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -36,18 +36,28 @@ export default function AdminReviews() {
   const [msg, setMsg] = useState('');
   const [acting, setActing] = useState<{ review: AdminReview; kind: 'approve' | 'reject' } | null>(null);
   const [draft, setDraft] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const seqRef = useRef(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const draftRef = useRef<HTMLTextAreaElement>(null);
+  const openTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-  const load = useCallback(async (nextState: string, nextQ: string) => {
+  const load = useCallback(async (nextState: string, nextQ: string, nextPage: number) => {
+    const seq = ++seqRef.current;
     try {
       const params = new URLSearchParams({ status: nextState });
       if (nextQ.trim()) params.set('q', nextQ.trim());
+      if (nextPage > 1) params.set('page', String(nextPage));
       const d = await fetch(`/api/admin/reviews?${params.toString()}`, { credentials: 'include', cache: 'no-store' }).then((r) => r.json());
+      if (seq !== seqRef.current) return;
       if (d?.ok) {
         setReviews(d.reviews || []);
         setSummary(d.summary || {});
+        setHasMore(Boolean(d.hasMore));
       }
     } catch {
-      setMsg('No se pudieron cargar las reseñas. Revisa tu conexión.');
+      if (seq === seqRef.current) setMsg('No se pudieron cargar las reseñas. Revisa tu conexión.');
     }
   }, []);
 
@@ -56,7 +66,51 @@ export default function AdminReviews() {
     return () => clearTimeout(t);
   }, [q]);
 
-  useEffect(() => { load(state, debouncedQ); }, [load, state, debouncedQ]);
+  // Cambio de filtro o búsqueda vuelve a la primera página.
+  useEffect(() => { setPage(1); }, [state, debouncedQ]);
+
+  useEffect(() => { load(state, debouncedQ, page); }, [load, state, debouncedQ, page]);
+
+  const closeModal = useCallback(() => {
+    setActing(null);
+    setDraft('');
+    openTriggerRef.current?.focus();
+  }, []);
+
+  // Foco inicial en el primer campo (textarea) al abrir el diálogo.
+  useEffect(() => {
+    if (acting) draftRef.current?.focus();
+  }, [acting]);
+
+  const handleDialogKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeModal();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const node = dialogRef.current;
+    if (!node) return;
+    const focusables = Array.from(
+      node.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusables.length === 0) {
+      e.preventDefault();
+      node.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, [closeModal]);
 
   const submit = async () => {
     if (!acting) return;
@@ -75,10 +129,11 @@ export default function AdminReviews() {
       });
       const d = await r.json();
       if (!r.ok || d.error) setMsg(d.message || d.error || 'No se pudo registrar la decisión.');
-      else setMsg(kind === 'approve' ? `Reseña de ${review.authorName} aprobada y publicada.` : `Reseña de ${review.authorName} rechazada.`);
-      setActing(null);
-      setDraft('');
-      await load(state, debouncedQ);
+      else {
+        setMsg(kind === 'approve' ? `Reseña de ${review.authorName} aprobada y publicada.` : `Reseña de ${review.authorName} rechazada.`);
+        closeModal();
+      }
+      await load(state, debouncedQ, page);
     } catch {
       setMsg('Error de red.');
     } finally {
@@ -162,11 +217,11 @@ export default function AdminReviews() {
                 <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                   {rv.status === 'submitted' ? (
                     <div style={{ display: 'inline-flex', gap: 6 }}>
-                      <button type="button" disabled={busy === rv.id} onClick={() => { setActing({ review: rv, kind: 'approve' }); setDraft(''); setMsg(''); }}
+                      <button type="button" disabled={busy === rv.id} onClick={(e) => { openTriggerRef.current = e.currentTarget; setActing({ review: rv, kind: 'approve' }); setDraft(''); setMsg(''); }}
                         style={{ border: `1px solid ${TOKENS.colors.emeraldDark}`, background: 'transparent', color: TOKENS.colors.emeraldDark, borderRadius: TOKENS.radii.pill, padding: '6px 12px', fontSize: '0.76rem', fontWeight: 800, cursor: 'pointer' }}>
                         <Check size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Aprobar
                       </button>
-                      <button type="button" disabled={busy === rv.id} onClick={() => { setActing({ review: rv, kind: 'reject' }); setDraft(''); setMsg(''); }}
+                      <button type="button" disabled={busy === rv.id} onClick={(e) => { openTriggerRef.current = e.currentTarget; setActing({ review: rv, kind: 'reject' }); setDraft(''); setMsg(''); }}
                         style={{ border: '1px solid #b91c1c', background: 'transparent', color: '#b91c1c', borderRadius: TOKENS.radii.pill, padding: '6px 12px', fontSize: '0.76rem', fontWeight: 800, cursor: 'pointer' }}>
                         <X size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Rechazar
                       </button>
@@ -184,8 +239,24 @@ export default function AdminReviews() {
         </table>
       </div>
 
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <button type="button" aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
+            cursor: page <= 1 ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
+            color: page <= 1 ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+          <ChevronLeft size={14} /> Anterior
+        </button>
+        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>Página {page}</span>
+        <button type="button" aria-label="Página siguiente" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
+            cursor: !hasMore ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
+            color: !hasMore ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+          Siguiente <ChevronRight size={14} />
+        </button>
+      </div>
+
       {acting ? (
-        <div role="dialog" aria-modal="true" aria-label={acting.kind === 'approve' ? 'Aprobar reseña' : 'Rechazar reseña'}
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={acting.kind === 'approve' ? 'Aprobar reseña' : 'Rechazar reseña'} onKeyDown={handleDialogKeyDown}
           style={{ position: 'fixed', inset: 0, background: 'rgba(16,36,28,0.55)', display: 'grid', placeItems: 'center', zIndex: 90, padding: 20 }}>
           <div style={{ background: TOKENS.colors.white, borderRadius: TOKENS.radii.xl, padding: '26px 28px', maxWidth: 470, width: '100%', boxShadow: TOKENS.shadows.card }}>
             <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.1rem', marginBottom: '8px' }}>
@@ -197,10 +268,10 @@ export default function AdminReviews() {
             <label style={{ fontSize: '0.78rem', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
               {acting.kind === 'approve' ? 'Respuesta pública (opcional)' : 'Motivo del rechazo (obligatorio, mín. 10 caracteres)'}
             </label>
-            <textarea rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Borrador de decisión"
+            <textarea ref={draftRef} rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Borrador de decisión"
               style={{ width: '100%', padding: '10px 12px', borderRadius: TOKENS.radii.md, border: `1px solid ${TOKENS.colors.borderLight}`, fontSize: '0.9rem', marginBottom: '16px', resize: 'vertical' }} />
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => { setActing(null); setDraft(''); }}
+              <button type="button" onClick={closeModal}
                 style={{ padding: '9px 16px', borderRadius: TOKENS.radii.pill, border: `1px solid ${TOKENS.colors.borderLight}`, background: 'transparent', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}>
                 Cancelar
               </button>

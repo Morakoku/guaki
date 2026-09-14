@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { adminClient, recordAdminEvent } from '@/lib/admin_server';
+import { notifyBusinessAudit } from '@/lib/notifications';
 
 const DECISIONS = ['approved', 'rejected'] as const;
 type ReviewDecision = (typeof DECISIONS)[number];
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const { data: current } = await ctx.admin
     .from('reviews')
-    .select('id,business_id,moderation_status,businesses(name)')
+    .select('id,business_id,moderation_status,businesses(name,owner_email)')
     .eq('id', params.id)
     .maybeSingle();
   if (!current) return NextResponse.json({ error: 'REVIEW_NOT_FOUND' }, { status: 404 });
@@ -89,6 +90,14 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const businessId = (current as Record<string, any>).business_id as string;
   await reconcileBusinessRating(ctx.admin, businessId);
+
+  // Loop transaccional: aviso al negocio cuando su reseña es moderada.
+  await notifyBusinessAudit(decision === 'approved' ? 'review_approved' : 'review_rejected', {
+    businessName: (current as Record<string, any>).businesses?.name || '',
+    businessId,
+    recipientEmail: (current as Record<string, any>).businesses?.owner_email || null,
+    notes: String(body.reason || '').trim() || null,
+  });
 
   await recordAdminEvent(
     ctx.admin,

@@ -1,5 +1,6 @@
 // Loop transaccional de Guaki (spec v1.0 — EVIDENCE/GUAKI_LOOP_TRANSACCIONAL_v1.md)
-// Plantillas de los 4 mensajes del flujo de auditoría + envío por proveedor.
+// Plantillas de los mensajes del flujo de auditoría + avisos de moderación de
+// reseñas, y envío por proveedor.
 //
 // Activación: define RESEND_API_KEY (y opcional EMAIL_FROM) en el entorno y el
 // envío real queda operativo sin cambios de código. Sin proveedor, los envíos
@@ -12,7 +13,9 @@ export type BusinessNotificationKind =
   | 'audit_received'
   | 'audit_approved'
   | 'audit_rejected'
-  | 'audit_reminder';
+  | 'audit_reminder'
+  | 'review_approved'
+  | 'review_rejected';
 
 export interface NotificationContext {
   businessName: string;
@@ -120,6 +123,38 @@ export function buildAuditReminderEmail(ctx: NotificationContext, since = new Da
   };
 }
 
+export function buildReviewApprovedEmail(ctx: NotificationContext): RenderedEmail {
+  return {
+    subject: 'Una reseña sobre tu negocio fue publicada — Guaki',
+    text: [
+      `Hola ${ownerFirstName(ctx)},`,
+      '',
+      `Buena noticia: una reseña sobre tu negocio "${ctx.businessName}" fue aprobada y ya está publicada en Guaki.`,
+      '',
+      'Gracias por dar un buen servicio.',
+      '',
+      '— Equipo Guaki',
+    ].join('\n'),
+  };
+}
+
+export function buildReviewRejectedEmail(ctx: NotificationContext): RenderedEmail {
+  const notes = (ctx.notes || '').trim();
+  return {
+    subject: 'Una reseña sobre tu negocio no fue publicada — Guaki',
+    text: [
+      `Hola ${ownerFirstName(ctx)},`,
+      '',
+      `Revisamos una reseña sobre tu negocio "${ctx.businessName}" y no fue publicada.`,
+      '',
+      ...(notes ? [`Motivo: ${notes}`, ''] : []),
+      'Si crees que se trata de un error, responde este mensaje y lo revisamos.',
+      '',
+      '— Equipo Guaki',
+    ].join('\n'),
+  };
+}
+
 function renderEmail(kind: BusinessNotificationKind, ctx: NotificationContext, date?: Date): RenderedEmail {
   switch (kind) {
     case 'audit_received':
@@ -130,6 +165,10 @@ function renderEmail(kind: BusinessNotificationKind, ctx: NotificationContext, d
       return buildAuditRejectedEmail(ctx, date);
     case 'audit_reminder':
       return buildAuditReminderEmail(ctx, date);
+    case 'review_approved':
+      return buildReviewApprovedEmail(ctx);
+    case 'review_rejected':
+      return buildReviewRejectedEmail(ctx);
   }
 }
 
