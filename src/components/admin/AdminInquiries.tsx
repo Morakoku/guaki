@@ -120,6 +120,14 @@ export default function AdminInquiries() {
         <strong style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.05rem' }}>
           Bandeja de contactos {summary.new ? `· ${summary.new} sin atender` : ''}
         </strong>
+        <a
+          href={`/api/admin/inquiries/export${status !== 'all' ? `?status=${status}` : ''}`}
+          download
+          aria-label="Exportar contactos a CSV"
+          style={{ padding: '6px 12px', borderRadius: TOKENS.radii.pill, border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated, color: TOKENS.colors.textMain, fontSize: '0.78rem', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}
+        >
+          ⬇ Exportar CSV
+        </a>
         <label style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
           <Search size={14} color={TOKENS.colors.textSecondary} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="buscar nombre, contacto o mensaje" aria-label="Buscar contactos"
