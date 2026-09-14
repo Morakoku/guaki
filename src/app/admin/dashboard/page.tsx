@@ -69,6 +69,8 @@ export default function AdminGodModeDashboard() {
   const [selectedCategory, setSelectedCategory] = useState('Todas las categorías');
   const [selectedCity, setSelectedCity] = useState('Todas las ciudades');
   const [adminTab, setAdminTab] = useState<'resumen' | 'comercios' | 'usuarios' | 'inquiries' | 'resenas' | 'precios' | 'exportar'>('resumen');
+  const [pendingInquiries, setPendingInquiries] = useState(0);
+  const [pendingReviews, setPendingReviews] = useState(0);
 
   // Precios Maestros del Sistema
   const [priceVerificado, setPriceVerificado] = useState('49900');
@@ -127,6 +129,31 @@ export default function AdminGodModeDashboard() {
   useEffect(() => {
     void refreshBusinesses();
   }, [refreshBusinesses]);
+
+  // Contadores de pendientes para las pestañas (bandeja y moderación).
+  useEffect(() => {
+    let alive = true;
+    async function loadCounts() {
+      try {
+        const [i, r] = await Promise.all([
+          fetch('/api/admin/inquiries?page=1&limit=1', { credentials: 'include', cache: 'no-store' }),
+          fetch('/api/admin/reviews?page=1&limit=1', { credentials: 'include', cache: 'no-store' }),
+        ]);
+        const ij = await i.json();
+        const rj = await r.json();
+        if (!alive) return;
+        setPendingInquiries(typeof ij?.summary?.new === 'number' ? ij.summary.new : 0);
+        setPendingReviews(typeof rj?.summary?.submitted === 'number' ? rj.summary.submitted : 0);
+      } catch {
+        if (alive) {
+          setPendingInquiries(0);
+          setPendingReviews(0);
+        }
+      }
+    }
+    void loadCounts();
+    return () => { alive = false; };
+  }, []);
 
   const persistBusinessUpdate = async (id: string, patch: Record<string, unknown>) => {
     const response = await fetch('/api/businesses/' + encodeURIComponent(id), {
@@ -443,6 +470,12 @@ export default function AdminGodModeDashboard() {
               >
                 <Icon size={16} />
                 <span>{t.label}</span>
+                {t.id === 'inquiries' && pendingInquiries > 0 ? (
+                  <span aria-label={`${pendingInquiries} contactos sin atender`} style={{ marginLeft: 6, padding: '2px 8px', borderRadius: TOKENS.radii.pill, background: '#f59e0b', color: '#fff', fontSize: '0.68rem', fontWeight: 800, lineHeight: 1.4 }}>{pendingInquiries}</span>
+                ) : null}
+                {t.id === 'resenas' && pendingReviews > 0 ? (
+                  <span aria-label={`${pendingReviews} reseñas por moderar`} style={{ marginLeft: 6, padding: '2px 8px', borderRadius: TOKENS.radii.pill, background: '#f59e0b', color: '#fff', fontSize: '0.68rem', fontWeight: 800, lineHeight: 1.4 }}>{pendingReviews}</span>
+                ) : null}
               </button>
             );
           })}
