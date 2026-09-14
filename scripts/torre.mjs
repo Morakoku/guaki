@@ -77,6 +77,26 @@ if (postizConfig.apiKey) {
   }
 }
 
+// Lane de contenido: programado vs publicado (Postiz). Degradacion honesta cuando
+// no hay API key, el backend local no responde o aun no hay canal conectado.
+let postizPosts = null;
+let postizPostsError = null;
+if (postizConfig.apiKey && postizPing.ok) {
+  const start = new Date(Date.now() - 30 * 864e5).toISOString();
+  const end = new Date(Date.now() + 60 * 864e5).toISOString();
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:4007/api/public/v1/posts?startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}`,
+      { headers: postizHeaders, signal: AbortSignal.timeout(25000) },
+    );
+    const body = await res.json();
+    postizPosts = Array.isArray(body) ? body : Array.isArray(body?.posts) ? body.posts : null;
+    if (!postizPosts) postizPostsError = `HTTP ${res.status} formato inesperado`;
+  } catch (e) {
+    postizPostsError = String(e?.message || e).slice(0, 80);
+  }
+}
+
 const docker = run('docker ps --format "{{.Names}}: {{.Status}}"', 60000);
 const postizContainers = (docker || '').split(/\r?\n/).filter((l) => /postiz|temporal|spotlight/.test(l));
 
@@ -123,6 +143,20 @@ for (const [board, tasks] of Object.entries(boardsRaw)) {
 const igChecklist = uncheckedMd('C:/Users/edwin/Documents/Default Project/EVIDENCE/GUAKI_INSTAGRAM_SETUP_v1.md', 'setup Postiz');
 const accionesChecklist = uncheckedMd(`${TRINIDAD}/ACCIONES_EDWIN.md`, 'ACCIONES_EDWIN');
 
+const postizContent = (() => {
+  if (!postizConfig.apiKey) return { state: 'not_configured', scheduled: null, published: null, detail: 'sin API key de Postiz' };
+  if (!postizPosts) return { state: 'unavailable', scheduled: null, published: null, detail: postizPostsError || 'Postiz local sin respuesta' };
+  const buckets = { published: 0, scheduled: 0, draft: 0, other: 0 };
+  for (const p of postizPosts) {
+    const s = String(p?.state || p?.status || p?.statusType || '').toLowerCase();
+    if (s.includes('publish')) buckets.published += 1;
+    else if (s.includes('queue') || s.includes('schedul')) buckets.scheduled += 1;
+    else if (s.includes('draft')) buckets.draft += 1;
+    else buckets.other += 1;
+  }
+  return { state: 'ok', scheduled: buckets.scheduled, published: buckets.published, draft: buckets.draft, other: buckets.other, total: postizPosts.length };
+})();
+
 const content = {
   posts: countFiles(`${TRINIDAD}/GUAKI_CREATIVES/01_LISTO_PARA_PUBLICAR/lote-1_dias-01-03/posts`, '.jpg')
     + countFiles(`${TRINIDAD}/GUAKI_CREATIVES/01_LISTO_PARA_PUBLICAR/lote-2_dias-04-07/posts`, '.jpg')
@@ -131,6 +165,9 @@ const content = {
   reels: countFiles(`${TRINIDAD}/GUAKI_CREATIVES/01_LISTO_PARA_PUBLICAR/reels`, '.mp4'),
   drafts: countFiles(`${TRINIDAD}/GUAKI_CREATIVES/_pipeline/postiz/drafts`, '.json'),
   broll: countFiles(`${TRINIDAD}/GUAKI_CREATIVES/02_VIDEOS_BROLL`, '.mp4'),
+  scheduled: postizContent.scheduled,
+  published: postizContent.published,
+  postiz_posts: postizContent,
 };
 
 const evidence = (() => {
@@ -234,6 +271,10 @@ L.push('---');
 L.push('');
 L.push('## 🎨 PIPELINE DE CONTENIDO IG');
 L.push(`- Piezas listas: **${content.posts} posts** 1080×1350 + **${content.stories} historias** · Reels montados: **${content.reels}** (auditados, falta audio — tarjeta REEL-AUD) · Drafts Postiz: **${content.drafts}**`);
+const pp = content.postiz_posts || {};
+L.push(pp.state === 'ok'
+  ? `- Lane Postiz (programado vs publicado): **${pp.published} publicados** · **${pp.scheduled} programados** · ${pp.draft || 0} en borrador (ventana -30d/+60d)`
+  : `- Lane Postiz (programado vs publicado): ⚪ sin datos — ${pp.detail || 'Postiz no configurado o inalcanzable'} (estado: ${pp.state || 'unknown'})`);
 L.push(`- B-roll: ${content.broll} clips en 02_VIDEOS_BROLL`);
 L.push('- Lote 4 (días 12-15): pendiente por decisión de Edwin');
 L.push('');
