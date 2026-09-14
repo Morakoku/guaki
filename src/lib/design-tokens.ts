@@ -18,7 +18,7 @@ export const TOKENS = {
     // 🖋️ Editorial Typography & Contrast
     textMain: '#16231D',
     textSecondary: '#5A6E63',
-    textMuted: '#84968C',
+    textMuted: '#5A6E63',
     textInverse: '#F8FAF7',
 
     // 🌲 Dark Emerald & Sage Accents (Level 3)

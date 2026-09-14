@@ -17,7 +17,7 @@
   /* 🖋️ Editorial Typography */
   --guaki-text-main: #16231D;
   --guaki-text-secondary: #5A6E63;
-  --guaki-text-muted: #84968C;
+  --guaki-text-muted: #5A6E63;
   --guaki-text-inverse: #F8FAF7;
 
   /* 🌲 Dark Emerald & Sage Accents (Level 3) */
@@ -77,6 +77,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* 🦽 Foco visible global por teclado */
+*:focus-visible {
+  outline: 2px solid var(--guaki-emerald-dark, #17382D);
+  outline-offset: 2px;
 }
 
 html {
@@ -156,12 +162,16 @@ textarea:focus {
 /* 🔍 Search Bar Clean Focus (Eliminates weird corner halos) */
 .search-bar-form input,
 .search-bar-form input:focus,
-.search-bar-form input:focus-visible,
 .search-bar-form input:active {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
   background: transparent !important;
+}
+
+.search-bar-form input:focus-visible {
+  outline: 2px solid var(--guaki-emerald-dark, #17382D) !important;
+  outline-offset: 2px !important;
 }
 
 /* 🎙️ Voice Listening Animation & Organic Waveform */
