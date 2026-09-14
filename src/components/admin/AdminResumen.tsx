@@ -26,16 +26,19 @@ const fmtCop = (n: number) => new Intl.NumberFormat('es-CO', { maximumFractionDi
 export default function AdminResumen() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [log, setLog] = useState<AuditEntry[]>([]);
+  const [reviewsPending, setReviewsPending] = useState(0);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const [s, l] = await Promise.all([
-        fetch('/api/admin/stats', { credentials: 'include', cache: 'no-store' }).then((r) => r.json()),
-        fetch('/api/admin/audit-log', { credentials: 'include', cache: 'no-store' }).then((r) => r.json()),
+      const [s, l, r] = await Promise.all([
+        fetch('/api/admin/stats', { credentials: 'include', cache: 'no-store' }).then((res) => res.json()),
+        fetch('/api/admin/audit-log', { credentials: 'include', cache: 'no-store' }).then((res) => res.json()),
+        fetch('/api/admin/reviews?page=1&limit=1', { credentials: 'include', cache: 'no-store' }).then((res) => res.json()),
       ]);
       if (s?.ok) setStats(s); else setError(s?.error || 'stats');
       if (l?.ok) setLog(l.entries || []);
+      if (r?.ok && typeof r?.summary?.submitted === 'number') setReviewsPending(r.summary.submitted);
     } catch {
       setError('No se pudo cargar el resumen.');
     }
@@ -65,6 +68,7 @@ export default function AdminResumen() {
         {card('En auditoría', String(f.byStatus.in_audit || 0), 'fichas esperando decisión', (f.byStatus.in_audit || 0) > 0)}
         {card('Rechazadas >7d', String(f.rejectedStale), 'sin reenviar al panel', f.rejectedStale > 0)}
         {card('Inquiries nuevos', String(stats.inquiries?.new ?? 0), `${stats.inquiries?.total ?? 0} totales`, (stats.inquiries?.new || 0) > 0)}
+        {card('Reseñas por moderar', String(reviewsPending), 'esperando decisión', reviewsPending > 0)}
         {card('MRR real (COP/mes)', fmtCop(stats.mrr?.cop || 0), `verificado ${stats.planes?.verificado || 0} · vip ${stats.planes?.vip || 0}`)}
         {card('Publicadas', String(f.byStatus.published || 0), `${f.total} fichas en total`)}
         {card('Eventos 7d', String(stats.events7d ?? 0), 'telemetría real de fichas')}
