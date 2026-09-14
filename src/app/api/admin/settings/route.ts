@@ -7,7 +7,7 @@ const PRICING_DEFAULTS = {
   priceVip: 149900,
   flashDiscountEnabled: false,
   flashDiscountPercent: 20,
-} as const;
+};
 
 function coercePricing(raw: unknown): typeof PRICING_DEFAULTS {
   const v = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;

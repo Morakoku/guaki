@@ -26,6 +26,10 @@ function toPublicProvider(record: unknown): PublishedProviderRecord | null {
     rating: typeof source.rating === 'number' ? source.rating : null,
     review_count: typeof source.review_count === 'number' ? source.review_count : typeof source.reviewCount === 'number' ? source.reviewCount : 0,
     plan: readString(source, 'plan') || readString(source, 'planName') || undefined,
+    // Admin panel flags. `=== true` in the public guards keeps pre-migration
+    // behavior unchanged (absent column ⇒ not pinned / not suspended).
+    pinned: source.pinned === true,
+    suspended: source.suspended === true,
   };
   return isPubliclyEligibleProvider(candidate) ? candidate : null;
 }

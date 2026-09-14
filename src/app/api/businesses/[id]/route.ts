@@ -282,6 +282,21 @@ export async function PATCH(request: NextRequest, { params }: Props) {
           { status: 403 }
         );
       }
+      // PIN (destacado) y Suspender solo los mueve un admin (evita que un
+      // provider se auto-fije en el #1 Top o se auto-suspenda una vez aplicada
+      // la migración que añade esas columnas).
+      if (
+        (payload.pinned !== undefined || payload.suspended !== undefined) &&
+        actor.user.app_metadata?.role !== 'admin'
+      ) {
+        return NextResponse.json(
+          {
+            error: 'ADMIN_REQUIRED',
+            message: 'El PIN y la suspensión los controla un administrador de Guaki.',
+          },
+          { status: 403 }
+        );
+      }
       const validation = validateBusinessPayload(payload, true);
       if (!validation.success || !validation.data) {
         return NextResponse.json({ error: 'Datos de actualización inválidos.', details: validation.errors }, { status: 400 });

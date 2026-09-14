@@ -82,6 +82,10 @@ export interface BusinessRecord {
   ownerEmail?: string | null;
   claimStatus?: 'unclaimed' | 'pending' | 'verified' | 'rejected';
   isVerified?: boolean;
+  // Admin panel flags (migration 20260914000000). Optional so the app keeps
+  // working before the columns exist in production.
+  pinned?: boolean;
+  suspended?: boolean;
   auditNotes?: string;
   rejectionReason?: string;
   source?: string;
@@ -189,6 +193,16 @@ export function validateBusinessPayload(
     }
   }
 
+  // Admin panel toggles (PIN #1 Top / suspensión). Optional booleans so a PATCH
+  // from the panel does not fail validation when the migration is pending.
+  if (payload.pinned !== undefined && payload.pinned !== null && typeof payload.pinned !== 'boolean') {
+    errors.pinned = 'El campo pinned debe ser un booleano.';
+  }
+
+  if (payload.suspended !== undefined && payload.suspended !== null && typeof payload.suspended !== 'boolean') {
+    errors.suspended = 'El campo suspended debe ser un booleano.';
+  }
+
   if (Object.keys(errors).length > 0) {
     return { success: false, errors };
   }
@@ -223,6 +237,8 @@ export function validateBusinessPayload(
   if (payload.ownerId !== undefined) sanitized.ownerId = payload.ownerId ? sanitizeString(payload.ownerId) : null;
   if (payload.ownerEmail !== undefined) sanitized.ownerEmail = payload.ownerEmail ? sanitizeString(payload.ownerEmail) : null;
   if (payload.claimStatus !== undefined) sanitized.claimStatus = payload.claimStatus;
+  if (payload.pinned !== undefined) sanitized.pinned = Boolean(payload.pinned);
+  if (payload.suspended !== undefined) sanitized.suspended = Boolean(payload.suspended);
   if (payload.auditNotes !== undefined) sanitized.auditNotes = sanitizeString(payload.auditNotes);
 
   return { success: true, data: sanitized };

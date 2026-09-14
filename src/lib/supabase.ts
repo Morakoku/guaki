@@ -103,6 +103,8 @@ export interface PublishedProviderRecord {
   rating?: number | null;
   review_count?: number;
   plan?: string | null;
+  pinned?: boolean;
+  suspended?: boolean;
 }
 
 export interface FactEvent {
@@ -151,6 +153,10 @@ function mapSupabaseRowToBusiness(row: any, inquiries: BusinessInquiry[] = [], r
     ownerId: row.owner_id || null,
     ownerEmail: row.owner_email || null,
     claimStatus: row.claim_status || (row.owner_id ? 'verified' : 'unclaimed'),
+    // Pre-migration these columns are absent (undefined) → coerced to false so
+    // public guards (`=== true`) and the admin panel behave exactly as before.
+    pinned: Boolean(row.pinned),
+    suspended: Boolean(row.suspended),
     updatedAt: row.updated_at || undefined,
     createdAt: row.created_at || undefined,
   };
@@ -197,6 +203,8 @@ function mapBusinessToSupabaseRow(b: Partial<BusinessRecord>): Record<string, an
   if (b.ownerId !== undefined) row.owner_id = b.ownerId;
   if (b.ownerEmail !== undefined) row.owner_email = b.ownerEmail;
   if (b.claimStatus !== undefined) row.claim_status = b.claimStatus;
+  if (b.pinned !== undefined) row.pinned = b.pinned;
+  if (b.suspended !== undefined) row.suspended = b.suspended;
   row.updated_at = new Date().toISOString();
   return row;
 }
@@ -252,14 +260,26 @@ export class GuakiDataService {
   static async getPublishedProviders(limit: number = 500): Promise<PublishedProviderRecord[]> {
     if (!isSupabaseConfigured()) return [];
     const client = getSupabaseClient();
+    const baseColumns =
+      'id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan';
+    // `pinned`/`suspended` arrive with migration 20260914000000. Selecting a
+    // not-yet-existing column makes PostgREST fail, so we degrade to the legacy
+    // column set instead of breaking the public listing/search before migration.
     const { data, error } = await client
       .from('businesses')
-      .select('id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan')
+      .select(`${baseColumns},pinned,suspended`)
       .eq('status', 'published')
       .limit(limit);
 
-    if (error) throw error;
-    return (data || []) as PublishedProviderRecord[];
+    if (!error) return (data || []) as PublishedProviderRecord[];
+
+    const fallback = await client
+      .from('businesses')
+      .select(baseColumns)
+      .eq('status', 'published')
+      .limit(limit);
+    if (fallback.error) throw fallback.error;
+    return (fallback.data || []) as PublishedProviderRecord[];
   }
 
   static async getAllBusinesses(filters?: { status?: string; city?: string; category?: string }): Promise<BusinessRecord[]> {
@@ -407,6 +427,8 @@ export class GuakiDataService {
     delete row.owner_email;
     delete row.claim_status;
     delete row.status;
+    // NOTE: pinned / suspended are intentionally NOT deleted here — the admin
+    // panel PATCH must persist them (migration 20260914000000).
     const { data, error } = await client.from('businesses').update(row).eq('id', id).select().single();
     if (error) throw error;
     return mapSupabaseRowToBusiness(data);

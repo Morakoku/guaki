@@ -37,7 +37,8 @@ interface BusinessAdminRecord {
   whatsapp: string;
   phone: string;
   plan: 'gratis' | 'verificado' | 'vip';
-  isPinned?: boolean;
+  pinned: boolean;
+  suspended: boolean;
   rating: number;
   reviewCount: number;
   description: string;
@@ -99,13 +100,16 @@ export default function AdminGodModeDashboard() {
     whatsapp: business.whatsapp || '',
     phone: business.phone || '',
     plan: ['gratis', 'verificado', 'vip'].includes(business.plan) ? business.plan : 'gratis',
-    isPinned: false,
+    pinned: Boolean(business.pinned),
+    suspended: Boolean(business.suspended),
     rating: Number(business.rating || 0),
     reviewCount: Number(business.reviewCount || 0),
     description: business.description || '',
     services: Array.isArray(business.services) ? business.services : [],
     imageUrl: business.heroImage || business.logoUrl || '',
-    status: business.status === 'published' ? 'published' : 'suspended',
+    // Display state: an actually-suspended business wins over the workflow flag;
+    // pre-migration `suspended` is undefined, so the old behavior is preserved.
+    status: Boolean(business.suspended) ? 'suspended' : (business.status === 'published' ? 'published' : 'suspended'),
     workflowStatus: business.status || 'draft',
     claimStatus: business.claimStatus || 'unclaimed',
   }), []);
@@ -178,18 +182,46 @@ export default function AdminGodModeDashboard() {
     }
   };
 
-  // Pinning has no persisted field in the current schema; never simulate it locally.
-  const handleTogglePin = (_id: string) => {
-    showToast('PIN no está disponible: falta un campo persistente en el modelo.');
+  // PIN #1 Top: persists `pinned` via the admin-authenticated PATCH. If the
+  // migration is pending, the PATCH fails and we show the error instead of
+  // pretending the field exists.
+  const handleTogglePin = async (id: string) => {
+    const business = businesses.find((item) => item.id === id);
+    if (!business) return;
+    const next = !business.pinned;
+    try {
+      await persistBusinessUpdate(id, { pinned: next });
+      showToast(next ? '✓ Comercio fijado en el #1 Top del directorio' : '✓ Comercio quitado del #1 Top');
+    } catch {
+      showToast('No se pudo actualizar el PIN (¿migración aplicada?).');
+    }
   };
 
   const handleToggleStatus = async (id: string) => {
     const business = businesses.find((item) => item.id === id);
     if (!business) return;
-    if (business.workflowStatus === 'published') {
-      showToast('Suspensión no está disponible todavía en el modelo persistente.');
+    // Suspendido → reactivar (vuelve a la visibilidad pública sin tocar el
+    // flujo de auditoría ni el campo status).
+    if (business.suspended) {
+      try {
+        await persistBusinessUpdate(id, { suspended: false });
+        showToast('✓ Comercio reactivado: visible de nuevo en el directorio público');
+      } catch {
+        showToast('No se pudo reactivar el comercio (¿migración aplicada?).');
+      }
       return;
     }
+    // Publicado y no suspendido → suspender.
+    if (business.workflowStatus === 'published') {
+      try {
+        await persistBusinessUpdate(id, { suspended: true });
+        showToast('✓ Comercio suspendido: oculto del directorio público');
+      } catch {
+        showToast('No se pudo suspender el comercio (¿migración aplicada?).');
+      }
+      return;
+    }
+    // Otros estados del flujo de auditoría: conservar el flujo aprobar/publicar.
     try {
       const decision = async (value: 'approved' | 'published') => {
         const response = await fetch('/api/admin/audit/' + encodeURIComponent(id) + '/decision', {
@@ -258,10 +290,56 @@ export default function AdminGodModeDashboard() {
     }
   };
 
-  // Pricing has no persisted backend table in P1.2; keep the form explicit rather than writing localStorage.
-  const handleSavePricing = (e: React.FormEvent) => {
+  // Pricing persists through /api/admin/settings (platform_settings). On mount we
+  // hydrate the form; the endpoint degrades to defaults pre-migration.
+  useEffect(() => {
+    let alive = true;
+    async function loadPricing() {
+      try {
+        const response = await fetch('/api/admin/settings', { credentials: 'include', cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = await response.json();
+        const pricing = payload?.pricing;
+        if (!alive || !pricing) return;
+        if (typeof pricing.priceVerificado === 'number') setPriceVerificado(String(pricing.priceVerificado));
+        if (typeof pricing.priceVip === 'number') setPriceVip(String(pricing.priceVip));
+        setFlashDiscountEnabled(Boolean(pricing.flashDiscountEnabled));
+        if (typeof pricing.flashDiscountPercent === 'number') setFlashDiscountPercent(String(pricing.flashDiscountPercent));
+      } catch {
+        // Sin acceso o endpoint caído: conservar los valores por defecto.
+      }
+    }
+    void loadPricing();
+    return () => { alive = false; };
+  }, []);
+
+  const handleSavePricing = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast('Precios pendientes de un modelo persistente; no se guardaron localmente.');
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceVerificado: Number(priceVerificado) || 0,
+          priceVip: Number(priceVip) || 0,
+          flashDiscountEnabled,
+          flashDiscountPercent: Number(flashDiscountPercent) || 0,
+        }),
+      });
+      if (!response.ok) throw new Error('PRICING_SAVE_FAILED');
+      const payload = await response.json().catch(() => null);
+      const pricing = payload?.pricing;
+      if (pricing) {
+        if (typeof pricing.priceVerificado === 'number') setPriceVerificado(String(pricing.priceVerificado));
+        if (typeof pricing.priceVip === 'number') setPriceVip(String(pricing.priceVip));
+        setFlashDiscountEnabled(Boolean(pricing.flashDiscountEnabled));
+        if (typeof pricing.flashDiscountPercent === 'number') setFlashDiscountPercent(String(pricing.flashDiscountPercent));
+      }
+      showToast('✓ Tarifas y promociones guardadas en Supabase');
+    } catch {
+      showToast('No se pudieron guardar los precios (¿migración aplicada?).');
+    }
   };
 
   // 6. Exportar a Excel / CSV con formato BOM
@@ -276,7 +354,7 @@ export default function AdminGodModeDashboard() {
       `"${b.whatsapp}"`,
       `"${b.phone}"`,
       b.plan.toUpperCase(),
-      b.isPinned ? 'SI' : 'NO',
+      b.pinned ? 'SI' : 'NO',
       b.rating,
       b.reviewCount,
       b.status,
@@ -671,9 +749,9 @@ export default function AdminGodModeDashboard() {
                           style={{
                             padding: '6px 12px',
                             borderRadius: TOKENS.radii.pill,
-                            border: `1px solid ${b.isPinned ? '#D97706' : TOKENS.colors.borderLight}`,
-                            backgroundColor: b.isPinned ? '#FEF3C7' : TOKENS.colors.surfaceElevated,
-                            color: b.isPinned ? '#92400E' : TOKENS.colors.textMuted,
+                            border: `1px solid ${b.pinned ? '#D97706' : TOKENS.colors.borderLight}`,
+                            backgroundColor: b.pinned ? '#FEF3C7' : TOKENS.colors.surfaceElevated,
+                            color: b.pinned ? '#92400E' : TOKENS.colors.textMuted,
                             fontWeight: 800,
                             fontSize: '0.74rem',
                             cursor: 'pointer',
@@ -683,7 +761,7 @@ export default function AdminGodModeDashboard() {
                           }}
                         >
                           <Pin size={13} />
-                          <span>{b.isPinned ? 'PIN #1' : 'Normal'}</span>
+                          <span>{b.pinned ? 'PIN #1' : 'Normal'}</span>
                         </button>
                       </td>
 
@@ -741,7 +819,7 @@ export default function AdminGodModeDashboard() {
                               color: b.status === 'published' ? '#DC2626' : '#15803D',
                             }}
                           >
-                            {b.status === 'published' ? 'Suspender' : 'Publicar'}
+                            {b.suspended ? 'Reactivar' : b.workflowStatus === 'published' ? 'Suspender' : 'Publicar'}
                           </button>
                         </div>
                       </td>

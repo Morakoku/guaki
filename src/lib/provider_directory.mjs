@@ -21,6 +21,9 @@ export function isPublishedProvider(record) {
   if (!record || typeof record !== 'object') return false;
   if (!REQUIRED_FIELDS.every((field) => field in record)) return false;
   if (record.status !== 'published') return false;
+  // Suspended businesses are hidden from public discovery. `=== true` keeps the
+  // pre-migration behavior identical: an absent/NULL column is not suspended.
+  if (record.suspended === true) return false;
   // Only the human-facing identity fields must be non-empty strings. We do NOT
   // reject records for optional NULL-mapped fields (lat/lng/logo/hero) — those
   // legitimately arrive as undefined from Supabase NULL columns and previously
@@ -45,8 +48,14 @@ export function searchPublishedProviders(records, { city = '', category = '' } =
     (!city || normalize(record.city) === normalize(city))
     && (!category || normalize(record.category) === normalize(category))
   ));
+  // PIN #1 Top first (stable): only `pinned === true` float to the front, the
+  // rest keep their original order. Absent column ⇒ no reordering pre-migration.
+  const ordered = [
+    ...results.filter((record) => record.pinned === true),
+    ...results.filter((record) => record.pinned !== true),
+  ];
   return {
-    results,
+    results: ordered,
     total: results.length,
     ...(results.length ? {} : { message: 'Sin datos todavía' }),
   };
