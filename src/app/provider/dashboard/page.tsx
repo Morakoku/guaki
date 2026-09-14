@@ -930,7 +930,7 @@ function DashboardContent() {
                           )}
                       </span>
                       <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary, fontWeight: 700 }}>
-                        {merchantUser.plan === 'vip' ? 'Súper Botón VIP y Posicionamiento #1' : merchantUser.plan === 'verificado' ? 'Insignia Oficial de Verificación y Ficha Dedicada' : 'Presencia Básica en el Directorio'}
+                        {merchantUser.plan === 'vip' ? 'Súper Botón VIP y Prioridad en el Directorio' : merchantUser.plan === 'verificado' ? 'Insignia Oficial de Verificación y Ficha Dedicada' : 'Presencia Básica en el Directorio'}
                       </span>
                     </div>
 
@@ -1876,7 +1876,7 @@ function DashboardContent() {
                           Multiplica hasta 3x tus contactos de clientes
                         </h3>
                         <p style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, lineHeight: 1.5, margin: 0 }}>
-                          Activa el <strong>{verificadoLabelWithPrice}</strong> o <strong>Plan VIP Elite</strong> para desbloquear posicionamiento top y convertir más visitantes en clientes reales.
+                          Activa el <strong>{verificadoLabelWithPrice}</strong> o <strong>Plan VIP Elite</strong> para desbloquear mayor prioridad en el directorio y convertir más visitantes en clientes reales.
                         </p>
                       </div>
 
@@ -1921,7 +1921,7 @@ function DashboardContent() {
                         <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Ficha indexable en Google
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
-                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Posición #1 en búsquedas locales
+                        <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Prioridad en los resultados del directorio
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: TOKENS.colors.textMain }}>
                         <Check size={13} color="#15803D" style={{ flexShrink: 0 }} /> Reseñas y testimonios oficiales
@@ -2114,7 +2114,7 @@ function DashboardContent() {
                       </div>
                       <p style={{ fontSize: '0.86rem', color: TOKENS.colors.textSecondary, margin: 0 }}>
                         {merchantUser.plan === 'vip'
-                          ? 'Súper Botón TOP VIP Verificado, posición #1 en el buscador y Ficha Comercial Completa.'
+                          ? 'Súper Botón TOP VIP Verificado, prioridad en los resultados del directorio y Ficha Comercial Completa.'
                           : merchantUser.plan === 'verificado'
                           ? 'Insignia oficial ✓ Verificado, Ficha Web propia indexable y catálogo ilimitado.'
                           : 'Presencia básica en el buscador con botón directo de WhatsApp.'}

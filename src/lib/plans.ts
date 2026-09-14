@@ -73,11 +73,11 @@ export const GUAKI_PLANS: GuakiPlan[] = [
     priceFormatted: '$149.900',
     priceAmount: 149900,
     period: 'COP / mes',
-    description: 'Súper Botón VIP dorado, posicionamiento #1 absoluto y máxima exposición comercial.',
+    description: 'Súper Botón VIP dorado, prioridad en los resultados del directorio y máxima exposición comercial.',
     features: [
       'Todo lo incluido en Plan Verificado',
       'Súper Botón / Badge 👑 TOP VIP VERIFICADO',
-      'Posicionamiento #1 Absoluto en búsquedas de tu ciudad',
+      'Prioridad en los resultados del directorio',
       'Panel de métricas y leads en tiempo real',
       'Soporte prioritario y atención personalizada 24/7',
     ],

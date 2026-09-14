@@ -12,7 +12,10 @@ const REMINDER_WINDOW_HOURS = 72;
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();
   const authHeader = request.headers.get('authorization') || '';
-  if (secret && authHeader !== `Bearer ${secret}`) {
+  if (!secret) {
+    return NextResponse.json({ error: 'CRON_SECRET_NOT_CONFIGURED' }, { status: 503 });
+  }
+  if (authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
   }
 

@@ -536,23 +536,11 @@ export class GuakiDataService {
 
     if (error) throw error;
 
-    // Recalculate average rating & review count for business
-    const { data: allReviews } = await client
-      .from('reviews')
-      .select('rating')
-      .eq('business_id', businessId);
-
-    if (allReviews && allReviews.length > 0) {
-      const avg = allReviews.reduce((acc, curr) => acc + curr.rating, 0) / allReviews.length;
-      await client
-        .from('businesses')
-        .update({
-          rating: Math.round(avg * 100) / 100,
-          review_count: allReviews.length,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', businessId);
-    }
+    // El agregado de reputación (businesses.rating / review_count) NO se escribe
+    // aquí: la reseña entra como 'submitted' y el promedio solo debe derivarse de
+    // reseñas aprobadas. El admin lo reconcilia en cada moderación (approved-only)
+    // en src/app/api/admin/reviews/[id]/decision/route.ts. Escribir aquí con reseñas
+    // sin moderar contaminaría las columnas denormalizadas.
 
     return {
       id: data.id,

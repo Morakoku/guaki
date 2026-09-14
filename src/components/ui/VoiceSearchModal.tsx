@@ -659,11 +659,11 @@ export default function VoiceSearchModal({ isOpen, onClose }: VoiceSearchModalPr
                         </div>
                       </div>
 
-                      {/* Plan gratuito: sin reputación visible (regla de planes) */}
-                      {!['free', 'gratis', 'basico'].includes(String(biz.plan || '').toLowerCase()) && (
+                      {/* Plan gratuito: sin reputación visible (regla de planes); sin rating numérico tampoco se muestra */}
+                      {!['free', 'gratis', 'basico'].includes(String(biz.plan || '').toLowerCase()) && typeof biz.rating === 'number' && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.78rem', fontWeight: 800, color: '#D97706' }}>
                           <Star size={12} fill="#D97706" color="#D97706" />
-                          <span>{(biz.rating || 4.9).toFixed(1)}</span>
+                          <span>{biz.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
