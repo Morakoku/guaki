@@ -15,11 +15,15 @@ import {
   Pin,
   Gauge,
   Users,
+  Inbox,
+  Star,
 } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
 import GuakiHeader from '@/components/ui/GuakiHeader';
 import AdminResumen from '@/components/admin/AdminResumen';
 import AdminUsuarios from '@/components/admin/AdminUsuarios';
+import AdminInquiries from '@/components/admin/AdminInquiries';
+import AdminReviews from '@/components/admin/AdminReviews';
 
 interface BusinessAdminRecord {
   id: string;
@@ -64,7 +68,7 @@ export default function AdminGodModeDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas las categorías');
   const [selectedCity, setSelectedCity] = useState('Todas las ciudades');
-  const [adminTab, setAdminTab] = useState<'resumen' | 'comercios' | 'usuarios' | 'precios' | 'exportar'>('resumen');
+  const [adminTab, setAdminTab] = useState<'resumen' | 'comercios' | 'usuarios' | 'inquiries' | 'resenas' | 'precios' | 'exportar'>('resumen');
 
   // Precios Maestros del Sistema
   const [priceVerificado, setPriceVerificado] = useState('49900');
@@ -410,6 +414,8 @@ export default function AdminGodModeDashboard() {
             { id: 'resumen', label: '📋 Resumen operativo', icon: Gauge },
             { id: 'comercios', label: '🏪 Gestor Universal de Comercios', icon: Store },
             { id: 'usuarios', label: '👥 Usuarios', icon: Users },
+            { id: 'inquiries', label: '📥 Bandeja de contactos', icon: Inbox },
+            { id: 'resenas', label: '⭐ Moderación de reseñas', icon: Star },
             { id: 'precios', label: '💰 Control de Precios & Ofertas', icon: DollarSign },
             { id: 'exportar', label: '📊 Exportador Excel / CSV', icon: Download },
           ].map((t) => {
@@ -717,6 +723,18 @@ export default function AdminGodModeDashboard() {
         {adminTab === 'usuarios' && (
         <div style={{ padding: '6px 2px 30px' }}>
           <AdminUsuarios />
+        </div>
+      )}
+
+      {adminTab === 'inquiries' && (
+        <div style={{ padding: '6px 2px 30px' }}>
+          <AdminInquiries />
+        </div>
+      )}
+
+      {adminTab === 'resenas' && (
+        <div style={{ padding: '6px 2px 30px' }}>
+          <AdminReviews />
         </div>
       )}
 
