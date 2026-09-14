@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     ctx.admin.from('inquiries').select('status'),
   ]);
   if (error) {
-    return NextResponse.json({ error: 'INQUIRIES_QUERY_FAILED', detail: error.message }, { status: 500 });
+    console.error('[admin] inquiries query failed:', error.message);
+    return NextResponse.json({ error: 'INQUIRIES_QUERY_FAILED' }, { status: 500 });
   }
 
   const inquiries = (data || []).map((r: Record<string, any>) => ({

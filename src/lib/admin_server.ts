@@ -25,3 +25,21 @@ export async function adminClient(request: NextRequest): Promise<AdminContext> {
 export function sanitizeFilter(value: string): string {
   return value.replace(/[%,()]/g, ' ').trim();
 }
+
+export async function recordAdminEvent(
+  admin: SupabaseClient,
+  actorId: string,
+  eventName: string,
+  metadata: Record<string, unknown>,
+  businessId: string | null = null,
+): Promise<void> {
+  const { error } = await admin.from('events').insert({
+    event_name: eventName,
+    business_id: businessId,
+    actor_user_id: actorId,
+    metadata,
+  });
+  if (error) {
+    console.error('[admin] event log failed:', eventName, error.message);
+  }
+}

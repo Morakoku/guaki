@@ -31,6 +31,7 @@ export default function AdminReviews() {
   const [summary, setSummary] = useState<Summary>({});
   const [state, setState] = useState<(typeof STATE_ORDER)[number]>('submitted');
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
   const [acting, setActing] = useState<{ review: AdminReview; kind: 'approve' | 'reject' } | null>(null);
@@ -46,11 +47,16 @@ export default function AdminReviews() {
         setSummary(d.summary || {});
       }
     } catch {
-      /* silencioso */
+      setMsg('No se pudieron cargar las reseñas. Revisa tu conexión.');
     }
   }, []);
 
-  useEffect(() => { load(state, q); }, [load, state, q]);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => { load(state, debouncedQ); }, [load, state, debouncedQ]);
 
   const submit = async () => {
     if (!acting) return;
@@ -72,7 +78,7 @@ export default function AdminReviews() {
       else setMsg(kind === 'approve' ? `Reseña de ${review.authorName} aprobada y publicada.` : `Reseña de ${review.authorName} rechazada.`);
       setActing(null);
       setDraft('');
-      await load(state, q);
+      await load(state, debouncedQ);
     } catch {
       setMsg('Error de red.');
     } finally {

@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { adminClient } from '@/lib/admin_server';
-import { GuakiDataService } from '@/lib/supabase';
+import { adminClient, recordAdminEvent } from '@/lib/admin_server';
 
 const VALID_STATUSES = ['new', 'contacted', 'quoted', 'scheduled', 'closed'] as const;
 type InquiryStatus = (typeof VALID_STATUSES)[number];
@@ -39,19 +38,25 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     .select('id,status')
     .maybeSingle();
   if (error) {
-    return NextResponse.json({ error: 'INQUIRY_UPDATE_FAILED', detail: error.message }, { status: 502 });
+    console.error('[admin] inquiry update failed:', error.message);
+    return NextResponse.json({ error: 'INQUIRY_UPDATE_FAILED' }, { status: 502 });
   }
 
-  await GuakiDataService.recordEvent('admin_action', {
-    action: 'inquiry_status',
-    target: (current as Record<string, any>).businesses?.name || 'inquiry',
-    target_id: params.id,
-    actor_id: ctx.actorId,
-    from: (current as Record<string, any>).status,
-    to: status,
-    reason: String(body.notes || '').slice(0, 500) || null,
-    origen: 'admin-panel',
-  }).catch(() => undefined);
+  await recordAdminEvent(
+    ctx.admin,
+    ctx.actorId,
+    'admin_action',
+    {
+      action: 'inquiry_status',
+      target: (current as Record<string, any>).businesses?.name || 'inquiry',
+      target_id: params.id,
+      from: (current as Record<string, any>).status,
+      to: status,
+      reason: String(body.notes || '').slice(0, 500) || null,
+      origen: 'admin-panel',
+    },
+    (current as Record<string, any>).business_id ?? null,
+  );
 
   return NextResponse.json({ ok: true, inquiry: updated });
 }

@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     ctx.admin.from('reviews').select('moderation_status'),
   ]);
   if (error) {
-    return NextResponse.json({ error: 'REVIEWS_QUERY_FAILED', detail: error.message }, { status: 500 });
+    console.error('[admin] reviews query failed:', error.message);
+    return NextResponse.json({ error: 'REVIEWS_QUERY_FAILED' }, { status: 500 });
   }
 
   const reviews = (data || []).map((r: Record<string, any>) => ({

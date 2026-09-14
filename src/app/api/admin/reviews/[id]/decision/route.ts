@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { adminClient } from '@/lib/admin_server';
-import { GuakiDataService } from '@/lib/supabase';
+import { adminClient, recordAdminEvent } from '@/lib/admin_server';
 
 const DECISIONS = ['approved', 'rejected'] as const;
 type ReviewDecision = (typeof DECISIONS)[number];
@@ -12,18 +11,25 @@ interface Props {
 }
 
 async function reconcileBusinessRating(admin: SupabaseClient, businessId: string) {
-  const { data } = await admin
+  const { data, error: readError } = await admin
     .from('reviews')
     .select('rating')
     .eq('business_id', businessId)
     .eq('moderation_status', 'approved');
+  if (readError) {
+    console.error('[admin] reconcile read failed:', readError.message);
+    return;
+  }
   const rows = (data || []) as Array<{ rating: number }>;
   const count = rows.length;
   const avg = count ? Math.round((rows.reduce((acc, r) => acc + Number(r.rating || 0), 0) / count) * 100) / 100 : null;
-  await admin
+  const { error: updateError } = await admin
     .from('businesses')
     .update({ rating: avg, review_count: count, updated_at: new Date().toISOString() })
     .eq('id', businessId);
+  if (updateError) {
+    console.error('[admin] reconcile rating update failed:', updateError.message);
+  }
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -54,6 +60,14 @@ export async function POST(request: NextRequest, { params }: Props) {
     .maybeSingle();
   if (!current) return NextResponse.json({ error: 'REVIEW_NOT_FOUND' }, { status: 404 });
 
+  const currentStatus = (current as Record<string, any>).moderation_status;
+  if (currentStatus !== 'submitted') {
+    return NextResponse.json(
+      { error: 'ALREADY_MODERATED', message: 'Esta reseña ya fue moderada.' },
+      { status: 409 },
+    );
+  }
+
   const patch: Record<string, unknown> = { moderation_status: decision };
   const reply = String(body.reply || '').trim();
   if (reply) patch.reply = reply.slice(0, 1000);
@@ -62,23 +76,34 @@ export async function POST(request: NextRequest, { params }: Props) {
     .from('reviews')
     .update(patch)
     .eq('id', params.id)
+    .eq('moderation_status', 'submitted')
     .select('id,moderation_status,reply')
     .maybeSingle();
   if (error) {
-    return NextResponse.json({ error: 'REVIEW_UPDATE_FAILED', detail: error.message }, { status: 502 });
+    console.error('[admin] review update failed:', error.message);
+    return NextResponse.json({ error: 'REVIEW_UPDATE_FAILED' }, { status: 502 });
+  }
+  if (!updated) {
+    return NextResponse.json({ error: 'ALREADY_MODERATED', message: 'La reseña cambió mientras decidías.' }, { status: 409 });
   }
 
-  await reconcileBusinessRating(ctx.admin, (current as Record<string, any>).business_id);
+  const businessId = (current as Record<string, any>).business_id as string;
+  await reconcileBusinessRating(ctx.admin, businessId);
 
-  await GuakiDataService.recordEvent('admin_action', {
-    action: `review_${decision}`,
-    target: (current as Record<string, any>).businesses?.name || 'review',
-    target_id: params.id,
-    actor_id: ctx.actorId,
-    reason: String(body.reason || '').slice(0, 500) || null,
-    reply: reply || null,
-    origen: 'admin-panel',
-  }).catch(() => undefined);
+  await recordAdminEvent(
+    ctx.admin,
+    ctx.actorId,
+    'admin_action',
+    {
+      action: `review_${decision}`,
+      target: (current as Record<string, any>).businesses?.name || 'review',
+      target_id: params.id,
+      reason: String(body.reason || '').slice(0, 500) || null,
+      reply: reply || null,
+      origen: 'admin-panel',
+    },
+    businessId,
+  );
 
   return NextResponse.json({ ok: true, review: updated });
 }

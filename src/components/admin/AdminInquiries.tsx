@@ -35,6 +35,7 @@ export default function AdminInquiries() {
   const [summary, setSummary] = useState<Summary>({});
   const [status, setStatus] = useState<'all' | (typeof STATUS_ORDER)[number]>('all');
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
 
@@ -49,11 +50,16 @@ export default function AdminInquiries() {
         setSummary(d.summary || {});
       }
     } catch {
-      /* silencioso */
+      setMsg('No se pudieron cargar los contactos. Revisa tu conexión.');
     }
   }, []);
 
-  useEffect(() => { load(status, q); }, [load, status, q]);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => { load(status, debouncedQ); }, [load, status, debouncedQ]);
 
   const changeStatus = async (inquiry: AdminInquiry, nextStatus: string) => {
     setBusy(inquiry.id);
@@ -67,7 +73,7 @@ export default function AdminInquiries() {
       const d = await r.json();
       if (!r.ok || d.error) setMsg(d.message || d.error || 'No se pudo actualizar el estado.');
       else setMsg(`Contacto de ${inquiry.clientName} → ${STATUS_META[nextStatus]?.label || nextStatus}.`);
-      await load(status, q);
+      await load(status, debouncedQ);
     } catch {
       setMsg('Error de red.');
     } finally {
