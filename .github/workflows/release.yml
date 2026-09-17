@@ -1,0 +1,44 @@
+# SCAFFOLD ONLY: todo permanece comentado; no es un workflow ejecutable.
+# Habilitar únicamente tras revisión humana y configuración de CI.
+# Configurar required reviewers en Settings > Environments > production.
+# Los nombres secrets.* son placeholders de GitHub Secrets, no valores reales.
+# Revisar el proyecto Supabase enlazado y el diff del dry-run antes del db push.
+# Una aprobación del environment ocurre antes del job; para aprobar el resultado
+# del dry-run, separarlo en otro job antes de habilitar migraciones reales.
+#
+# name: Production release
+# on:
+#   workflow_dispatch:
+# permissions:
+#   contents: read
+# jobs:
+#   migrate-and-deploy-prod:
+#     runs-on: ubuntu-latest
+#     environment: production
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: supabase/setup-cli@v1
+#         with:
+#           version: latest
+#       - name: Link production (review target first)
+#         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+#         env:
+#           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+#           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+#           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+#       - name: Preview migrations
+#         run: supabase db push --dry-run
+#         env:
+#           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+#           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+#       - name: Apply approved migrations
+#         run: supabase db push
+#         env:
+#           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+#           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+#       - name: Deploy production (install/pin Vercel CLI before enabling)
+#         run: vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+#         env:
+#           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+#           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
