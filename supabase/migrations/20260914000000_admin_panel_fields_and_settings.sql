@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS public.platform_settings (
 
 ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
 -- La app lee/escribe con la service-role key desde el servidor (bypassa RLS).
--- No exponer a anon/authenticated: los precios se sirven server-side.
+-- No exponer a anon/authenticated: los precios se sirven server-side con
+-- service-role. Sin GRANT adicional, ambos roles quedan sin privilegios.
 REVOKE ALL ON public.platform_settings FROM anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_settings TO authenticated;
 
 -- Seed con los precios vigentes (la app hace fallback a estas cifras si no hay fila).
 INSERT INTO public.platform_settings (key, value)
