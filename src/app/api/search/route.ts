@@ -48,6 +48,12 @@ export async function GET(request: Request) {
         { status: 503 },
       );
     }
+    if (code === 'GUAKI_DATA_UNAVAILABLE') {
+      return NextResponse.json(
+        { query, city, intent, results: [], total: 0, error: code, message: 'Búsqueda temporalmente no disponible.' },
+        { status: 503 },
+      );
+    }
     throw cause;
   }
 
@@ -108,7 +114,8 @@ export async function GET(request: Request) {
       return { provider, score };
     })
     .filter((item): item is { provider: any; score: number } => item !== null)
-    .sort((a, b) => b.score - a.score)
+    // Stable sort preserves input order for equal PIN and relevance scores.
+    .sort((a, b) => Number(b.provider.pinned === true) - Number(a.provider.pinned === true) || b.score - a.score)
     .map(item => item.provider);
 
   return NextResponse.json(

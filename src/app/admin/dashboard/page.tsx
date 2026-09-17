@@ -119,12 +119,8 @@ export default function AdminGodModeDashboard() {
       const response = await fetch('/api/admin/audit', { credentials: 'include', cache: 'no-store' });
       if (!response.ok) throw new Error('ADMIN_AUDIT_UNAVAILABLE');
       const payload = await response.json();
-      const records = [
-        ...(payload.queue?.pending || []),
-        ...(payload.queue?.inReview || []),
-        ...(payload.queue?.approved || []),
-        ...(payload.queue?.rejected || []),
-      ].map(mapApiBusiness);
+      if (!Array.isArray(payload.inventory)) throw new Error('ADMIN_INVENTORY_UNAVAILABLE');
+      const records = payload.inventory.map(mapApiBusiness);
       setBusinesses(records);
     } catch {
       setBusinesses([]);

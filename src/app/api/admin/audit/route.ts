@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     summary,
     queue,
+    // Inventory is independent of the moderation queue, including published
+    // businesses and their persisted pinned/suspended flags.
+    inventory: businesses,
     refreshedAt: new Date().toISOString(),
   }, { headers: { 'Cache-Control': 'no-store, private' } });
 }

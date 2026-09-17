@@ -262,24 +262,19 @@ export class GuakiDataService {
     const client = getSupabaseClient();
     const baseColumns =
       'id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan';
-    // `pinned`/`suspended` arrive with migration 20260914000000. Selecting a
-    // not-yet-existing column makes PostgREST fail, so we degrade to the legacy
-    // column set instead of breaking the public listing/search before migration.
+    // Moderation flags are required: fail closed rather than retrying a query
+    // that could expose suspended businesses. This also requires migration
+    // 20260914000000 before public discovery becomes available.
     const { data, error } = await client
       .from('businesses')
       .select(`${baseColumns},pinned,suspended`)
       .eq('status', 'published')
       .limit(limit);
 
-    if (!error) return (data || []) as PublishedProviderRecord[];
-
-    const fallback = await client
-      .from('businesses')
-      .select(baseColumns)
-      .eq('status', 'published')
-      .limit(limit);
-    if (fallback.error) throw fallback.error;
-    return (fallback.data || []) as PublishedProviderRecord[];
+    // Wrap PostgREST's plain-object errors so callers cannot mistake a failed
+    // query for an empty directory or silently discard moderation flags.
+    if (error) throw new Error('GUAKI_DATA_UNAVAILABLE', { cause: error });
+    return (data || []) as PublishedProviderRecord[];
   }
 
   static async getAllBusinesses(filters?: { status?: string; city?: string; category?: string }): Promise<BusinessRecord[]> {

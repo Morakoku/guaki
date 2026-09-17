@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Check, CheckCircle2, Crown, X as XIcon, ArrowRight, Sparkles } from 'lucide-react';
 import { TOKENS } from '@/lib/design-tokens';
-import { GUAKI_PLANS, GuakiPlan, getPlansForCountry } from '@/lib/plans';
+import { GUAKI_PLANS, GuakiPlan, getPlansForCountry, type PublicPricing } from '@/lib/plans';
 import type { CountryCode } from '@/lib/geo';
 
 interface PlanCardsSectionProps {
@@ -12,6 +12,7 @@ interface PlanCardsSectionProps {
   selectedPlanId?: string;
   onSelectPlan?: (planId: 'gratis' | 'verificado' | 'vip') => void;
   country?: CountryCode;
+  publicPricing?: PublicPricing;
 }
 
 export default function PlanCardsSection({
@@ -19,9 +20,24 @@ export default function PlanCardsSection({
   selectedPlanId = 'gratis',
   onSelectPlan,
   country = 'CO',
+  publicPricing,
 }: PlanCardsSectionProps) {
-  const plans = country === 'CO' ? GUAKI_PLANS : getPlansForCountry(country);
+  const pricing = mode === 'display' && country === 'CO' ? publicPricing : undefined;
+  const plans = pricing?.plans ?? (country === 'CO' ? GUAKI_PLANS : getPlansForCountry(country));
   return (
+    <>
+      {pricing && pricing.status !== 'configured' && (
+        <p role="status"><small>
+          {pricing.status === 'missing'
+            ? 'Precios predeterminados: todavía no hay una configuración de precios guardada.'
+            : pricing.status === 'invalid'
+            ? 'La configuración de precios no es válida. Mostramos precios predeterminados; confirma la tarifa antes de contratar.'
+            : 'No pudimos consultar los precios guardados. Mostramos precios predeterminados; confirma la tarifa antes de contratar.'}
+        </small></p>
+      )}
+      {pricing && pricing.flashDiscountPercent > 0 && (
+        <p><small>Descuento flash del {pricing.flashDiscountPercent}% aplicado a Verificado y VIP.</small></p>
+      )}
     <div className="guaki-plans-grid">
       {plans.map((plan: GuakiPlan) => {
         const isSelected = selectedPlanId === plan.id;
@@ -229,5 +245,6 @@ export default function PlanCardsSection({
         );
       })}
     </div>
+    </>
   );
 }

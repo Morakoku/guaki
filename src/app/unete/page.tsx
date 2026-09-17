@@ -8,6 +8,11 @@ import PlanCardsSection from '@/components/ui/PlanCardsSection';
 import UneteCTAs from '@/components/ui/UneteCTAs';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl } from '@/lib/site';
+import { createClient } from '@supabase/supabase-js';
+import { loadPublicPricing } from '@/lib/plans';
+
+// Read on each request so saved prices are not frozen at build time.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Únete a Guaki — Publica tu negocio gratis y recibe clientes por WhatsApp',
@@ -47,7 +52,16 @@ const BENEFITS = [
   { icon: MessageCircle, text: 'Contacto directo por WhatsApp 1-clic, sin intermediarios' },
 ];
 
-export default function UnetePage() {
+export default async function UnetePage() {
+  const publicPricing = await loadPublicPricing(() => {
+    // Same server-only client pattern as admin_server.ts. The migration denies
+    // anonymous reads; only this pricing projection crosses the client boundary.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    if (!url || !serviceKey) throw new Error('PUBLIC_PRICING_NOT_CONFIGURED');
+    const client = createClient(url, serviceKey, { auth: { persistSession: false } });
+    return client.from('platform_settings').select('value').eq('key', 'pricing').maybeSingle();
+  });
   const hasWhatsApp = (process.env.NEXT_PUBLIC_GUAKI_WHATSAPP || '').replace(/\D/g, '').length >= 10;
 
   return (
@@ -165,7 +179,7 @@ export default function UnetePage() {
           <p style={{ fontSize: '0.9rem', color: TOKENS.colors.textSecondary, textAlign: 'center', margin: '0 0 22px' }}>
             El Plan Esencial es $0 para siempre. Verificado y VIP añaden insignia, ficha web indexable y prioridad.
           </p>
-          <PlanCardsSection mode="display" />
+          <PlanCardsSection mode="display" publicPricing={publicPricing} />
         </section>
 
         {/* CTA FINAL */}
