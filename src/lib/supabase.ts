@@ -50,6 +50,33 @@ export function getSupabaseClientForAccessToken(accessToken: string): SupabaseCl
   });
 }
 
+// SERVER-ONLY client: SUPABASE_SERVICE_ROLE_KEY es env server-only — Next.js no
+// la inyecta en el bundle del cliente, así que la key nunca viaja al browser.
+// Evolución del objetivo M-03 (el anon legacy está revocado: el proyecto migró
+// a formato sb_): solo las funciones server-side con select cerrada a columnas
+// públicas + filtro status=published pueden usarlo — no expone registros no
+// públicos ni la key.
+export function isSupabaseServiceConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && serviceKey && url.startsWith('http'));
+}
+
+let cachedServiceClient: SupabaseClient | null = null;
+
+export function getSupabaseServiceClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey || !url.startsWith('http')) {
+    throw new Error('GUAKI_SUPABASE_NOT_CONFIGURED');
+  }
+  if (cachedServiceClient) return cachedServiceClient;
+  cachedServiceClient = createClient(url, serviceKey, {
+    auth: { persistSession: false },
+  });
+  return cachedServiceClient;
+}
+
 export interface Plan {
   id: string;
   name: 'Start' | 'Growth' | 'Pro' | 'Premium' | 'Enterprise';
@@ -258,8 +285,12 @@ export class GuakiDataService {
   }
 
   static async getPublishedProviders(limit: number = 500): Promise<PublishedProviderRecord[]> {
-    if (!isSupabaseConfigured()) return [];
-    const client = getSupabaseClient();
+    if (!isSupabaseServiceConfigured()) return [];
+    // Server-side only (page.tsx server component + sitemap.ts — nunca el
+    // cliente): service-role con la MISMA select cerrada a columnas públicas
+    // + filtro status=published. El anon legacy está revocado (proyecto
+    // migrado a formato sb_); la key queda server-only (no NEXT_PUBLIC_*).
+    const client = getSupabaseServiceClient();
     const baseColumns =
       'id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan';
     // Moderation flags are required: fail closed rather than retrying a query
