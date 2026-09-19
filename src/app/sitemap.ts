@@ -20,7 +20,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/terminos`, changeFrequency: 'yearly', priority: 0.3 },
   ];
 
-  const providers = await getPublishedProviders();
+  let providers: Awaited<ReturnType<typeof getPublishedProviders>> = [];
+  try {
+    providers = await getPublishedProviders();
+  } catch (cause) {
+    // El sitemap nunca debe 500: robots.txt lo declara y Google lo rastrea.
+    // Si el inventario falla, devolvemos las rutas estáticas sin perfiles.
+    console.error('sitemap: inventory unavailable, serving static routes only', cause);
+  }
   const dynamicMap = new Map<string, MetadataRoute.Sitemap[number]>();
   for (const provider of providers) {
     // REGLA DE PLAN GRATIS: sin ficha pública — no se anuncia en el sitemap.
