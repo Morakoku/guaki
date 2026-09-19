@@ -15,8 +15,9 @@ if (!action || !ns) {
 }
 
 const args = ['-y', 'ruflo@latest', 'memory', action, '--namespace', ns];
-if (action === 'store') args.push('--key', a, '--value', b);
-if (action === 'search') args.push('--query', a);
+const quote = (s) => '"' + String(s).replace(/"/g, '') + '"';
+if (action === 'store') args.push('--key', a, '--value', quote(b));
+if (action === 'search') args.push('--query', quote(a));
 
 try {
   // Windows: el bridge nativo de AgentDB esta roto (#3024) y sus sidecars -wal/-shm

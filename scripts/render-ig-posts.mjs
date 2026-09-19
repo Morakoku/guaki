@@ -13,44 +13,54 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 const BG_PREFIX = process.env.IG_BG_PREFIX || '../../../03_FONDOS_IA/';
 
-// Temas = las biblias de marca (BIBLIAS/*.md). Cambiar un color aqui sin
-// actualizar la biblia se considera bug, no feature.
+// Temas reales web (2026-09-14). Tokens extraídos de las webs de cada marca.
+// Donde la web no define un color, se marca como // PROPUESTA.
+// Nota: las bibles/templates anteriores quedan OVERRIDEadas por estos tokens.
 const THEMES = {
+  // Tema real web (2026-09-14) — tokens extraídos de guakiweb.vercel.app
   guaki: {
     logo: '🥑 GUAKI',
     url: 'guaki.online',
+    coverMode: 'light', // La web real es clara: fondo sage, texto ink
     fonts: { head: 'Outfit', body: 'Inter', kicker: 'Outfit' },
     fontImport: 'family=Outfit:wght@600;700;900&family=Inter:wght@400;600;800',
     colors: {
       emerald: '#17382D',
-      emeraldMid: '#2A5A4A',
-      green: '#15803D',
+      emeraldMid: '#1E4638', // PROPUESTA: tono intermedio entre emerald e ink
+      green: '#25D366',      // WhatsApp green: acento CTA real
       sage: '#DCE9D5',
-      cream: '#F4F7F2',
-      ink: '#10241C',
-      kickerLight: '#B9E4C6',
-      scrimDarkTop: 'rgba(16,36,28,0.72)',
-      scrimDarkMid: 'rgba(16,36,28,0.35)',
-      scrimDarkBottom: 'rgba(16,36,28,0.82)',
+      cream: '#E2E8E1',      // Fondo real web: sage claro
+      ink: '#16231D',        // Texto real web: ink verde-oscuro
+      kickerLight: '#25D366', // WhatsApp green sobre oscuro
+      scrimDarkTop: 'rgba(22,35,29,0.72)',
+      scrimDarkMid: 'rgba(22,35,29,0.35)',
+      scrimDarkBottom: 'rgba(22,35,29,0.82)',
       scrimBrandTop: 'rgba(23,56,45,0.88)',
       scrimBrandMid: 'rgba(23,56,45,0.62)',
-      scrimBrandBottom: 'rgba(21,74,52,0.92)',
-      scrimLightTop: 'rgba(244,247,242,0.28)',
-      scrimLightBottom: 'rgba(244,247,242,0.42)',
-      panelShadow: 'rgba(16,36,28,0.22)',
+      scrimBrandBottom: 'rgba(23,56,45,0.92)',
+      scrimLightTop: 'rgba(226,232,225,0.3)',
+      scrimLightBottom: 'rgba(226,232,225,0.46)',
+      panelShadow: 'rgba(22,35,29,0.18)',
     },
   },
+  // Tema real web (2026-09-14) — tokens extraídos de veyrasoluciones.com
   veyra: {
     logo: '🧭 VEYRA',
     url: 'veyrasoluciones.com',
+    coverMode: 'dark', // Covers oscuros válidos; web alterna blanco/negro
+    titleCase: 'upper', // web: headlines UPPERCASE masivos
+    noPhoto: false, // DECISIÓN OWNER 2026-09-14: volver a fotos de fondo (el negro plano se veía soso)
+    panelStyle: 'swiss', // card blanca + borde negro 2px + sombra dura 4px + radius 0
+    pillRadius: '0', // web: botones rectangulares duros, sin pills
+    ctaArrow: '', // biblia §7: sin emojis en arte
     fonts: { head: 'Outfit', body: 'Inter', kicker: 'JetBrains Mono' },
     fontImport: 'family=Outfit:wght@600;700;900&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700;800',
     colors: {
       emerald: '#0A0A0A',
       emeraldMid: '#1F1F1F',
-      green: '#FF5722',
-      sage: '#F8FAFC',
-      cream: '#FFFFFF',
+      green: '#FF5722',      // Acento naranja principal (WhatsApp #25D366 solo para CTAs de WA)
+      sage: '#F8FAFC',       // Gris estructura real
+      cream: '#FFFFFF',      // Blanco real
       ink: '#0A0A0A',
       kickerLight: '#FF5722',
       scrimDarkTop: 'rgba(10,10,10,0.78)',
@@ -64,28 +74,32 @@ const THEMES = {
       panelShadow: 'rgba(10,10,10,0.18)',
     },
   },
+  // Tema real web (2026-09-14) — tokens extraídos de brenda-site-psi.vercel.app
+  // Fuente real: SF Pro Display / system-ui. En render usamos Inter como sustituto
+  // porque SF Pro no está disponible en Google Fonts.
   brenda: {
     logo: '💅 BRENDA',
     url: 'link en la bio',
-    fonts: { head: 'Fraunces', body: 'Manrope', kicker: 'Manrope' },
-    fontImport: 'family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;600;800',
+    coverMode: 'dark', // Hero oscuro con títulos blancos; paneles gris Apple
+    fonts: { head: 'Inter', body: 'Inter', kicker: 'Inter' },
+    fontImport: 'family=Inter:wght@400;600;700;800;900',
     colors: {
-      emerald: '#241A1E',
-      emeraldMid: '#3A2A31',
-      green: '#9E2B4E',
-      sage: '#E7C8CF',
-      cream: '#F7F1EA',
-      ink: '#241A1E',
-      kickerLight: '#C6A15B',
-      scrimDarkTop: 'rgba(36,26,30,0.74)',
-      scrimDarkMid: 'rgba(36,26,30,0.36)',
-      scrimDarkBottom: 'rgba(36,26,30,0.84)',
+      emerald: '#1D1D1F',    // Texto/fondo oscuro real
+      emeraldMid: '#2C2C2E', // PROPUESTA: gris oscuro Apple
+      green: '#9E2B4E',      // Acento berry real
+      sage: '#FBF3F6',       // Blush real
+      cream: '#F5F5F7',      // Fondo gris Apple real
+      ink: '#1D1D1F',        // Texto real
+      kickerLight: '#9E2B4E', // Berry sobre oscuro
+      scrimDarkTop: 'rgba(29,29,31,0.74)',
+      scrimDarkMid: 'rgba(29,29,31,0.36)',
+      scrimDarkBottom: 'rgba(29,29,31,0.84)',
       scrimBrandTop: 'rgba(158,43,78,0.9)',
       scrimBrandMid: 'rgba(158,43,78,0.66)',
-      scrimBrandBottom: 'rgba(36,26,30,0.92)',
-      scrimLightTop: 'rgba(247,241,234,0.3)',
-      scrimLightBottom: 'rgba(247,241,234,0.44)',
-      panelShadow: 'rgba(36,26,30,0.2)',
+      scrimBrandBottom: 'rgba(29,29,31,0.92)',
+      scrimLightTop: 'rgba(245,245,247,0.3)',
+      scrimLightBottom: 'rgba(245,245,247,0.46)',
+      panelShadow: 'rgba(29,29,31,0.16)',
     },
   },
 };
@@ -124,6 +138,9 @@ function slideHtml(slide, index, total) {
   const isCta = slide.layout === 'cta-emerald';
   const isStory = slide.layout === 'story';
   const number = slide.number || `${index + 1}/${total}`;
+  const isLight = theme.coverMode === 'light';
+  const isLightCover = isCover && isLight;
+  const isPanel = !isStory && !isCover && !isCta;
 
   const optionsHtml = (slide.options || [])
     .map(
@@ -144,7 +161,7 @@ function slideHtml(slide, index, total) {
         <h1 class="title title-cover story-title">${escapeHtml(slide.title)}</h1>
         ${slide.body ? `<p class="sub sub-light">${escapeHtml(slide.body)}</p>` : ''}
         ${optionsHtml ? `<div class="options">${optionsHtml}</div>` : ''}
-        ${slide.url ? `<div class="url-pill">👉 ${escapeHtml(slide.url)}</div>` : ''}
+        ${slide.url ? `<div class="url-pill">${theme.ctaArrow ?? '👉 '}${escapeHtml(slide.url)}</div>` : ''}
         <div class="footer-row">
           <span class="hint">${escapeHtml(slide.hint || '')}</span>
           <span class="counter">${escapeHtml(theme.url)}</span>
@@ -152,15 +169,15 @@ function slideHtml(slide, index, total) {
       </div>`
     : isCover
     ? `
-      <div class="scrim scrim-dark"></div>
+      <div class="scrim ${isLightCover ? 'scrim-light-cover' : 'scrim-dark'}"></div>
       <div class="content content-cover">
         <div class="topbar">
           <span class="logo">${escapeHtml(theme.logo)}</span>
           ${slide.badge ? `<span class="badge">${escapeHtml(slide.badge)}</span>` : ''}
         </div>
-        ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
+        ${slide.kicker ? `<span class="kicker ${isLightCover ? 'kicker-light-cover' : 'kicker-light'}">${escapeHtml(slide.kicker)}</span>` : ''}
         <h1 class="title title-cover">${escapeHtml(slide.title)}</h1>
-        ${slide.sub ? `<p class="sub sub-light">${escapeHtml(slide.sub)}</p>` : ''}
+        ${slide.sub ? `<p class="sub ${isLightCover ? 'sub-light-cover' : 'sub-light'}">${escapeHtml(slide.sub)}</p>` : ''}
         <div class="footer-row">
           <span class="hint">${escapeHtml(slide.hint || 'Desliza →')}</span>
           <span class="counter">${escapeHtml(number)}</span>
@@ -177,7 +194,7 @@ function slideHtml(slide, index, total) {
         ${slide.kicker ? `<span class="kicker kicker-light">${escapeHtml(slide.kicker)}</span>` : ''}
         <h1 class="title title-cover">${escapeHtml(slide.title)}</h1>
         ${slide.body ? `<p class="sub sub-light">${escapeHtml(slide.body)}</p>` : ''}
-        <div class="url-pill">👉 ${escapeHtml(slide.url || theme.url)}</div>
+        <div class="url-pill">${theme.ctaArrow ?? '👉 '}${escapeHtml(slide.url || theme.url)}</div>
       </div>`
       : `
       <div class="scrim scrim-light"></div>
@@ -205,7 +222,9 @@ function slideHtml(slide, index, total) {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100vw; height: 100vh; overflow: hidden; }
   body { position: relative; background: ${COLORS.emerald}; font-family: '${theme.fonts.body}', system-ui, sans-serif; }
+  body.theme-light { background: ${COLORS.cream}; }
   .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .bg.bg-decorative { opacity: 0.12; object-fit: cover; }
   .scrim { position: absolute; inset: 0; }
   .scrim-dark { background: linear-gradient(180deg, ${COLORS.scrimDarkTop} 0%, ${COLORS.scrimDarkMid} 38%, ${COLORS.scrimDarkBottom} 100%); }
   .scrim-emerald { background: linear-gradient(180deg, ${COLORS.scrimBrandTop} 0%, ${COLORS.scrimBrandMid} 45%, ${COLORS.scrimBrandBottom} 100%); }
@@ -214,7 +233,7 @@ function slideHtml(slide, index, total) {
   .content-cover { justify-content: flex-end; gap: 2.4vw; }
   .topbar { position: absolute; top: 7.04vw; left: 7.04vw; right: 7.04vw; display: flex; align-items: center; justify-content: space-between; }
   .logo { font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.15vw; letter-spacing: 0.02em; color: ${COLORS.cream}; }
-  .badge { font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 2.22vw; letter-spacing: 0.14em; color: ${COLORS.emerald}; background: ${COLORS.sage}; padding: 0.93vw 2.04vw; border-radius: 999px; }
+  .badge { font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 2.22vw; letter-spacing: 0.14em; color: ${COLORS.emerald}; background: ${COLORS.sage}; padding: 0.93vw 2.04vw; border-radius: ${theme.pillRadius || '999px'}; }
   .kicker { font-family: '${theme.fonts.kicker}'; font-weight: 700; font-size: 2.41vw; letter-spacing: 0.16em; text-transform: uppercase; }
   .kicker-light { color: ${COLORS.kickerLight}; }
   .kicker-dark { color: ${COLORS.green}; }
@@ -228,7 +247,7 @@ function slideHtml(slide, index, total) {
   .counter { font-family: '${theme.fonts.head}'; font-weight: 700; font-size: 2.59vw; color: ${COLORS.cream}CC; }
   .counter-light { color: ${COLORS.cream}D8; }
   .counter-dark { color: ${COLORS.ink}8C; }
-  .url-pill { margin-top: 1.7vw; align-self: flex-start; background: ${COLORS.sage}; color: ${COLORS.emerald}; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.7vw; padding: 2.04vw 3.7vw; border-radius: 999px; }
+  .url-pill { margin-top: 1.7vw; align-self: flex-start; background: ${COLORS.sage}; color: ${COLORS.emerald}; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.7vw; padding: 2.04vw 3.7vw; border-radius: ${theme.pillRadius || '999px'}; }
   .panel { background: ${COLORS.cream}F0; border-radius: 4.44vw; padding: 5.93vw 5.37vw; box-shadow: 0 2.78vw 7.41vw ${COLORS.panelShadow}; margin-top: auto; }
   .panel-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3.15vw; }
   .body { color: ${COLORS.ink}DB; font-size: 3.7vw; line-height: 1.42; font-weight: 600; margin-top: 2.4vw; }
@@ -239,10 +258,30 @@ function slideHtml(slide, index, total) {
   .options { display: flex; flex-direction: column; gap: 1.7vw; margin-top: 1.5vw; }
   .option { display: flex; align-items: center; gap: 1.5vw; background: ${COLORS.cream}24; border: 1px solid ${COLORS.cream}60; border-radius: 999px; padding: 1.7vw 2.4vw; color: ${COLORS.cream}; font-size: 3.1vw; font-weight: 700; }
   .opt-letter { display: inline-flex; width: 4.3vw; height: 4.3vw; border-radius: 50%; background: ${COLORS.sage}; color: ${COLORS.emerald}; align-items: center; justify-content: center; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 2.6vw; flex-shrink: 0; }
+  /* Modo cover claro (Guaki): fondo sage, texto ink, foto decorativa sutil */
+  .scrim-light-cover { background: linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(226,232,225,0.08) 40%, rgba(226,232,225,0.30) 100%); }
+  body.theme-light .logo { color: ${COLORS.ink}; }
+  body.theme-light .badge { color: ${COLORS.ink}; background: #FFFFFF; border: 0.3vw solid ${COLORS.ink}; }
+  body.theme-light .kicker-light-cover { color: ${COLORS.ink}; }
+  body.theme-light .title-cover { color: ${COLORS.ink}; }
+  body.theme-light .sub-light-cover { color: ${COLORS.ink}D8; }
+  body.theme-light .hint { color: ${COLORS.ink}B8; }
+  body.theme-light .counter { color: ${COLORS.ink}A0; }
+  body.theme-light .panel { background: #FFFFFFF0; }
+  body.theme-light .kicker-dark { color: ${COLORS.ink}; }
+  body.theme-light .check { background: ${COLORS.emerald}; }
+  /* Modo suizo web Veyra (2026-09-14): UPPERCASE, negro total en cover/CTA, card con borde duro */
+  body.title-upper .title { text-transform: uppercase; }
+  body.title-upper .title-cover { font-size: 7.6vw; }
+  body.panel-page { background: ${COLORS.sage}; }
+  /* Card suiza: borde negro duro + sombra desplazada + radio 0 (patrón de cards de veyrasoluciones.com).
+     Se aplica por panelStyle, NO por no-photo (la foto puede convivir con la card suiza). */
+  body.panel-swiss .panel { background: #FFFFFF; border: 0.3vw solid ${COLORS.ink}; border-radius: 0; box-shadow: 0.6vw 0.6vw 0 ${COLORS.ink}; }
+  body.panel-swiss .check { border-radius: 0; }
 </style>
 </head>
-<body>
-  <img class="bg" src="${BG_PREFIX}${escapeHtml(bg)}" alt="" />
+<body class="${isLight && !isCta ? 'theme-light ' : ''}${theme.titleCase === 'upper' ? 'title-upper ' : ''}${theme.noPhoto && isPanel ? 'panel-page ' : ''}${theme.noPhoto ? 'no-photo ' : ''}${theme.panelStyle === 'swiss' && isPanel ? 'panel-swiss' : ''}">
+  ${theme.noPhoto ? '' : `<img class="bg ${isLightCover ? 'bg-decorative' : ''}" src="${BG_PREFIX}${escapeHtml(bg)}" alt="" />`}
   ${inner}
 </body>
 </html>`;

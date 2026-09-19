@@ -28,6 +28,8 @@ interface SearchBarProps {
   autoFocus?: boolean;
   onSearchSubmit?: (query: string, city: string) => void;
   detectedLocation?: string | null;
+  // Placeholder estático en el HTML inicial (SEO). Desactiva la rotación animada.
+  staticPlaceholder?: string;
 }
 
 export default function SearchBar({
@@ -38,6 +40,7 @@ export default function SearchBar({
   autoFocus = false,
   onSearchSubmit,
   detectedLocation = null,
+  staticPlaceholder,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [city, setCity] = useState(initialCity);
@@ -170,7 +173,7 @@ export default function SearchBar({
     router.push(`/directorio?${params.toString()}`);
   };
 
-  const showAnimatedOverlay = !isFocused && query.length === 0;
+  const showAnimatedOverlay = !isFocused && query.length === 0 && !staticPlaceholder;
 
   return (
     <form
@@ -227,7 +230,7 @@ export default function SearchBar({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder={isListening ? 'Escuchando tu voz...' : isFocused ? 'Escribe lo que necesitas...' : ''}
+          placeholder={isListening ? 'Escuchando tu voz...' : isFocused ? 'Escribe lo que necesitas...' : (staticPlaceholder ?? '')}
           autoFocus={autoFocus}
           style={{
             width: '100%',

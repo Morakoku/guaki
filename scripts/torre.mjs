@@ -7,7 +7,7 @@ const BOARDS = ['guaki', 'veyra', 'brenda', 'cveliz', 'sielan', 'lanza', 'atlas'
 const AGENT_PREFIX = /^(IGP\d|AUD-|WEB\d|SEO\d|OPS\d|AB\d|P0-|TORRE\d|Lote\s?\d)/;
 const HUMAN_RE = /HUMANO|EDWIN|HUMANAS/i;
 
-function run(cmd, timeout = 120000) {
+function run(cmd, timeout = 20000) {
   try {
     return execSync(cmd, { encoding: 'utf8', timeout, windowsHide: true, maxBuffer: 20 * 1024 * 1024 });
   } catch {
@@ -17,7 +17,7 @@ function run(cmd, timeout = 120000) {
 
 async function probe(url, opts = {}) {
   try {
-    const res = await fetch(url, { ...opts, signal: AbortSignal.timeout(25000) });
+    const res = await fetch(url, { ...opts, signal: AbortSignal.timeout(15000) });
     return { ok: true, status: res.status };
   } catch (e) {
     return { ok: false, status: 0, error: String(e.message || e).slice(0, 80) };
@@ -97,7 +97,7 @@ if (postizConfig.apiKey && postizPing.ok) {
   }
 }
 
-const docker = run('docker ps --format "{{.Names}}: {{.Status}}"', 60000);
+const docker = run('docker ps --format "{{.Names}}: {{.Status}}"', 20000);
 const postizContainers = (docker || '').split(/\r?\n/).filter((l) => /postiz|temporal|spotlight/.test(l));
 
 const probes = {
@@ -108,6 +108,8 @@ const probes = {
   'veyrasoluciones.com': await probe('https://veyrasoluciones.com/'),
   'Torre Mapache (Vercel)': await probe('https://mapache-kappa.vercel.app/torre-control'),
   'Postiz API local': postizPing,
+  'CVELIZ WhatsApp (:3004)': await probe('http://127.0.0.1:3004/'),
+  'Torre local :7788': await probe('http://127.0.0.1:7788/health'),
 };
 
 const boards = {};
@@ -130,7 +132,7 @@ for (const [board, tasks] of Object.entries(boardsRaw)) {
   for (const t of tasks) {
     if (t.status === 'done' || t.status === 'archived') continue;
     if (/^LEAD /.test(t.title)) {
-      const kind = t.title.includes('wa-mde') ? 'LEAD WhatsApp Medellin' : t.title.includes('wa-ccs') ? 'LEAD WhatsApp Caracas' : 'LEAD otros';
+      const kind = t.title.includes('wa-cveliz') ? 'LEAD WhatsApp CVELIZ' : t.title.includes('wa-mde') ? 'LEAD WhatsApp Medellin' : t.title.includes('wa-ccs') ? 'LEAD WhatsApp Caracas' : 'LEAD otros';
       leadCounts[kind] = (leadCounts[kind] || 0) + 1;
       continue;
     }
@@ -185,6 +187,45 @@ const evidence = (() => {
   }
 })();
 
+// CVELIZ: lote de WhatsApp manual listo (empresas corporativas Medellin, Scrapling/Maps)
+// + base de leads de prospeccion (sqlite en D:)
+const cveliz = (() => {
+  const batch = [];
+  let waBatch = 0;
+  const CSV = 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_corporativo_mde_1.csv';
+  // Parser CSV minimalista que respeta comillas dobles (escrito por Python csv.writer).
+  const splitCsv = (line) => {
+    const out = []; let cur = ''; let q = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (q) {
+        if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ',') { out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur);
+    return out;
+  };
+  try {
+    const lines = fs.readFileSync(CSV, 'utf8').split(/\r?\n/);
+    for (const l of lines) {
+      if (!l.includes('wa-cveliz-')) continue;
+      const c = splitCsv(l); // ref,empresa,telefono_raw,celular,categoria,rating,direccion,website,query,link_wa
+      if (c.length < 10) continue;
+      batch.push({ ref: c[0], empresa: c[1], celular: c[3], rating: c[5], direccion: c[6], link_wa: c[9] });
+    }
+    waBatch = batch.length;
+  } catch {}
+  return {
+    wa_batch_ready: waBatch,
+    batch,
+    batch_file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_corporativo_mde_1.md',
+    leads_db: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/leads.db (12.720 leads · 9.603 con telefono · verificado 2026-09-19)',
+  };
+})();
+
 const data = {
   generated_at: new Date().toISOString(),
   generator: 'guaki/scripts/torre.mjs',
@@ -194,6 +235,7 @@ const data = {
   ig_checklist_open: igChecklist,
   acciones_open: accionesChecklist,
   probes,
+  cveliz,
   postiz: {
     api: postizPing,
     containers: postizContainers,
@@ -231,7 +273,12 @@ L.push('### 2. Otras acciones humanas abiertas (de los boards)');
 for (const h of humans) L.push(`- [${h.board}] \`${h.id}\` (${h.status}) — ${h.title}`);
 for (const [k, v] of Object.entries(leadCounts)) L.push(`- [guaki] **${v}** tarjetas ${k} (rutina diaria 15/día según KIT_OUTBOUND)`);
 L.push('');
-L.push('### 3. Legado ACCIONES_EDWIN.md');
+L.push('### 3. CVELIZ — lote WhatsApp manual listo');
+L.push(`   🏷️ **${data.cveliz?.wa_batch_ready || 0} empresas corporativas** listas para envío manual (${data.cveliz?.batch_file || 'lote no encontrado'})`);
+L.push(`   📂 Base de leads: \`${data.cveliz?.leads_db || 'leads.db no encontrada'}\``);
+L.push(`   🔴 Gateway WhatsApp :3004 caído — encender antes de trackear respuestas del lote (hermes, perfil cveliz)`);
+L.push('');
+L.push('### 4. Legado ACCIONES_EDWIN.md');
 if (accionesChecklist.length) for (const item of accionesChecklist) L.push(`   - [ ] ${item.text}`);
 else L.push('   (sin ítems abiertos)');
 L.push('');

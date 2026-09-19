@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Store,
@@ -14,35 +14,17 @@ import AficheCard from '../components/ui/AficheCard';
 import GuakiHeader from '../components/ui/GuakiHeader';
 import PlanCardsSection from '../components/ui/PlanCardsSection';
 import { AficheBusinessData } from '../lib/demo_afiche';
-import { mapPublicBusinessToAfiche } from '../lib/public_card_mapper.mjs';
 
-export default function HomeClient() {
+interface HomeClientProps {
+  // Inventario server-rendered (ISR 5 min). El filtrado por categoría y la
+  // geolocalización siguen siendo interacción client-side.
+  initialBusinesses?: AficheBusinessData[];
+}
+
+export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) {
   const [detectedCity, setDetectedCity] = useState<string>('');
   const [detectedLocationName, setDetectedLocationName] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('todos');
-  const [realBusinesses, setRealBusinesses] = useState<AficheBusinessData[]>([]);
-  const [inventoryLoaded, setInventoryLoaded] = useState(false);
-
-  // Cargar comercios reales
-  useEffect(() => {
-    async function loadBusinesses() {
-      try {
-        const res = await fetch('/api/businesses?status=published');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.items && Array.isArray(data.items)) {
-            const mapped: AficheBusinessData[] = data.items.map(mapPublicBusinessToAfiche);
-            setRealBusinesses(mapped);
-          }
-        }
-      } catch {
-        setRealBusinesses([]);
-      } finally {
-        setInventoryLoaded(true);
-      }
-    }
-    loadBusinesses();
-  }, []);
 
   const categories = [
     { id: 'todos', label: 'Todos', icon: '✨' },
@@ -52,7 +34,14 @@ export default function HomeClient() {
     { id: 'restaurante', label: 'Restaurantes', icon: '☕' },
   ];
 
-  const allBusinesses = realBusinesses;
+  const allBusinesses = initialBusinesses;
+
+  // Cifras reales para la franja de stats (derivan del inventario publicado).
+  const uniqueCategoryCount = new Set(
+    allBusinesses
+      .map((b) => b.category.trim().toLowerCase())
+      .filter(Boolean)
+  ).size;
 
   const filteredBusinesses =
     activeCategory === 'todos'
@@ -94,7 +83,7 @@ export default function HomeClient() {
             letterSpacing: '-0.03em',
           }}
         >
-          Encuentra lo que necesitas
+          Encuentra negocios verificados cerca de ti
         </h1>
 
         <p
@@ -114,11 +103,12 @@ export default function HomeClient() {
           <SearchBar
             initialCity={detectedCity}
             detectedLocation={detectedLocationName}
+            staticPlaceholder="Ej. veterinaria en Medellín"
           />
         </div>
 
         {/* Chips de Categorías Minimalistas */}
-        {inventoryLoaded && allBusinesses.length === 0 ? (
+        {allBusinesses.length === 0 ? (
           <p style={{ textAlign: 'center', color: TOKENS.colors.textSecondary, padding: '36px 20px' }}>Estamos verificando los primeros comercios de tu zona. Muy pronto verás fichas aquí.</p>
         ) : filteredBusinesses.length === 0 && activeCategory !== 'todos' ? (
           <p style={{ textAlign: 'center', color: TOKENS.colors.textSecondary, padding: '36px 20px' }}>No encontramos negocios con esta categoría.</p>
@@ -170,6 +160,29 @@ export default function HomeClient() {
           margin: '0 auto',
         }}
       >
+        {/* ── FRANJA DE STATS (cifras reales del inventario publicado) ── */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <div
+            className="glass-surface-elevated"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 20px',
+              borderRadius: TOKENS.radii.pill,
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              color: TOKENS.colors.textSecondary,
+            }}
+          >
+            <span>
+              {allBusinesses.length > 0
+                ? `${allBusinesses.length} negocios verificados · ${uniqueCategoryCount} categorías · WhatsApp directo`
+                : 'Negocios verificados · WhatsApp directo'}
+            </span>
+          </div>
+        </div>
+
         <div
           style={{
             display: 'flex',
@@ -187,9 +200,7 @@ export default function HomeClient() {
             </h2>
           </div>
           <span style={{ fontSize: '0.8rem', color: TOKENS.colors.textMuted, fontWeight: 600 }}>
-            {!inventoryLoaded
-              ? 'Cargando comercios…'
-              : `${Math.min(filteredBusinesses.length, 12)} de ${filteredBusinesses.length} resultados`}
+            {`${Math.min(filteredBusinesses.length, 12)} de ${filteredBusinesses.length} resultados`}
           </span>
         </div>
 
@@ -201,17 +212,9 @@ export default function HomeClient() {
             gap: '20px',
           }}
         >
-          {!inventoryLoaded
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={`sk-${i}`}
-                  className="skeleton"
-                  style={{ height: '420px', borderRadius: '20px', opacity: 0.55 }}
-                />
-              ))
-            : filteredBusinesses.slice(0, 12).map((afiche) => (
-                <AficheCard key={afiche.id} afiche={afiche} />
-              ))}
+          {filteredBusinesses.slice(0, 12).map((afiche) => (
+            <AficheCard key={afiche.id} afiche={afiche} />
+          ))}
         </div>
 
         {/* Botón Ver Más */}

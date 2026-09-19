@@ -213,7 +213,7 @@ export default function PlanCardsSection({
             ) : (
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'auto' }}>
                 <Link
-                  href="/provider/dashboard"
+                  href="/unete"
                   className="neu-btn-primary"
                   style={{
                     display: 'inline-flex',
