@@ -444,6 +444,28 @@ export class GuakiDataService {
     return mapSupabaseRowToBusiness(data);
   }
 
+  /**
+   * Crea una ficha de negocio de forma PÚBLICA (alta rápida desde /unete, sin
+   * login). Usa el client de service-role SOLO server-side (SUPABASE_SERVICE_ROLE_KEY
+   * no es NEXT_PUBLIC_* y nunca viaja al navegador) para insertar una ficha en
+   * estado 'draft' (la cola de auditoría admin la muestra como "pending") con
+   * claimStatus 'pending' y source 'public_register'. El alta nunca publica:
+   * solo el flujo admin/auditoría puede pasar a published.
+   */
+  static async createPublicBusinessLead(record: Partial<BusinessRecord>): Promise<BusinessRecord> {
+    if (!isSupabaseServiceConfigured()) throw new Error('GUAKI_SUPABASE_NOT_CONFIGURED');
+    const client = getSupabaseServiceClient();
+    const row = mapBusinessToSupabaseRow({
+      status: 'draft',
+      claimStatus: 'pending',
+      source: 'public_register',
+      ...record,
+    });
+    const { data, error } = await client.from('businesses').insert(row).select().single();
+    if (error) throw error;
+    return mapSupabaseRowToBusiness(data);
+  }
+
   static async updateBusinessWithToken(id: string, record: Partial<BusinessRecord>, accessToken: string): Promise<BusinessRecord> {
     if (!isSupabaseConfigured()) throw new Error('GUAKI_SUPABASE_NOT_CONFIGURED');
     const client = getSupabaseClientForAccessToken(accessToken);

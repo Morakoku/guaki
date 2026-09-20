@@ -213,7 +213,7 @@ export default function PlanCardsSection({
             ) : (
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'auto' }}>
                 <Link
-                  href="/unete"
+                  href="/unete#crea-tu-ficha"
                   className="neu-btn-primary"
                   style={{
                     display: 'inline-flex',

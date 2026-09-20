@@ -187,12 +187,18 @@ const evidence = (() => {
   }
 })();
 
-// CVELIZ: lote de WhatsApp manual listo (empresas corporativas Medellin, Scrapling/Maps)
+// CVELIZ: lotes de WhatsApp manual listos (Medellin + Barranquilla + Bogota/Cali/Bucaramanga/Cartagena)
 // + base de leads de prospeccion (sqlite en D:)
 const cveliz = (() => {
   const batch = [];
-  let waBatch = 0;
-  const CSV = 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_corporativo_mde_1.csv';
+  const lotes = [];
+  // Cada lote indica el indice de columnas en su CSV y su ciudad (constante o columna).
+  // Fuente canonica: lote automatico del pipeline (cveliz_pipeline.py), que consolida
+  // todos los leads con celular y crece con cada corrida programada.
+  const LOTS = [
+    { name: 'Automatico', file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_automatico.csv',
+      idx: { ref: 0, empresa: 2, celular: 4, rating: 6, direccion: 7, link: 9 }, ciudadCol: 1 },
+  ];
   // Parser CSV minimalista que respeta comillas dobles (escrito por Python csv.writer).
   const splitCsv = (line) => {
     const out = []; let cur = ''; let q = false;
@@ -208,20 +214,28 @@ const cveliz = (() => {
     out.push(cur);
     return out;
   };
-  try {
-    const lines = fs.readFileSync(CSV, 'utf8').split(/\r?\n/);
-    for (const l of lines) {
-      if (!l.includes('wa-cveliz-')) continue;
-      const c = splitCsv(l); // ref,empresa,telefono_raw,celular,categoria,rating,direccion,website,query,link_wa
-      if (c.length < 10) continue;
-      batch.push({ ref: c[0], empresa: c[1], celular: c[3], rating: c[5], direccion: c[6], link_wa: c[9] });
-    }
-    waBatch = batch.length;
-  } catch {}
+  for (const lot of LOTS) {
+    let n = 0;
+    try {
+      const lines = fs.readFileSync(lot.file, 'utf8').split(/\r?\n/);
+      for (const l of lines) {
+        if (!l.includes('wa-cveliz') && !l.includes('wa-auto')) continue;
+        const c = splitCsv(l);
+        if (c.length < 10) continue;
+        const ciudad = lot.ciudadCol != null ? c[lot.ciudadCol] : lot.ciudad;
+        batch.push({ ref: c[lot.idx.ref], ciudad: ciudad || lot.ciudad || '', empresa: c[lot.idx.empresa],
+                     celular: c[lot.idx.celular], rating: c[lot.idx.rating], direccion: c[lot.idx.direccion],
+                     link_wa: c[lot.idx.link] });
+        n++;
+      }
+    } catch {}
+    lotes.push({ name: lot.name, file: lot.file, count: n });
+  }
   return {
-    wa_batch_ready: waBatch,
+    wa_batch_ready: batch.length,
     batch,
-    batch_file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_corporativo_mde_1.md',
+    lotes,
+    batch_file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/',
     leads_db: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/leads.db (12.720 leads · 9.603 con telefono · verificado 2026-09-19)',
   };
 })();

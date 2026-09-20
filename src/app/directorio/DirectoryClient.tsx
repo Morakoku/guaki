@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 import {
   LayoutGrid,
   List,
@@ -19,26 +18,36 @@ import InteractiveCityMap from '../../components/ui/InteractiveCityMap';
 import EmptyState from '../../components/ui/EmptyState';
 import PlanCardsSection from '../../components/ui/PlanCardsSection';
 import { AficheBusinessData } from '../../lib/demo_afiche';
-import { mapPublicBusinessToAfiche } from '../../lib/public_card_mapper.mjs';
 import { trackEvent } from '../../lib/analytics';
 
-export default function DirectoryClient() {
-  const searchParams = useSearchParams();
-  const initialQ = searchParams.get('q') || '';
-  const initialCity = searchParams.get('city') || '';
-  // Deep-link de categoría: /directorio?cat=veterinaria (usado por el home
-  // y por enlaces externos). Acepta también "category".
-  const initialCat = searchParams.get('cat') || searchParams.get('category') || 'todos';
+interface DirectoryClientProps {
+  // Inventario server-rendered (ISR 5 min). El filtrado por categoría/ciudad y
+  // la búsqueda en vivo quedan como interacción client-side sobre estos datos.
+  initialBusinesses?: AficheBusinessData[];
+  // Estado inicial proveniente de searchParams, leídos en el server component
+  // para mantener el directorio totalmente server-rendered (sin bailout).
+  initialQuery?: string;
+  initialCity?: string;
+  initialCategory?: string;
+}
 
-  const [query, setQuery] = useState(initialQ);
+export default function DirectoryClient({
+  initialBusinesses = [],
+  initialQuery = '',
+  initialCity = '',
+  initialCategory = 'todos',
+}: DirectoryClientProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [selectedCity, setSelectedCity] = useState(initialCity);
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCat);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [onlyOpenNow, setOnlyOpenNow] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'card' | 'list' | 'map'>('card');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [businesses, setBusinesses] = useState<AficheBusinessData[]>([]);
-  const [loading, setLoading] = useState(true);
+  // El inventario llega ya server-rendered desde el server component (ISR).
+  // No se re-fetchea en cliente: el filtrado en vivo opera sobre estos datos.
+  const [businesses, setBusinesses] = useState<AficheBusinessData[]>(initialBusinesses);
+  const [loading, setLoading] = useState(false);
 
   // Cargar búsquedas recientes de localStorage
   useEffect(() => {
@@ -70,28 +79,6 @@ export default function DirectoryClient() {
       } catch {}
     }
   };
-
-  // Cargar comercios reales sincronizados con el Home y la base de datos
-  useEffect(() => {
-    async function loadBusinesses() {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/businesses?status=published', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          const rawItems = Array.isArray(data) ? data : (data.items || []);
-          const mapped: AficheBusinessData[] = rawItems.map(mapPublicBusinessToAfiche);
-          setBusinesses(mapped);
-        }
-      } catch (err) {
-        console.error('Error fetching directory:', err);
-        setBusinesses([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadBusinesses();
-  }, []);
 
   const cities = cityNames();
   const categories = [

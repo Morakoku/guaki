@@ -936,3 +936,14 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .gk-toast { animation: none; }
 }
+
+/* Spinner usado en el formulario de alta de proveedor (UneteRegisterForm). */
+@keyframes gk-spin {
+  to { transform: rotate(360deg); }
+}
+.gk-spin {
+  animation: gk-spin 0.9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-spin { animation: none; }
+}

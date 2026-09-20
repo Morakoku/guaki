@@ -1,9 +1,16 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import GuakiHeader from '../../components/ui/GuakiHeader';
 import { TOKENS } from '../../lib/design-tokens';
 import { absoluteUrl } from '@/lib/site';
+import { getPublishedProviders } from '@/lib/published_providers';
+import { mapPublicBusinessToAfiche } from '@/lib/public_card_mapper.mjs';
+import type { AficheBusinessData } from '@/lib/demo_afiche';
 import DirectoryClient from './DirectoryClient';
+
+// ISR: el directorio se prerenderiza en build y se refresca cada 5 minutos.
+// La lista de negocios queda en el HTML inicial (SEO) y el filtrado por
+// categoría/ciudad + búsqueda en vivo siguen siendo client-side.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Directorio de Negocios y Servicios Verificados en Colombia y Venezuela | Guaki',
@@ -33,14 +40,38 @@ function DirectorySeoHeading() {
   );
 }
 
-export default function DirectoryPage() {
+interface DirectoryPageProps {
+  searchParams: Promise<{ q?: string; city?: string; cat?: string; category?: string }>;
+}
+
+export default async function DirectoryPage(props: DirectoryPageProps) {
+  const params = await props.searchParams;
+  // Deep-link de categoría: /directorio?cat=veterinaria. Acepta también "category".
+  const initialCategory = params.cat || params.category || 'todos';
+
+  // Graceful degradation: si la fuente de datos falla o no está configurada,
+  // se sirve un directorio vacío (no 500, no spinner infinito) y se revalida
+  // al siguiente ciclo de ISR.
+  let initialBusinesses: AficheBusinessData[] = [];
+  try {
+    const providers = await getPublishedProviders();
+    initialBusinesses = providers.map(
+      (p) => mapPublicBusinessToAfiche(p) as AficheBusinessData
+    );
+  } catch (cause) {
+    console.error('directorio: inventory unavailable, serving empty directory', cause);
+  }
+
   return (
     <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       <GuakiHeader />
       <DirectorySeoHeading />
-      <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center' }}>Cargando directorio...</div>}>
-        <DirectoryClient />
-      </Suspense>
+      <DirectoryClient
+        initialBusinesses={initialBusinesses}
+        initialQuery={params.q || ''}
+        initialCity={params.city || ''}
+        initialCategory={initialCategory}
+      />
     </div>
   );
 }

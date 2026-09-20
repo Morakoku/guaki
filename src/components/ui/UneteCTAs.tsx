@@ -35,11 +35,22 @@ export default function UneteCTAs() {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   };
 
+  const scrollToForm = (e: React.MouseEvent) => {
+    const form = document.getElementById('crea-tu-ficha');
+    if (form) {
+      e.preventDefault();
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
       <Link
-        href="/provider/dashboard"
-        onClick={() => trackEvent({ event_name: 'merchant_cta_clicked', metadata: { channel: 'register', entry: 'unete' } })}
+        href="/unete#crea-tu-ficha"
+        onClick={(e) => {
+          scrollToForm(e);
+          trackEvent({ event_name: 'merchant_cta_clicked', metadata: { channel: 'register', entry: 'unete' } });
+        }}
         className="neu-btn-primary"
         style={{
           display: 'inline-flex',

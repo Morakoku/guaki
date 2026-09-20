@@ -6,6 +6,7 @@ import GuakiHeader from '@/components/ui/GuakiHeader';
 import SoftCard from '@/components/ui/SoftCard';
 import PlanCardsSection from '@/components/ui/PlanCardsSection';
 import UneteCTAs from '@/components/ui/UneteCTAs';
+import UneteRegisterForm from '@/components/ui/UneteRegisterForm';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl } from '@/lib/site';
 import { createClient } from '@supabase/supabase-js';
@@ -97,6 +98,11 @@ export default async function UnetePage() {
           </p>
 
           <UneteCTAs />
+        </section>
+
+        {/* ALTA RÁPIDA PÚBLICA: formulario de ficha (sin login) */}
+        <section id="crea-tu-ficha" style={{ scrollMarginTop: '92px', marginBottom: '48px' }}>
+          <UneteRegisterForm />
         </section>
 
         {/* CÓMO FUNCIONA */}
