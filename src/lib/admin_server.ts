@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
-import { verifyOwnerBypassCookie } from '@/lib/owner_bypass';
 
 export type AdminContext = { denied: NextResponse } | { admin: SupabaseClient; actorId: string };
 
 export async function adminClient(request: NextRequest): Promise<AdminContext> {
-  // ⚙️ Acceso temporal del dueño (botón oculto al pie + env ADMIN_BYPASS_TOKEN).
-  if (await verifyOwnerBypassCookie(request.cookies.get('guaki_admin_bypass')?.value)) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-    const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-    if (!url || !serviceKey) {
-      return { denied: NextResponse.json({ error: 'NOT_CONFIGURED' }, { status: 503 }) };
-    }
-    const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
-    return { admin, actorId: 'owner-bypass' };
-  }
-
+  // El acceso admin pasa SOLO por autenticación real: sesión Supabase válida +
+  // rol 'admin' en app_metadata. El backdoor de bypass por cookie
+  // (guaki_admin_bypass) fue eliminado por seguridad — ningún acceso sin
+  // credenciales reales.
   const token = request.cookies.get('guaki_session')?.value;
   if (!isSupabaseConfigured() || !token || token.startsWith('dev-') || token.startsWith('usr_local_')) {
     return { denied: NextResponse.json({ error: 'ADMIN_REQUIRED' }, { status: 403 }) };

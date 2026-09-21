@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getTrustedRole } from './lib/authorization';
-import { verifyOwnerBypassCookie } from './lib/owner_bypass';
 
 function loginRedirect(request: NextRequest, status: 401 | 403 = 401, error: string = 'AUTH_REQUIRED'): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -91,14 +90,9 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // ⚙️ Acceso temporal del dueño (botón oculto al pie + env ADMIN_BYPASS_TOKEN). Revocable.
-  if (
-    (path.startsWith('/admin') || path.startsWith('/api/admin')) &&
-    (await verifyOwnerBypassCookie(request.cookies.get('guaki_admin_bypass')?.value))
-  ) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
+  // El acceso a /admin y /api/admin pasa SOLO por autenticación real:
+  // sesión Supabase válida + rol 'admin' (verificado abajo). El backdoor de
+  // bypass por cookie fue eliminado (security fix: ningún acceso sin credenciales).
   const token = request.cookies.get('guaki_session')?.value;
 
   // Las rutas protegidas siempre requieren una sesión Supabase real, también en local.
