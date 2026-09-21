@@ -54,6 +54,7 @@ interface RegisterResult {
 
 export default function UneteRegisterForm() {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [city, setCity] = useState<string>(() => citiesByCountry()[0]?.cities[0]?.name ?? 'Medellín');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [services, setServices] = useState('');
@@ -78,6 +79,10 @@ export default function UneteRegisterForm() {
       setError('Ingresa el nombre de tu negocio (mínimo 2 caracteres).');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Ingresa un correo válido — te enviamos ahí la confirmación de tu ficha.');
+      return;
+    }
     if (!whatsapp.trim() || whatsapp.replace(/\D/g, '').length < 8) {
       setError('Ingresa un número de WhatsApp válido para que los clientes te contacten.');
       return;
@@ -90,6 +95,7 @@ export default function UneteRegisterForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
+          email: email.trim(),
           city,
           category,
           services: services.trim(),
@@ -284,6 +290,21 @@ export default function UneteRegisterForm() {
           value={services}
           onChange={(e) => setServices(e.target.value)}
           placeholder="Ej. Corte, tintura, peinados"
+          style={fieldStyle}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="ficha-email" style={labelStyle}>Correo electrónico *</label>
+        <input
+          id="ficha-email"
+          type="email"
+          required
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Ej. laura@tunegocio.com"
           style={fieldStyle}
         />
       </div>

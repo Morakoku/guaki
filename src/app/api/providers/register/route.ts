@@ -4,6 +4,48 @@ import { GuakiDataService, isSupabaseServiceConfigured } from '@/lib/supabase';
 import { validateBusinessPayload, sanitizeString } from '@/lib/validation';
 import { slugify } from '@/lib/site';
 
+// Email de bienvenida con el template publicado en Resend (alias estable).
+const RESEND_TEMPLATE_ID = 'guaki-proveedor-bienvenida';
+const RESEND_FROM = 'Guaki <hola@guaki.online>';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// El email de bienvenida es un extra, no un bloqueo: si Resend falla, el alta
+// sigue siendo 201 (la ficha ya está creada) y solo se loguea el error.
+async function sendWelcomeEmail(to: string, businessName: string, category: string, city: string): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error('[register] RESEND_API_KEY no configurada — sin email de bienvenida.');
+    return;
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM,
+        to: [to],
+        template: {
+          id: RESEND_TEMPLATE_ID,
+          variables: {
+            BUSINESS_NAME: businessName,
+            CATEGORY: category,
+            CITY: city || 'tu ciudad',
+          },
+        },
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('[register] Resend bienvenida falló:', (err as { message?: string }).message || res.status);
+    }
+  } catch (cause) {
+    console.error('[register] Resend bienvenida error:', cause);
+  }
+}
+
 // Alta rápida pública de un negocio (proveedor) desde la landing /unete.
 // NO requiere sesión ni login: el visitante deja su ficha en estado 'pending'
 // (persistida como status 'draft', que es la cola "pending" de auditoría admin),
@@ -30,6 +72,15 @@ export async function POST(request: NextRequest) {
     if (!whatsapp || whatsapp.replace(/\D/g, '').length < 8) {
       return NextResponse.json(
         { error: 'Datos de negocio inválidos.', details: { whatsapp: 'Ingresa un número de WhatsApp válido.' } },
+        { status: 400 },
+      );
+    }
+
+    // Email del proveedor: obligatorio — ahí va la confirmación de la ficha.
+    const email = sanitizeString(payload.email).toLowerCase();
+    if (!email || !EMAIL_PATTERN.test(email) || email.length > 254) {
+      return NextResponse.json(
+        { error: 'Datos de negocio inválidos.', details: { email: 'Ingresa un correo electrónico válido.' } },
         { status: 400 },
       );
     }
@@ -78,6 +129,9 @@ export async function POST(request: NextRequest) {
       ownerId: null,
       ownerEmail: null,
     });
+
+    // Email de bienvenida (extra, no bloqueo): se envía tras crear la ficha.
+    await sendWelcomeEmail(email, created.name || baseName, validation.data.category || '', created.city || '');
 
     return NextResponse.json(
       {
