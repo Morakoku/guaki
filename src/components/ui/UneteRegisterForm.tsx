@@ -159,7 +159,7 @@ export default function UneteRegisterForm() {
         </h3>
         <p style={{ fontSize: '0.95rem', color: TOKENS.colors.textSecondary, lineHeight: 1.6, margin: '0 auto 18px', maxWidth: '440px' }}>
           Gracias, <strong>{name}</strong>. Tu negocio quedó en <strong>revisión</strong> (estado pending).
-          El equipo Guaki audita tu ficha y te contactamos por WhatsApp para activarla — normalmente en menos de 48 horas.
+          El equipo Guaki audita tu ficha y te contactamos por correo para activarla — normalmente en menos de 48 horas.
         </p>
 
         {hasSupportWhatsApp ? (
