@@ -37,6 +37,14 @@ export async function middleware(request: NextRequest) {
   // C-02 FIX: Use server-side env var instead of spoofable Host header for security boundaries.
   const isLocal = process.env.NODE_ENV !== 'production';
 
+  // /admin no existe como pagina (solo /admin/dashboard, /admin/audit, /admin/veyra):
+  // redirigir a /admin/dashboard para que el login?next=/admin no desemboque en 404.
+  if (path === '/admin' || path === '/admin/') {
+    const adminUrl = request.nextUrl.clone();
+    adminUrl.pathname = '/admin/dashboard';
+    return NextResponse.redirect(adminUrl);
+  }
+
   // 148. Bloqueo de amenazas perimetrales
   if (containsThreat(`${path}${search}`)) {
     return new NextResponse('Acceso denegado por seguridad perimetral Guaki.', { status: 403 });
