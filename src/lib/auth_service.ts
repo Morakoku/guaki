@@ -24,7 +24,7 @@ export class AuthService {
           return { user: null, token: null, error: 'Debes confirmar tu correo electrónico antes de ingresar. Revisa tu bandeja de entrada o carpeta de spam.' };
         }
         // Catch-all: nunca mostrar el error crudo de Supabase al usuario final.
-        return { user: null, token: null, error: 'No pudimos iniciar sesión. Verifica tu conexión e intenta de nuevo; si persiste, escríbenos por WhatsApp.' };
+        return { user: null, token: null, error: 'No pudimos iniciar sesión. Verifica tu conexión e intenta de nuevo; si persiste, escríbenos a hola@guaki.online.' };
       }
       if (!data.user || !data.session) return { user: null, token: null, error: 'AUTH_SESSION_MISSING' };
 
@@ -97,7 +97,7 @@ export class AuthService {
           return { user: null, token: null, error: 'Ingresa una contraseña válida para crear tu cuenta.' };
         }
         // Catch-all: nunca mostrar el error crudo de Supabase al usuario final.
-        return { user: null, token: null, error: 'No pudimos completar el registro. Revisa tus datos e intenta de nuevo; si persiste, escríbenos por WhatsApp.' };
+        return { user: null, token: null, error: 'No pudimos completar el registro. Revisa tus datos e intenta de nuevo; si persiste, escríbenos a hola@guaki.online.' };
       }
       if (!data.user) return { user: null, token: null, error: 'No se pudo crear el usuario. Intenta de nuevo.' };
 
