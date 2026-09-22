@@ -128,7 +128,8 @@ export default function LoginPage() {
         await ensureProviderRole({ token: result.token, user: result.user });
         trackEvent({ event_name: 'register_completed', metadata: { mode: 'register' } });
         const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
-        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : '/provider/dashboard';
+        const postLoginHome = result.user?.role === 'admin' ? '/admin/dashboard' : '/provider/dashboard';
+        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : postLoginHome;
       } else {
         const result = await authService.login(userEmail, userPass);
         if (!result.token) {
@@ -150,7 +151,8 @@ export default function LoginPage() {
 
         await ensureProviderRole({ token: result.token, user: result.user });
         const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
-        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : '/provider/dashboard';
+        const postLoginHome = result.user?.role === 'admin' ? '/admin/dashboard' : '/provider/dashboard';
+        window.location.href = nextParam && nextParam.startsWith('/') ? nextParam : postLoginHome;
       }
     } catch {
       setError('Tuvimos un inconveniente al conectar con el servidor. Intenta nuevamente.');
@@ -166,7 +168,9 @@ export default function LoginPage() {
   // pasar: GoTrue puede tardar unos segundos en propagar el app_metadata y el
   // primer redirect rebotaba a /login.
   const ensureProviderRole = async (result: { token: string; user?: { role?: string } | null }) => {
-    if (result.user?.role === 'provider') return;
+    // Los admins no pasan por la provision de rol provider: su rol ya es
+    // superior y el provision podria interferir con el acceso a /admin.
+    if (result.user?.role === 'provider' || result.user?.role === 'admin') return;
     try {
       await fetch('/api/provider/provision', {
         method: 'POST',
