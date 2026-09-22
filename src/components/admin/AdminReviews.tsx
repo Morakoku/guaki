@@ -168,7 +168,7 @@ export default function AdminReviews() {
           href={`/api/admin/reviews/export?status=${state}`}
           download
           aria-label="Exportar reseñas a CSV"
-          style={{ padding: '6px 12px', borderRadius: TOKENS.radii.pill, border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated, color: TOKENS.colors.textMain, fontSize: '0.78rem', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}
+          style={{ padding: '6px 12px', borderRadius: TOKENS.radii.pill, border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated, color: TOKENS.colors.textMain, fontSize: '0.78rem', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: TOKENS.shadows.btnConvex }}
         >
           ⬇ Exportar CSV
         </a>
@@ -251,14 +251,14 @@ export default function AdminReviews() {
         <button type="button" aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
             cursor: page <= 1 ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
-            color: page <= 1 ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+            color: page <= 1 ? TOKENS.colors.textMuted : TOKENS.colors.textMain, boxShadow: TOKENS.shadows.btnConvex }}>
           <ChevronLeft size={14} /> Anterior
         </button>
         <span style={{ fontSize: '0.8rem', fontWeight: 800, color: TOKENS.colors.textSecondary }}>Página {page}</span>
         <button type="button" aria-label="Página siguiente" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: TOKENS.radii.pill, fontSize: '0.8rem', fontWeight: 800,
             cursor: !hasMore ? 'not-allowed' : 'pointer', border: `1px solid ${TOKENS.colors.borderLight}`, background: TOKENS.colors.surfaceElevated,
-            color: !hasMore ? TOKENS.colors.textMuted : TOKENS.colors.textMain }}>
+            color: !hasMore ? TOKENS.colors.textMuted : TOKENS.colors.textMain, boxShadow: TOKENS.shadows.btnConvex }}>
           Siguiente <ChevronRight size={14} />
         </button>
       </div>

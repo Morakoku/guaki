@@ -47,7 +47,7 @@ export default function AdminResumen() {
   useEffect(() => { load(); }, [load]);
 
   const card = (label: string, value: string, sub: string, alert = false) => (
-    <div style={{ background: TOKENS.colors.surfaceElevated, border: `1px solid ${alert ? TOKENS.colors.danger || '#b91c1c' : TOKENS.colors.borderLight}`, borderRadius: TOKENS.radii.lg, padding: '18px 20px', minWidth: 180 }}>
+    <div style={{ background: TOKENS.colors.surfaceElevated, border: `1px solid ${alert ? TOKENS.colors.danger || '#b91c1c' : TOKENS.colors.borderLight}`, borderRadius: TOKENS.radii.lg, padding: '18px 20px', minWidth: 180, boxShadow: TOKENS.shadows.card }}>
       <div style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: TOKENS.colors.textSecondary }}>{label}</div>
       <div style={{ fontSize: '1.7rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: alert ? '#b91c1c' : TOKENS.colors.textMain, margin: '4px 0' }}>{value}</div>
       <div style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary }}>{sub}</div>
@@ -78,7 +78,7 @@ export default function AdminResumen() {
         <strong style={{ fontFamily: 'Outfit, sans-serif' }}>Registro de acciones del admin</strong>
         <span style={{ fontSize: '0.78rem', color: TOKENS.colors.textSecondary }}>(append-only; antes de toda edición delicada, revísalo)</span>
       </div>
-      <div style={{ background: TOKENS.colors.surfaceElevated, border: `1px solid ${TOKENS.colors.borderLight}`, borderRadius: TOKENS.radii.lg, padding: '8px 0', maxHeight: 340, overflowY: 'auto' }}>
+      <div style={{ background: TOKENS.colors.surfaceElevated, border: `1px solid ${TOKENS.colors.borderLight}`, borderRadius: TOKENS.radii.lg, padding: '8px 0', maxHeight: 340, overflowY: 'auto', boxShadow: TOKENS.shadows.cardSubtle }}>
         {log.length === 0 ? (
           <div style={{ padding: '18px 20px', color: TOKENS.colors.textSecondary, fontSize: '0.88rem' }}>
             <Inbox size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
