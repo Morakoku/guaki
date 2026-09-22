@@ -1,56 +1,101 @@
 import fs from 'node:fs';
 import http from 'node:http';
 
+// Torre de control local. DOS responsabilidades:
+// 1) Datos del escritorio (TORRE.json + registros de contactos por marca).
+// 2) Proxy de la torre publicada en Vercel: Edwin abre http://127.0.0.1:7788/torre-control
+//    y la pagina + datos van por el MISMO origen — sin CORS ni Private Network Access,
+//    que los Chromium actuales bloquean en paginas HTTPS publicas hacia localhost.
 const PORT = Number(process.env.TORRE_PORT || 7788);
 const FILE = 'C:/Users/edwin/Documents/Trinidad/TORRE.json';
-// Registro de contactos CVELIZ: mismo directorio del lote canónico del pipeline.
-const REG_FILE = 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/registro_contactos.json';
+const UPSTREAM = 'https://mapache-kappa.vercel.app';
+
+// Registro de contactos por marca (junto al lote canonico de cada pipeline).
+const BRANDS = {
+  cveliz: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/registro_contactos.json',
+  guaki: 'D:/Proyectos IA/01_PROYECTOS/GUAKI/prospeccion/registro_contactos.json',
+  veyra: 'D:/Proyectos IA/01_PROYECTOS/VEYRA/prospeccion/registro_contactos.json'
+};
 const ESTADOS = new Set(['contactado', 'respondio', 'pendiente']);
 
-const readReg = () => {
-  try { return JSON.parse(fs.readFileSync(REG_FILE, 'utf8')); }
+const readReg = (file) => {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
   catch { return { contactos: {} }; }
 };
-const writeReg = (reg) => fs.writeFileSync(REG_FILE, JSON.stringify(reg, null, 2), 'utf8');
-
+const writeReg = (file, reg) => fs.writeFileSync(file, JSON.stringify(reg, null, 2), 'utf8');
 const normCel = (s) => String(s || '').replace(/\D/g, '');
 
-const server = http.createServer((req, res) => {
+const readBody = (req) => new Promise((resolve) => {
+  let b = [];
+  req.on('data', (c) => { b.push(c); if (b.reduce((n, x) => n + x.length, 0) > 1_000_000) req.destroy(); });
+  req.on('end', () => resolve(Buffer.concat(b)));
+  req.on('error', () => resolve(Buffer.concat(b)));
+});
+
+const server = http.createServer(async (req, res) => {
   const url = (req.url || '').split('?')[0];
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
 
-  // Preflight (por si el navegador lo exige; el frontend usa text/plain para evitarlo).
+  // Preflight (la version local misma no lo necesita, pero la publica si puede pedirlo).
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'content-type',
+      'Access-Control-Allow-Headers': 'content-type, authorization',
       'Access-Control-Allow-Private-Network': 'true',
       'Access-Control-Max-Age': '86400'
     });
     return res.end();
   }
 
-  if (url === '/cveliz/contactos' && req.method === 'GET') {
+  // ---- datos locales ----
+  if (url === '/health') {
+    let generatedAt = null;
+    let regs = {};
+    try { generatedAt = JSON.parse(fs.readFileSync(FILE, 'utf8')).generated_at; } catch {}
+    for (const [k, f] of Object.entries(BRANDS)) {
+      try { regs[k] = Object.keys(readReg(f).contactos || {}).length; } catch {}
+    }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    return res.end(JSON.stringify(readReg()));
+    return res.end(JSON.stringify({ ok: true, generatedAt, cvelizContactos: regs.cveliz || 0, registros: regs }));
   }
 
-  if (url === '/cveliz/contactos' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (c) => { body += c; if (body.length > 4096) req.destroy(); });
-    req.on('end', () => {
+  if (url === '/') {
+    res.writeHead(302, { Location: '/torre-control' });
+    return res.end();
+  }
+
+  if (url === '/torre.json') {
+    try {
+      const body = fs.readFileSync(FILE, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(body);
+    } catch {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'TORRE.json no existe. Corre: node C:/Users/edwin/Documents/Trinidad/guaki/scripts/torre.mjs' }));
+    }
+  }
+
+  const m = url.match(/^\/(cveliz|guaki|veyra)\/contactos$/);
+  if (m) {
+    const brand = m[1], regFile = BRANDS[brand];
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify(readReg(regFile)));
+    }
+    if (req.method === 'POST') {
+      const body = await readBody(req);
       try {
-        const payload = JSON.parse(body || '{}');
+        const payload = JSON.parse(body.toString('utf8') || '{}');
         const cel = normCel(payload.celular);
         const estado = String(payload.estado || '');
         if (!cel || cel.length < 7 || !ESTADOS.has(estado)) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
           return res.end(JSON.stringify({ ok: false, error: 'celular o estado invalido' }));
         }
-        const reg = readReg();
+        const reg = readReg(regFile);
         if (estado === 'pendiente') {
-          delete reg.contactos[cel]; // desmarcar
+          delete reg.contactos[cel];
         } else {
           const prev = reg.contactos[cel] || {};
           reg.contactos[cel] = {
@@ -61,47 +106,43 @@ const server = http.createServer((req, res) => {
             ciudad: payload.ciudad || prev.ciudad || ''
           };
         }
-        writeReg(reg);
+        writeReg(regFile, reg);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ ok: true, total: Object.keys(reg.contactos).length }));
+        return res.end(JSON.stringify({ ok: true, total: Object.keys(reg.contactos).length }));
       } catch {
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ ok: false, error: 'JSON invalido' }));
+        return res.end(JSON.stringify({ ok: false, error: 'JSON invalido' }));
       }
-    });
-    return;
-  }
-
-  if (url === '/torre.json' || url === '/') {
-    try {
-      const body = fs.readFileSync(FILE, 'utf8');
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(body);
-    } catch {
-      res.writeHead(503, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'TORRE.json no existe. Corre: node C:/Users/edwin/Documents/Trinidad/guaki/scripts/torre.mjs' }));
     }
-    return;
   }
 
-  if (url === '/health') {
-    let generatedAt = null;
-    let regCount = 0;
-    try {
-      generatedAt = JSON.parse(fs.readFileSync(FILE, 'utf8')).generated_at;
-    } catch {}
-    try {
-      regCount = Object.keys(readReg().contactos || {}).length;
-    } catch {}
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, generatedAt, cvelizContactos: regCount }));
-    return;
+  // ---- proxy del resto hacia la torre publicada ----
+  try {
+    const headers = { ...req.headers };
+    delete headers.host; delete headers.connection; delete headers['accept-encoding'];
+    const hasBody = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    const up = await fetch(UPSTREAM + req.url, {
+      method: req.method,
+      headers,
+      body: hasBody ? await readBody(req) : undefined,
+      redirect: 'manual'
+    });
+    const buf = Buffer.from(await up.arrayBuffer());
+    const h = {};
+    up.headers.forEach((v, k) => {
+      const kl = k.toLowerCase();
+      if (['content-encoding', 'transfer-encoding', 'content-length', 'content-security-policy',
+           'content-security-policy-report-only', 'strict-transport-security', 'host', 'connection'].includes(kl)) return;
+      h[k] = v;
+    });
+    res.writeHead(up.status, h);
+    return res.end(buf);
+  } catch (e) {
+    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ error: 'proxy hacia ' + UPSTREAM + ' fallo: ' + e.message }));
   }
-
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'not found' }));
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Torre server en http://127.0.0.1:${PORT}/torre.json · registro CVELIZ en ${REG_FILE}`);
+  console.log(`Torre local en http://127.0.0.1:${PORT}/torre-control (proxy de ${UPSTREAM} + datos del escritorio)`);
 });

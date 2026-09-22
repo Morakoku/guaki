@@ -187,58 +187,70 @@ const evidence = (() => {
   }
 })();
 
-// CVELIZ: lotes de WhatsApp manual listos (Medellin + Barranquilla + Bogota/Cali/Bucaramanga/Cartagena)
-// + base de leads de prospeccion (sqlite en D:)
-const cveliz = (() => {
-  const batch = [];
-  const lotes = [];
-  // Cada lote indica el indice de columnas en su CSV y su ciudad (constante o columna).
-  // Fuente canonica: lote automatico del pipeline (cveliz_pipeline.py), que consolida
-  // todos los leads con celular y crece con cada corrida programada.
-  const LOTS = [
-    { name: 'Automatico', file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_automatico.csv',
-      idx: { ref: 0, empresa: 2, celular: 4, rating: 6, direccion: 7, link: 9 }, ciudadCol: 1 },
-  ];
-  // Parser CSV minimalista que respeta comillas dobles (escrito por Python csv.writer).
-  const splitCsv = (line) => {
-    const out = []; let cur = ''; let q = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (q) {
-        if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; }
-        else cur += ch;
-      } else if (ch === '"') q = true;
-      else if (ch === ',') { out.push(cur); cur = ''; }
+// Lotes de WhatsApp manual por marca: CVELIZ + GUAKI + VEYRA (pipelines continuos en D:)
+// Parser CSV minimalista que respeta comillas dobles (escrito por Python csv.writer).
+const splitCsv = (line) => {
+  const out = []; let cur = ''; let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) {
+      if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; }
       else cur += ch;
-    }
-    out.push(cur);
-    return out;
-  };
-  for (const lot of LOTS) {
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+};
+const loadLote = (cfg) => {
+  const batch = []; const lotes = [];
+  for (const lot of cfg.LOTS) {
     let n = 0;
     try {
       const lines = fs.readFileSync(lot.file, 'utf8').split(/\r?\n/);
       for (const l of lines) {
-        if (!l.includes('wa-cveliz') && !l.includes('wa-auto')) continue;
+        if (!lot.prefixes.some(p => l.includes(p))) continue;
         const c = splitCsv(l);
-        if (c.length < 10) continue;
-        const ciudad = lot.ciudadCol != null ? c[lot.ciudadCol] : lot.ciudad;
-        batch.push({ ref: c[lot.idx.ref], ciudad: ciudad || lot.ciudad || '', empresa: c[lot.idx.empresa],
-                     celular: c[lot.idx.celular], rating: c[lot.idx.rating], direccion: c[lot.idx.direccion],
-                     link_wa: c[lot.idx.link] });
+        if (c.length < lot.minCols) continue;
+        const ciudad = lot.ciudadCol != null ? c[lot.ciudadCol] : lot.ciudad || '';
+        const item = { ref: c[lot.idx.ref], ciudad: ciudad || '', empresa: c[lot.idx.empresa],
+                       celular: c[lot.idx.celular], rating: c[lot.idx.rating],
+                       direccion: c[lot.idx.direccion], link_wa: c[lot.idx.link] };
+        if (lot.idx.pais != null) item.pais = c[lot.idx.pais] || '';
+        batch.push(item);
         n++;
       }
     } catch {}
     lotes.push({ name: lot.name, file: lot.file, count: n });
   }
-  return {
-    wa_batch_ready: batch.length,
-    batch,
-    lotes,
-    batch_file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/',
-    leads_db: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/leads.db (12.720 leads · 9.603 con telefono · verificado 2026-09-19)',
-  };
-})();
+  return { wa_batch_ready: batch.length, batch, lotes, batch_file: cfg.batch_file, leads_db: cfg.leads_db || '' };
+};
+const cveliz = loadLote({
+  LOTS: [
+    { name: 'Automatico', file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/lote_wa_automatico.csv',
+      prefixes: ['wa-cveliz', 'wa-auto'],
+      idx: { ref: 0, empresa: 2, celular: 4, rating: 6, direccion: 7, link: 9 }, ciudadCol: 1, minCols: 10 },
+  ],
+  batch_file: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/',
+  leads_db: 'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/leads.db (12.720 leads · 9.603 con telefono · verificado 2026-09-19)',
+});
+const guaki = loadLote({
+  LOTS: [
+    { name: 'Automatico', file: 'D:/Proyectos IA/01_PROYECTOS/GUAKI/prospeccion/lote_wa_automatico.csv',
+      prefixes: ['wa-guaki'],
+      idx: { ref: 0, pais: 1, empresa: 3, celular: 5, rating: 7, direccion: 8, link: 10 }, ciudadCol: 2, minCols: 11 },
+  ],
+  batch_file: 'D:/Proyectos IA/01_PROYECTOS/GUAKI/prospeccion/',
+});
+const veyra = loadLote({
+  LOTS: [
+    { name: 'Automatico', file: 'D:/Proyectos IA/01_PROYECTOS/VEYRA/prospeccion/lote_wa_automatico.csv',
+      prefixes: ['wa-veyra'],
+      idx: { ref: 0, pais: 1, empresa: 3, celular: 5, rating: 7, direccion: 8, link: 10 }, ciudadCol: 2, minCols: 11 },
+  ],
+  batch_file: 'D:/Proyectos IA/01_PROYECTOS/VEYRA/prospeccion/',
+});
 
 const data = {
   generated_at: new Date().toISOString(),
@@ -250,6 +262,8 @@ const data = {
   acciones_open: accionesChecklist,
   probes,
   cveliz,
+  guaki,
+  veyra,
   postiz: {
     api: postizPing,
     containers: postizContainers,
