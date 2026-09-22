@@ -1,14 +1,31 @@
 import fs from 'node:fs';
 import http from 'node:http';
 
-// Torre de control local. DOS responsabilidades:
-// 1) Datos del escritorio (TORRE.json + registros de contactos por marca).
-// 2) Proxy de la torre publicada en Vercel: Edwin abre http://127.0.0.1:7788/torre-control
-//    y la pagina + datos van por el MISMO origen — sin CORS ni Private Network Access,
-//    que los Chromium actuales bloquean en paginas HTTPS publicas hacia localhost.
+// Torre de control local. TRES responsabilidades:
+// 1) Servir la PAGINA de la torre desde el repo local (fuente unica de verdad: el
+//    DASHBOARD_HTML embebido en torre_control.py). La copia publica en Vercel se retiro.
+// 2) Datos del escritorio (TORRE.json + registros de contactos por marca).
+// 3) Proxy del backend de mapache (APIs) hacia Vercel — mismo origen, sin CORS ni PNA.
 const PORT = Number(process.env.TORRE_PORT || 7788);
 const FILE = 'C:/Users/edwin/Documents/Trinidad/TORRE.json';
+const TORRE_PY = 'C:/Users/edwin/Documents/Trinidad/mapache/backend/app/routers/torre_control.py';
 const UPSTREAM = 'https://mapache-kappa.vercel.app';
+
+// Pagina de la torre: extraida del Python del repo, cacheada por mtime.
+let pageCache = { mtime: 0, html: null };
+const torrePage = () => {
+  try {
+    const st = fs.statSync(TORRE_PY);
+    if (pageCache.html && st.mtimeMs === pageCache.mtime) return pageCache.html;
+    const src = fs.readFileSync(TORRE_PY, 'utf8');
+    const m = src.match(/DASHBOARD_HTML\s*=\s*"""([\s\S]*?)"""/);
+    if (!m) throw new Error('DASHBOARD_HTML no encontrado en torre_control.py');
+    pageCache = { mtime: st.mtimeMs, html: m[1] };
+    return m[1];
+  } catch (e) {
+    return '<!DOCTYPE html><html><body style="font-family:system-ui;background:#0a0a0a;color:#eee;padding:40px"><h2>No pude leer la pagina de la torre</h2><pre>' + e.message + '</pre><p>Revisa que exista: ' + TORRE_PY + '</p></body></html>';
+  }
+};
 
 // Registro de contactos por marca (junto al lote canonico de cada pipeline).
 const BRANDS = {
@@ -60,9 +77,10 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: true, generatedAt, cvelizContactos: regs.cveliz || 0, registros: regs }));
   }
 
-  if (url === '/') {
-    res.writeHead(302, { Location: '/torre-control' });
-    return res.end();
+  if (url === '/' || url === '/torre-control' || url === '/torre-control/') {
+    const html = torrePage();
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(html);
   }
 
   if (url === '/torre.json') {
