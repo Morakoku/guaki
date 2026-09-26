@@ -52,6 +52,9 @@ const BENEFITS = [
   { icon: Clock, text: 'Ficha web propia con horarios, fotos y catálogo editable' },
   { icon: MessageCircle, text: 'Contacto directo por WhatsApp 1-clic, sin intermediarios' },
 ];
+const VE_COPY = {
+  ve: 'Verificado con PagoMóvil o Zelle — sin tarjeta internacional',
+};
 
 export default async function UnetePage() {
   const publicPricing = await loadPublicPricing(() => {
@@ -62,6 +65,24 @@ export default async function UnetePage() {
     if (!url || !serviceKey) throw new Error('PUBLIC_PRICING_NOT_CONFIGURED');
     const client = createClient(url, serviceKey, { auth: { persistSession: false } });
     return client.from('platform_settings').select('value').eq('key', 'pricing').maybeSingle();
+  }, () => {
+    // 2026-09-23 (bloque 1 #9): el estado de la promo de apertura.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    if (!url || !serviceKey) throw new Error('PUBLIC_PRICING_NOT_CONFIGURED');
+    const client = createClient(url, serviceKey, { auth: { persistSession: false } });
+    return client.from('platform_settings').select('value').eq('key', 'launch_promo').maybeSingle();
+  }, async () => {
+    // Contador real: cuántas fichas ya fueron reclamadas (primeras N de apertura).
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    if (!url || !serviceKey) return 0;
+    const client = createClient(url, serviceKey, { auth: { persistSession: false } });
+    const { count } = await client
+      .from('businesses')
+      .select('id', { count: 'exact', head: true })
+      .neq('claim_status', 'unclaimed');
+    return count ?? 0;
   });
   const hasWhatsApp = (process.env.NEXT_PUBLIC_GUAKI_WHATSAPP || '').replace(/\D/g, '').length >= 10;
 
@@ -146,6 +167,10 @@ export default async function UnetePage() {
                   <span style={{ lineHeight: 1.45 }}>{benefit.text}</span>
                 </li>
               ))}
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: TOKENS.colors.textSecondary }}>
+                <BadgeCheck size={17} color={TOKENS.colors.emeraldDark} style={{ flexShrink: 0, marginTop: '2px', marginRight: 4 }} />
+                <span>{VE_COPY.ve}</span>
+              </li>
             </ul>
           </SoftCard>
 

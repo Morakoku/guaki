@@ -24,4 +24,6 @@ export interface AficheBusinessData {
   isDemo: boolean;
   isOpenNow?: boolean;
   plan?: 'free' | 'verificado' | 'pro' | 'vip';
+  // #44 "Fichas nuevas": frescura real (updated_at de la BD).
+  updatedAt?: string;
 }

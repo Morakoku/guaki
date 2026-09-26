@@ -1,3 +1,5 @@
+import { categoryImage } from './category-images';
+
 function stringOrUndefined(value) {
   return typeof value === 'string' && value.trim() ? value : undefined;
 }
@@ -41,17 +43,20 @@ export function mapPublicBusinessToAfiche(record) {
     lat: numberOrUndefined(record.lat),
     lng: numberOrUndefined(record.lng),
     address: stringOrUndefined(record.address),
-    schedule: stringOrUndefined(record.schedule),
+    schedule: record.schedule ? (typeof record.schedule === 'string' ? record.schedule : JSON.stringify(record.schedule)) : undefined,
     phone: stringOrUndefined(record.phone),
     whatsapp: stringOrUndefined(record.whatsapp),
     services: Array.isArray(record.services) ? record.services.filter((service) => typeof service === 'string' && service.trim()) : [],
     imageUrl,
-    fallbackImageUrl: undefined,
+    // 2026-09-23: fallback por categoría activado (antes: undefined, inerte).
+    fallbackImageUrl: categoryImage(String(record.category || '')),
     rating: isFreePlan ? undefined : numberOrUndefined(record.rating),
     reviewCount: isFreePlan ? undefined : numberOrUndefined(record.reviewCount ?? record.review_count),
     isVerified: record.isVerified === true ? true : undefined,
     isDemo: false,
     isOpenNow: record.isOpenNow === true ? true : undefined,
     plan,
+    // #44 "Fichas nuevas": frescura real desde la BD.
+    updatedAt: stringOrUndefined(record.updated_at ?? record.updatedAt),
   };
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GuakiDataService, getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import { validateAuditDecision } from '@/lib/validation';
 import { notifyBusinessAudit } from '@/lib/notifications';
+import { loadPublicPricing } from '@/lib/plans';
 
 interface Props {
   params: { id: string };
@@ -53,11 +54,30 @@ export async function POST(request: NextRequest, { params }: Props) {
     if (decision === 'published' && (current.claimStatus !== 'verified' || current.status !== 'approved')) {
       return NextResponse.json({ error: 'CLAIM_VERIFIED_APPROVAL_REQUIRED' }, { status: 409 });
     }
+
+    // Verificar si la promo de apertura está activa (desde platform_settings)
+    let launchPromoActive = false;
+    try {
+      const { data: promoData, error: promoError } = await getSupabaseClient()
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'launch_promo')
+        .single();
+      if (!promoError && promoData && typeof promoData.value === 'object' && promoData.value.active === true) {
+        launchPromoActive = true;
+      }
+    } catch { /* degradar a false — no bloquear la decisión */ }
+
+    const planExpiresAt = launchPromoActive ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() : undefined;
+    const planSource = launchPromoActive ? 'launch_promo' : undefined;
+
     const updated = await GuakiDataService.updateBusinessWorkflowWithToken(params.id, {
       status: decision,
       claimStatus: decision === 'approved' ? 'verified' : decision === 'published' ? 'verified' : 'rejected',
       auditNotes: notes,
       approvedAt: decision === 'approved' || decision === 'published' ? new Date().toISOString() : undefined,
+      plan_source: planSource,
+      plan_expires_at: planExpiresAt,
     }, token);
 
     // Loop transaccional (mensajes 2 y 3): aviso de aprobado / rechazo con checklist.

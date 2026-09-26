@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #030712;
+        font-family: 'Inter', sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #030712;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 60px;
+        opacity: 0;
+      }
+
+      /* ── Scene 1: gradient-text-sweep ── */
+      .hook-line {
+        font-family: 'Outfit', sans-serif;
+        font-size: 76px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: #F8FAFC;
+        max-width: 1300px;
+        position: relative;
+      }
+      .hook-line .dim { color: #64748B; }
+      .gradient-sweep {
+        display: inline-block;
+        background: linear-gradient(100deg, #06B6D4 0%, #67E8F9 50%, #06B6D4 100%);
+        background-size: 250% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      /* ── Scene 2: avatar-cloud-network ── */
+      .avatar-cloud {
+        position: relative;
+        width: 860px;
+        height: 780px;
+      }
+      .ring-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .ring-svg line {
+        stroke: #334155;
+        stroke-width: 2;
+      }
+      .avatar-circle {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #1E293B;
+        color: #FFF;
+        border: 3px solid #334155;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        will-change: transform;
+      }
+      .avatar-circle.center {
+        width: 140px;
+        height: 140px;
+        font-size: 36px;
+        background: #0A0A0A;
+        border-color: #04798D;
+        color: #04798D;
+        z-index: 10;
+      }
+      .avatar-circle.small {
+        width: 60px;
+        height: 60px;
+        font-size: 14px;
+      }
+      .centerpiece {
+        position: absolute;
+        left: 350px;
+        top: 310px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0A0A0A 0%, #0A0A0A 100%);
+        border: 4px solid #04798D;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin: 0 auto;
+      }
+      .centerpiece .number {
+        font-family: 'Outfit', sans-serif;
+        font-size: 52px;
+        font-weight: 900;
+        color: #04798D;
+        line-height: 1;
+      }
+      .centerpiece .label {
+        font-size: 14px;
+        color: #94A3B8;
+        margin-top: 6px;
+      }
+      .link-line {
+        position: absolute;
+        width: 2px;
+        height: 80px;
+        background: #334155;
+        border-radius: 2px;
+        margin: 0 auto;
+      }
+
+      /* ── Scene 3: proof-card + star-rating wipe ── */
+      .proof-card {
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 48px 56px;
+        width: 900px;
+        text-align: left;
+        box-shadow: 4px 4px 0 #0A0A0A;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(6, 182, 212, 0.12);
+        color: #04798D;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 8px 16px;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+      }
+      .biz-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 40px;
+        font-weight: 800;
+        color: #04798D;
+        margin-bottom: 8px;
+      }
+      .biz-sub {
+        font-size: 19px;
+        color: #6C7786;
+        margin-bottom: 34px;
+      }
+      .stats {
+        display: flex;
+        gap: 24px;
+      }
+      .stat {
+        flex: 1;
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 26px 28px;
+      }
+      .stat .label {
+        font-size: 17px;
+        font-weight: 600;
+        color: #6C7786;
+        margin-bottom: 10px;
+      }
+      .stat .value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 46px;
+        font-weight: 900;
+        color: #0A0A0A;
+        letter-spacing: -0.02em;
+      }
+      .stat .value .rating { color: #04798D; }
+
+      /* Star rating wipe */
+      .star-rating {
+        display: flex;
+        gap: 4px;
+        margin-top: 24px;
+      }
+      .star-rating .star {
+        font-size: 34px;
+        color: #E5E7EB;
+        cursor: default;
+      }
+      .star-rating .star.active,
+      .star-rating .star.filled {
+        color: #FF5722;
+      }
+
+      /* ── Scene 3: principles ── */
+      .prin {
+        font-family: 'Outfit', sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: #F8FAFC;
+        margin: 18px 0;
+        max-width: 1350px;
+      }
+      .prin::before {
+        content: "—";
+        color: #06B6D4;
+        margin-right: 18px;
+      }
+
+      /* ── Scene 4: outro ── */
+      .outro-logo {
+        font-family: 'Outfit', sans-serif;
+        font-size: 132px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: #06B6D4;
+        line-height: 1;
+        margin-bottom: 18px;
+      }
+      .outro-tag {
+        font-size: 30px;
+        font-weight: 600;
+        color: #94A3B8;
+        margin-bottom: 34px;
+      }
+      .outro-pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 87, 34, 0.1);
+        border: 1px solid rgba(255, 87, 34, 0.3);
+        color: #FF5722;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 12px 24px;
+        border-radius: 0;
+        margin-bottom: 26px;
+      }
+      .outro-url {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: #F8FAFC;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="18"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- ESCENA 1 — GRADIENT-TEXT-SWEEP -->
+      <section class="scene scene-hook">
+        <div class="hook-line">
+          <span class="gradient-sweep">La reputación se ve.</span><br>
+          <span class="dim">No se promete.</span>
+        </div>
+      </section>
+
+      <!-- ESCENA 2 — AVATAR-CLOUD-NETWORK -->
+      <section class="scene scene-proof">
+        <div class="avatar-cloud">
+          <!-- Anillo elíptico SVG -->
+          <svg class="ring-svg" viewBox="0 0 860 780" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <line x1="430" y1="390" x2="790" y2="390" />
+            <line x1="430" y1="390" x2="610" y2="615" />
+            <line x1="430" y1="390" x2="250" y2="615" />
+            <line x1="430" y1="390" x2="70" y2="390" />
+            <line x1="430" y1="390" x2="250" y2="165" />
+            <line x1="430" y1="390" x2="610" y2="165" />
+          </svg>
+          <!-- Centerpiece -->
+          <div class="centerpiece">
+            <div class="number">142</div>
+            <div class="label">reseñas reales</div>
+          </div>
+          <!-- Avatar circles (anillo elíptico posicionado) -->
+          <div class="avatar-circle small" style="left:760px; top:360px;">CS</div>
+          <div class="avatar-circle small" style="left:580px; top:585px;">JP</div>
+          <div class="avatar-circle small" style="left:220px; top:585px;">MR</div>
+          <div class="avatar-circle small" style="left:40px; top:360px;">LT</div>
+          <div class="avatar-circle small" style="left:220px; top:135px;">AD</div>
+          <div class="avatar-circle small" style="left:580px; top:135px;">FC</div>
+        </div>
+      </section>
+
+      <!-- ESCENA 3 — PROOF-CARD + STAR-RATING WIPE -->
+      <section class="scene scene-principles">
+        <div class="proof-card">
+          <span class="badge">✓ NEGOCIO VERIFICADO 100%</span>
+          <div class="biz-name">Clínica Odontológica San Martín</div>
+          <div class="biz-sub">Barranquilla, Colombia · Salud Privada & Implantes</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">⏱️ Respuesta</div>
+              <div class="value">Inmediata</div>
+            </div>
+            <div class="stat">
+              <div class="label">⭐ <span id="rating">4.9</span> · 142 reseñas</div>
+              <div class="value"><span class="rating" id="rating-big">4.9</span> / 5</div>
+            </div>
+          </div>
+          <div class="star-rating">
+            <span class="star filled">★</span>
+            <span class="star filled">★</span>
+            <span class="star filled">★</span>
+            <span class="star filled">★</span>
+            <span class="star filled">★</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ESCENA 4 — OUTRO -->
+      <section class="scene scene-outro">
+        <div class="outro-logo">Guaki</div>
+        <div class="outro-tag">Confianza y Crecimiento para tu negocio.</div>
+        <div class="outro-pill">⚡ REINVENTANDO EL DESCUBRIMIENTO EMPRESARIAL EN LATINOAMÉRICA</div>
+        <div class="outro-url">guaki.online</div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true, immediateRender: false });
+
+      // Escena 1 (0 – 3.9s): gradient-text-sweep
+      tl.fromTo(".scene-hook", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 0);
+      tl.fromTo(".gradient-sweep", { backgroundPosition: "100%" }, { backgroundPosition: "0%", duration: 1.2, ease: "power1.out" }, 0.15);
+      tl.to(".scene-hook", { opacity: 0, duration: 0.4 }, 3.5);
+
+      // Escena 2 (3.9 – 9.4s): avatar-cloud-network staggered entrance
+      tl.fromTo(".scene-proof", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9);
+      // Centerpiece enter
+      tl.fromTo(".centerpiece", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" }, 4.1);
+      // Avatars staggered (CS, JP, MR, LT, AD, FC + center)
+      const avatarEls = document.querySelectorAll('.avatar-circle.small, .avatar-circle.center');
+      avatarEls.forEach((el, i) => {
+        const delay = 4.3 + i * 0.12;
+        tl.fromTo(el, { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, delay: delay });
+      });
+      // Anillo SVG aparece
+      tl.fromTo(".ring-svg", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 5.5);
+      tl.to(".scene-proof", { opacity: 0, duration: 0.4 }, 9.0);
+
+      // Escena 3 (9.4 – 14.3s): proof-card spring-pop + count-up + star-rating wipe
+      tl.fromTo(".scene-principles", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 9.4);
+      // Spring-pop entrance
+      tl.fromTo(".proof-card", { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }, 9.7);
+      // Count-up 0→4.9 en #rating-big
+      const rating = { v: 0 };
+      tl.to(
+        rating,
+        {
+          v: 4.9,
+          duration: 1.2,
+          ease: "power1.out",
+          onUpdate: function () {
+            const val = rating.v.toFixed(1);
+            document.getElementById("rating").textContent = val;
+            document.getElementById("rating-big").textContent = val;
+          }
+        },
+        10.6
+      );
+      // Star rating wipe - clip-path fill
+      tl.fromTo(".star-rating .star", { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.08 }, 11.2);
+      tl.set(".star-rating .star", { clipPath: "inset(0 0 100% 0)" }, 12.0);
+      tl.to(".star-rating .star", { clipPath: "inset(0 0 2% 0)" }, 12.5);
+      tl.to(".scene-principles", { opacity: 0, duration: 0.4 }, 13.9);
+
+      // Escena 4 (14.3 – 18s): outro de marca
+      tl.fromTo(".scene-outro", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 14.3);
+      tl.fromTo(".outro-pill", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 15.2);
+      tl.fromTo(".outro-url", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 15.8);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

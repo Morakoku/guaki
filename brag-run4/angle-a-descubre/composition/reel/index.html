@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #030712;
+        font-family: 'Inter', sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #030712;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 60px;
+        opacity: 0;
+      }
+
+      /* ── Scene 1: hook kinetic beat-slam ── */
+      .hook-line {
+        font-family: 'Outfit', sans-serif;
+        font-size: 76px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: #F8FAFC;
+        max-width: 1300px;
+      }
+      .hook-line .dim { color: #64748B; }
+
+      /* ── Kinetic beat slam phrases ── */
+      .phrase1 {
+        position: relative;
+        font-size: 76px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: #F8FAFC;
+        max-width: 1300px;
+      }
+      .phrase1 .orange { color: #FF5722; }
+      .phrase1 .dim { color: #64748B; }
+
+      /* ── Scene 2: waterfall-entry cascade ── */
+      .waterfall-line {
+        font-family: 'Outfit', sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        color: #F8FAFC;
+        max-width: 1100px;
+      }
+      .waterfall-line .dim { color: #64748B; }
+
+      /* ── Scene 3: proof-card ── */
+      .proof-card {
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 48px 56px;
+        width: 900px;
+        text-align: left;
+        box-shadow: 4px 4px 0 #0A0A0A;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(6, 182, 212, 0.12);
+        color: #04798D;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 8px 16px;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+      }
+      .biz-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 40px;
+        font-weight: 800;
+        color: #04798D;
+        margin-bottom: 8px;
+      }
+      .biz-sub {
+        font-size: 19px;
+        color: #6C7786;
+        margin-bottom: 34px;
+      }
+      .stats {
+        display: flex;
+        gap: 24px;
+      }
+      .stat {
+        flex: 1;
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 26px 28px;
+      }
+      .stat .label {
+        font-size: 17px;
+        font-weight: 600;
+        color: #6C7786;
+        margin-bottom: 10px;
+      }
+      .stat .value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 46px;
+        font-weight: 900;
+        color: #0A0A0A;
+        letter-spacing: -0.02em;
+      }
+      .stat .value .rating { color: #04798D; }
+
+      /* ── Scene 3: principles ── */
+      .prin {
+        font-family: 'Outfit', sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: #F8FAFC;
+        margin: 18px 0;
+        max-width: 1350px;
+      }
+      .prin::before {
+        content: "—";
+        color: #06B6D4;
+        margin-right: 18px;
+      }
+
+      /* ── Scene 4: outro ── */
+      .outro-logo {
+        font-family: 'Outfit', sans-serif;
+        font-size: 132px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: #06B6D4;
+        line-height: 1;
+        margin-bottom: 18px;
+      }
+      .outro-tag {
+        font-size: 30px;
+        font-weight: 600;
+        color: #94A3B8;
+        margin-bottom: 34px;
+      }
+      .outro-pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 87, 34, 0.1);
+        border: 1px solid rgba(255, 87, 34, 0.3);
+        color: #FF5722;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 12px 24px;
+        border-radius: 0;
+        margin-bottom: 26px;
+      }
+      .outro-url {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: #F8FAFC;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="18"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- ESCENA 1 — HOOK KINETIC BEAT-SLAM -->
+      <section class="scene scene-hook">
+        <div class="hook-line">
+          <span class="phrase1">Tu próximo cliente <span class="orange">ya está buscando.</span></span><br>
+          <span class="phrase1 dim">¿<span class="orange">Apareces primero?</span></span>
+        </div>
+      </section>
+
+      <!-- ESCENA 2 — WATERFALL-ENTRY CASCADE -->
+      <section class="scene scene-proof">
+        <div class="waterfall-cascade">
+          <div class="waterfall-line">La mejor empresa aparece primero.<span class="dim"></span></div>
+          <div class="waterfall-line">Datos estructurados y reputación transparente.<span class="dim"></span></div>
+          <div class="waterfall-line">Recomendaciones con Atlas AI Core.<span class="dim"></span></div>
+        </div>
+      </section>
+
+      <!-- ESCENA 3 — PROOF-CARD + COUNT-UP -->
+      <section class="scene scene-principles">
+        <div class="proof-card">
+          <span class="badge">✓ NEGOCIO VERIFICADO 100%</span>
+          <div class="biz-name">Clínica Odontológica San Martín</div>
+          <div class="biz-sub">Barranquilla, Colombia · Salud Privada & Implantes</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">⏱️ Respuesta</div>
+              <div class="value">Inmediata</div>
+            </div>
+            <div class="stat">
+              <div class="label">⭐ <span id="rating">4.9</span> · 142 reseñas</div>
+              <div class="value"><span class="rating" id="rating-big">4.9</span> / 5</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ESCENA 4 — OUTRO + AMBIENT GLOW -->
+      <section class="scene scene-outro">
+        <div class="outro-logo">Guaki</div>
+        <div class="outro-tag">Confianza y Crecimiento para tu negocio.</div>
+        <div class="outro-pill">⚡ REINVENTANDO EL DESCUBRIMIENTO EMPRESARIAL EN LATINOAMÉRICA</div>
+        <div class="outro-url">guaki.online</div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true, immediateRender: false });
+
+      // Escena 1 (0 – 3.9s): hook kinetic beat-slam
+      tl.fromTo(".scene-hook", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 0);
+      tl.fromTo(".hook-line", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.15);
+      // Phrase 1 scale-slam
+      tl.fromTo(".phrase1", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.7)" }, 0.2);
+      // Phrase 2 side-snap (orange)
+      tl.fromTo(".phrase1 .orange", { x: -80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, 0.55);
+      tl.to(".scene-hook", { opacity: 0, duration: 0.4 }, 3.5);
+
+      // Escena 2 (3.9 – 9.4s): waterfall-entry cascade
+      tl.fromTo(".scene-proof", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9);
+      // Binary opacity via tl.set for waterfall lines
+      tl.set(".waterfall-line", { opacity: 1 }, 4.0);
+      tl.fromTo(".waterfall-line", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.3 }, 4.2);
+      tl.to(".scene-proof", { opacity: 0, duration: 0.4 }, 9.0);
+
+      // Escena 3 (9.4 – 14.3s): proof-card spring-pop + count-up
+      tl.fromTo(".scene-principles", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 9.4);
+      // Spring-pop entrance on proof-card
+      tl.fromTo(".proof-card", { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }, 9.7);
+      // Count-up 0→4.9 en #rating-big
+      const rating = { v: 0 };
+      tl.to(
+        rating,
+        {
+          v: 4.9,
+          duration: 1.2,
+          ease: "power1.out",
+          onUpdate: function () {
+            const val = rating.v.toFixed(1);
+            document.getElementById("rating").textContent = val;
+            document.getElementById("rating-big").textContent = val;
+          }
+        },
+        10.6
+      );
+      tl.to(".scene-principles", { opacity: 0, duration: 0.4 }, 13.9);
+
+      // Escena 4 (14.3 – 18s): outro de marca + ambient glow bloom
+      tl.fromTo(".scene-outro", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 14.3);
+      tl.fromTo(".outro-pill", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 15.2);
+      tl.fromTo(".outro-url", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 15.8);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

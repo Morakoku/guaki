@@ -132,6 +132,15 @@ export interface PublishedProviderRecord {
   plan?: string | null;
   pinned?: boolean;
   suspended?: boolean;
+  // 2026-09-25: plan/promo/payment fields (migration 20260926000000).
+  plan_source?: string | null;
+  plan_expires_at?: string | null;
+payment_method?: string | null;
+  // 2026-09-25 (QoL-S #3): horarios y coords para isOpenNow + orden por cercanía (QoL-S #3)
+  schedule?: unknown[] | string | null;
+  lat?: number | null;
+  lng?: number | null;
+  updatedAt?: string | null;
 }
 
 export interface FactEvent {
@@ -185,6 +194,10 @@ function mapSupabaseRowToBusiness(row: any, inquiries: BusinessInquiry[] = [], r
     pinned: Boolean(row.pinned),
     suspended: Boolean(row.suspended),
     updatedAt: row.updated_at || undefined,
+    updated_at: row.updated_at,
+    plan_source: row.plan_source,
+    plan_expires_at: row.plan_expires_at,
+    payment_method: row.payment_method,
     createdAt: row.created_at || undefined,
   };
   // FIX: strip undefined values. isPublishedProvider() rejects any record with a
@@ -232,6 +245,9 @@ function mapBusinessToSupabaseRow(b: Partial<BusinessRecord>): Record<string, an
   if (b.claimStatus !== undefined) row.claim_status = b.claimStatus;
   if (b.pinned !== undefined) row.pinned = b.pinned;
   if (b.suspended !== undefined) row.suspended = b.suspended;
+  if (b.plan_source !== undefined) row.plan_source = b.plan_source;
+  if (b.plan_expires_at !== undefined) row.plan_expires_at = b.plan_expires_at;
+  if (b.payment_method !== undefined) row.payment_method = b.payment_method;
   row.updated_at = new Date().toISOString();
   return row;
 }
@@ -292,14 +308,21 @@ export class GuakiDataService {
     // migrado a formato sb_); la key queda server-only (no NEXT_PUBLIC_*).
     const client = getSupabaseServiceClient();
     const baseColumns =
-      'id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan';
+      'id,slug,name,source,status,city,category,website,evidence,description,short_description,address,phone,whatsapp,rating,review_count,plan,schedule,lat,lng';
     // Moderation flags are required: fail closed rather than retrying a query
     // that could expose suspended businesses. This also requires migration
     // 20260914000000 before public discovery becomes available.
     const { data, error } = await client
       .from('businesses')
-      .select(`${baseColumns},pinned,suspended`)
+      .select(`${baseColumns},pinned,suspended,guaki_score`)
       .eq('status', 'published')
+      // 2026-09-23 (explorer: CRÍTICO): orden determinista best-first — sin
+      // .order() el planner entrega un subconjunto ARBITRARIO con 2.291 fichas
+      // (limit 500 truncaba el directorio al azar).
+      .order('pinned', { ascending: false })
+      .order('guaki_score', { ascending: false, nullsFirst: false })
+      .order('rating', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     // Wrap PostgREST's plain-object errors so callers cannot mistake a failed

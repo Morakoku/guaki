@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import {
   CheckCircle2,
@@ -159,6 +159,9 @@ function DashboardContent() {
   const [inquiriesLoaded, setInquiriesLoaded] = useState(false);
   const [inquiriesBusinessId, setInquiriesBusinessId] = useState<string | null>(null);
   const [status, setStatus] = useState<'draft' | 'in_audit' | 'published'>('draft');
+  // --- Undo/Redo para eliminación de foto de portada ---
+  const [pendingUndoImage, setPendingUndoImage] = useState<string | null>(null);
+  const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // The server session and Supabase-backed API are the only sources of identity/data.
   useEffect(() => {
@@ -353,14 +356,27 @@ function DashboardContent() {
   };
 
   const calculateCompleteness = () => {
+    // Spec Top 50 #21: pesos reasignados, exige ≥3 servicios CON precio
+    // Criterios: cada uno contribuye al % de completitud general (100pts máximo)
+    // 1. Nombre: 15pts
+    // 2. Dirección: 15pts
+    // 3. WhatsApp o teléfono: 15pts
+    // 4. Foto (logo o heroImage): 15pts
+    // 5. ≥3 servicios con precio: 20pts
+    // 6. Horario definido: 10pts
+    // 7. Descripción: 10pts
     let score = 0;
-    if (businessName.trim()) score += 20;
-    if (category) score += 15;
-    if (city && address.trim()) score += 20;
-    if (whatsapp.trim()) score += 20;
-    if (description.trim().length >= 10) score += 10;
-    if (services.length >= 2) score += 10;
-    if (imageUrl.trim()) score += 5;
+    if (businessName.trim()) score += 15;
+    if (address.trim()) score += 15;
+    if (whatsapp.trim() || phone.trim()) score += 15;
+    if (logoUrl?.trim() || imageUrl?.trim()) score += 15;
+    if (services.length >= 3) {
+      // Exige que al menos 3 servicios tengan precio definido
+      const conPrecio = services.filter((s: any) => s && typeof s === 'object' ? (s.price?.trim ? s.price.trim() : '') : '').length;
+      if (conPrecio >= 3) score += 20;
+    }
+    if (scheduleText && scheduleText !== 'Lunes a Sábado · 8:00 AM – 6:00 PM') score += 10;
+    if (description?.trim().length >= 10) score += 10;
     return Math.min(score, 100);
   };
 
@@ -574,6 +590,46 @@ function DashboardContent() {
           >
             <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
             <span>{successMessage}</span>
+          </div>
+        )}
+        {/* Snackbar de undo para eliminacion de foto de portada o reemplazo */}
+
+        {pendingUndoImage && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              position: 'fixed',
+              top: '132px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 100001,
+              maxWidth: 'min(560px, calc(100vw - 32px))',
+              padding: '12px 20px',
+              borderRadius: TOKENS.radii.pill,
+              backgroundColor: '#EF4444',
+              color: '#FFFFFF',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 12px 32px rgba(239, 68, 68, 0.2)',
+            }}
+          >
+            <span>Foto eliminada - <button
+              type="button"
+              onClick={() => {
+                undoTimeoutRef.current && clearTimeout(undoTimeoutRef.current);
+                setImageUrl(prev => pendingUndoImage!);
+                setPendingUndoImage(null);
+                undoTimeoutRef.current = setTimeout(() => {
+                  setPendingUndoImage(null);
+                }, 6000);
+              }}
+              style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: 'inherit', fontWeight: '800' }}>
+              Deshacer
+            </button></span>
           </div>
         )}
 
@@ -960,35 +1016,95 @@ function DashboardContent() {
                     />
                   </div>
 
-                  {/* Checklist Rápido: cada pendiente lleva al campo que falta */}
+                  {/* Checklist Rápido (Spec Top 50 #21): foto, ≥3 servicios con precio, horario, descripción, WhatsApp */}
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {[
-                      { done: Boolean(businessName), label: 'Nombre', target: 'field-negocio', visible: true },
-                      { done: Boolean(address), label: 'Dirección', target: 'field-direccion', visible: true },
-                      { done: Boolean(whatsapp), label: 'WhatsApp 1-Clic', target: 'field-whatsapp', visible: true },
-                      { done: services.length >= 2, label: services.length >= 2 ? `Catálogo (${services.length})` : 'Catálogo', target: 'field-catalogo', visible: true },
-                      { done: Boolean(description), label: 'Presentación', target: 'field-presentacion', visible: merchantUser.plan !== 'gratis' },
-                    ]
-                      .filter((item) => item.visible)
-                      .map((item) =>
-                        item.done ? (
-                          <span key={item.label} style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: 'rgba(37,211,102,0.14)', color: '#15803D', fontWeight: 700 }}>
-                            ✓ {item.label}
-                          </span>
-                        ) : (
-                          <button
-                            key={item.label}
-                            type="button"
-                            onClick={() => scrollToSection(item.target)}
-                            className="gk-chip-pending"
-                            title="Ir a completar este dato"
-                            style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: TOKENS.colors.surfaceInset, color: TOKENS.colors.textSecondary, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >
-                            {item.label === 'Catálogo' ? '• Falta Catálogo' : `• Falta ${item.label}`}
-                          </button>
-                        ),
-                      )}
+                      {
+                        done: Boolean(logoUrl?.trim() || imageUrl?.trim()),
+                        label: 'Foto',
+                        target: 'field-logo',
+                      },
+                      {
+                        done: services.filter((s: any) => s && typeof s === 'object' && typeof s.price === 'string' && s.price.trim()).length >= 3,
+                        label: '3 servicios con precio',
+                        target: 'field-catalogo',
+                      },
+                      {
+                        done: Boolean(scheduleText) && scheduleText !== 'Lunes a Sábado · 8:00 AM – 6:00 PM',
+                        label: 'Horario',
+                        target: 'field-horario',
+                      },
+                      {
+                        done: Boolean(description && description.trim().length >= 10),
+                        label: 'Descripción',
+                        target: 'field-presentacion',
+                      },
+                      {
+                        done: Boolean(whatsapp.trim() || phone.trim()),
+                        label: 'WhatsApp',
+                        target: 'field-whatsapp',
+                      },
+                    ].map((item) =>
+                      item.done ? (
+                        <span key={item.label} style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: 'rgba(37,211,102,0.14)', color: '#15803D', fontWeight: 700 }}>
+                          {item.label}
+                        </span>
+                      ) : (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => scrollToSection(item.target)}
+                          className="gk-chip-pending"
+                          title="Ir a completar este dato"
+                          style={{ fontSize: '0.74rem', padding: '3px 10px', borderRadius: TOKENS.radii.pill, backgroundColor: TOKENS.colors.surfaceInset, color: TOKENS.colors.textSecondary, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                          {`Falta ${item.label}`}
+                        </button>
+                      ),
+                    )}
                   </div>
+
+                  {/* Spec Top 50 #29: QR descargable para el local */}
+                  {slug ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '14px', paddingTop: '14px', borderTop: `1px solid ${TOKENS.colors.borderLight}` }}>
+                      <div style={{ width: '112px', height: '112px', flexShrink: 0, backgroundColor: '#FFFFFF', borderRadius: TOKENS.radii.pill, overflow: 'hidden', border: `1px solid ${TOKENS.colors.borderLight}`, display: 'grid', placeItems: 'center' }}>
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`https://guaki.online/proveedores/${slug}`)}&size=320x320`}
+                          alt="QR de tu ficha en Guaki"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 800, color: TOKENS.colors.textMain }}>
+                          QR para tu local
+                        </span>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: TOKENS.colors.textSecondary }}>
+                          Imprímelo y ponlo en tu mostrador: tu ficha a un escaneo.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`https://guaki.online/proveedores/${slug}`)}&size=320x320`;
+                            try {
+                              const blob = await (await fetch(qrUrl)).blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = 'qr-guaki.png';
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            } catch {
+                              window.open(qrUrl, '_blank');
+                            }
+                          }}
+                          className="gk-chip-pending"
+                          style={{ alignSelf: 'flex-start', fontSize: '0.76rem', fontWeight: 800, padding: '7px 16px', borderRadius: TOKENS.radii.pill, backgroundColor: TOKENS.colors.emeraldDark, color: '#FFFFFF', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                          Descargar QR
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Grid Split-View: Formulario a la Izquierda y Vista Previa en Vivo a la Derecha */}
@@ -1497,11 +1613,18 @@ function DashboardContent() {
                       </div>
 
                       {/* Logo y Portada en 2 Columnas */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                      <div id="field-logo" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                         <ImageUploadField
                           label="Logo del Negocio / Avatar"
                           value={logoUrl}
                           onChange={setLogoUrl}
+                          onRemove={() => {
+                            pendingUndoImage && (undoTimeoutRef.current && clearTimeout(undoTimeoutRef.current));
+                            setPendingUndoImage(logoUrl);
+                            undoTimeoutRef.current = setTimeout(() => {
+                              setPendingUndoImage(null);
+                            }, 6000);
+                          }}
                           variant="logo"
                           hint="Cuadrado, mínimo 300x300 px."
                         />
@@ -1509,6 +1632,13 @@ function DashboardContent() {
                           label="Foto de Fondo / Portada Comercial"
                           value={imageUrl}
                           onChange={setImageUrl}
+                          onRemove={() => {
+                            pendingUndoImage && (undoTimeoutRef.current && clearTimeout(undoTimeoutRef.current));
+                            setPendingUndoImage(imageUrl);
+                            undoTimeoutRef.current = setTimeout(() => {
+                              setPendingUndoImage(null);
+                            }, 6000);
+                          }}
                           variant="cover"
                           hint="Horizontal, mínimo 1200x600 px. Se ve en tu ficha y afiche."
                         />

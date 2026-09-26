@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { BusinessStore } from '@/lib/business_store';
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import { VeyraStore, type BusinessMriReport } from '@/lib/veyra_store';
 import { VEYRA_ENTERPRISE_LEADS } from '@/lib/veyra_enterprise_leads';
 
@@ -92,17 +93,49 @@ export async function POST(request: Request) {
     }
 
     if (action === 'status') {
-      const businessMetrics = BusinessStore.getMetrics();
+      // 2026-09-23 (P0 janitor): métricas REALES de Supabase — BusinessStore
+      // (18 demos) inflaba el estado con cifras falsas ("$88.350 pipeline").
+      let totalProviders = 0;
+      let cats = new Set<string>();
+      let cities = new Set<string>();
+      let dataError = false;
+      try {
+        if (!isSupabaseConfigured()) throw new Error('SUPABASE_NOT_CONFIGURED');
+        const { data, error } = await getSupabaseClient()
+          .from('businesses')
+          .select('category,city')
+          .eq('status', 'published')
+          .limit(5000);
+        if (error) throw new Error('GUAKI_DATA_UNAVAILABLE');
+        (data || []).forEach((r: { category?: string | null; city?: string | null }) => {
+          if (r.category) cats.add(String(r.category).trim().toLowerCase());
+          if (r.city) cities.add(String(r.city).trim().toLowerCase());
+        });
+        totalProviders = (data || []).length;
+      } catch {
+        dataError = true;
+      }
+
+      if (dataError) {
+        return NextResponse.json({
+          success: false,
+          type: 'ecosystem_status',
+          error: 'DIRECTORIO_DATOS_NO_DISPONIBLES',
+          message: 'No se pudo consultar el inventario real del directorio.',
+          timestamp,
+        }, { status: 503 });
+      }
+
       const veyraIntakes = VeyraStore.getAllIntakes();
       const enterpriseCount = VEYRA_ENTERPRISE_LEADS.length;
 
       const statusText = [
         '🎛️ **Estado en Vivo de La Trinidad:**',
         '',
-        '- **Directorio Guaki:** ' + businessMetrics.totalProviders + ' proveedores registrados (' + businessMetrics.publishedProviders + ' publicados en catálogo).',
-        '- **Categorías y Ciudades:** ' + businessMetrics.totalCategories + ' categorías en ' + businessMetrics.totalCities + ' ciudades principales.',
+        '- **Directorio Guaki:** ' + totalProviders + ' fichas publicadas (cifras reales de la BD).',
+        '- **Categorías y Ciudades:** ' + cats.size + ' categorías en ' + cities.size + ' ciudades.',
         '- **Veyra Engine:** ' + veyraIntakes.length + ' diagnósticos MRI activos.',
-        '- **Mapache CRM:** ' + enterpriseCount + ' clínicas enterprise precalificadas ($88.350 USD en pipeline).',
+        '- **Mapache CRM:** ' + enterpriseCount + ' clínicas enterprise precalificadas.',
         '- **Sistema Visual:** Neumorphism #E0E0E0 activo con 0 animaciones invasivas.'
       ].join('\n');
 
@@ -111,10 +144,10 @@ export async function POST(request: Request) {
         type: 'ecosystem_status',
         timestamp,
         metrics: {
-          totalProviders: businessMetrics.totalProviders,
-          publishedProviders: businessMetrics.publishedProviders,
-          totalCategories: businessMetrics.totalCategories,
-          totalCities: businessMetrics.totalCities,
+          totalProviders,
+          publishedProviders: totalProviders,
+          totalCategories: cats.size,
+          totalCities: cities.size,
           veyraIntakes: veyraIntakes.length,
           enterpriseLeads: enterpriseCount,
         },

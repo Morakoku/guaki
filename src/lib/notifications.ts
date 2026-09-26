@@ -15,7 +15,8 @@ export type BusinessNotificationKind =
   | 'audit_rejected'
   | 'audit_reminder'
   | 'review_approved'
-  | 'review_rejected';
+  | 'review_rejected'
+  | 'plan_renewal';
 
 export interface NotificationContext {
   businessName: string;
@@ -155,6 +156,28 @@ export function buildReviewRejectedEmail(ctx: NotificationContext): RenderedEmai
   };
 }
 
+export function buildPlanRenewalEmail(ctx: NotificationContext, date = new Date()): RenderedEmail {
+  return {
+    subject: 'Renueva tu plan Verificado — Guaki',
+    text: [
+      `Hola ${ownerFirstName(ctx)},`,
+      '',
+      `Tu plan Verificado vence el ${formatDate(date)}.`,
+      '',
+      'Renueva tu plan para mantener tu badge de verificado y seguir recibiendo contactos por WhatsApp.',
+      '',
+      'Al renovar, conservarás:',
+      '  - Tu insignia ✓ Verificado en la ficha',
+      '  - Prioridad en los resultados del directorio',
+      '  - Contactos directos ilimitados por WhatsApp',
+      '',
+      'No pierdas la visibilidad que has construido. Renueva hoy y sigue creciendo.',
+      '',
+      '— Equipo Guaki',
+    ].join('\n'),
+  };
+}
+
 function renderEmail(kind: BusinessNotificationKind, ctx: NotificationContext, date?: Date): RenderedEmail {
   switch (kind) {
     case 'audit_received':
@@ -169,6 +192,8 @@ function renderEmail(kind: BusinessNotificationKind, ctx: NotificationContext, d
       return buildReviewApprovedEmail(ctx);
     case 'review_rejected':
       return buildReviewRejectedEmail(ctx);
+    case 'plan_renewal':
+      return buildPlanRenewalEmail(ctx, date);
   }
 }
 

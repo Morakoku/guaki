@@ -47,6 +47,7 @@ interface BusinessAdminRecord {
   status: 'published' | 'suspended';
   workflowStatus: string;
   claimStatus: string;
+  number_verified: string;
 }
 
 const CATEGORIES = [
@@ -74,6 +75,7 @@ export default function AdminGodModeDashboard() {
   const [adminTab, setAdminTab] = useState<'resumen' | 'comercios' | 'usuarios' | 'inquiries' | 'resenas' | 'actividad' | 'precios' | 'exportar'>('resumen');
   const [pendingInquiries, setPendingInquiries] = useState(0);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [verifyingPaymentId, setVerifyingPaymentId] = useState<string | null>(null);
 
   // Precios Maestros del Sistema
   const [priceVerificado, setPriceVerificado] = useState('49900');
@@ -112,6 +114,7 @@ export default function AdminGodModeDashboard() {
     status: Boolean(business.suspended) ? 'suspended' : (business.status === 'published' ? 'published' : 'suspended'),
     workflowStatus: business.status || 'draft',
     claimStatus: business.claimStatus || 'unclaimed',
+    number_verified: business.number_verified || 'unverified',
   }), []);
 
   const refreshBusinesses = useCallback(async () => {
@@ -286,6 +289,62 @@ export default function AdminGodModeDashboard() {
     }
   };
 
+  // #38: verificar número por llamada — POST al confirm route + feedback + refresh
+  const handleNumberVerify = async (businessId: string, decision: 'verified' | 'pending') => {
+    try {
+      const res = await fetch('/api/admin/verifications/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, decision }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.ok) {
+        showToast(decision === 'verified' ? 'Número confirmado ✓' : 'Número marcado como pendiente');
+        refreshBusinesses();
+      } else if (data.error === 'ADMIN_REQUIRED') {
+        showToast('Se requiere rol admin.');
+      } else if (data.error === 'ADMIN_PERSISTENCE_NOT_CONFIGURED') {
+        showToast('Persistencia admin no configurada.');
+      } else {
+        showToast('No se pudo actualizar el número.');
+      }
+    } catch {
+      showToast('Error de red al actualizar el número.');
+    }
+  };
+
+  const handleVerifyPaymentSubmit = async (e: React.FormEvent, businessId: string) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    // Use item() method for safer element access
+    const method = (form.elements.namedItem('ve-method') as HTMLSelectElement).value;
+    const reference = (form.elements.namedItem('ve-reference') as HTMLInputElement).value.trim();
+    const amount = (form.elements.namedItem('ve-amount') as HTMLInputElement).value;
+    if (!reference) {
+      showToast('El campo referencia es obligatorio.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/payments/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, method, reference, amount, currency: 'VES' }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        showToast(String(data?.message || data?.error || 'No se pudo verificar el pago.'));
+        return;
+      }
+      const result = await response.json();
+      showToast(result.message || 'Pago VE verificado exitosamente');
+      setVerifyingPaymentId(null);
+      void refreshBusinesses();
+    } catch {
+      showToast('Error al procesar la verificación de pago.');
+    }
+  };
+
   // Pricing persists through /api/admin/settings (platform_settings). On mount we
   // hydrate the form; the endpoint degrades to defaults pre-migration.
   useEffect(() => {
@@ -340,21 +399,25 @@ export default function AdminGodModeDashboard() {
 
   // 6. Exportar a Excel / CSV con formato BOM
   const handleExportCSV = () => {
-    const headers = ['ID', 'Nombre', 'Categoria', 'Ciudad', 'Direccion', 'WhatsApp', 'Telefono', 'Plan', 'Destacado_Top', 'Calificacion', 'Resenas', 'Estado'];
-    const rows = businesses.map((b) => [
-      b.id,
-      `"${b.name.replace(/"/g, '""')}"`,
-      `"${b.category}"`,
-      `"${b.city}"`,
-      `"${b.address.replace(/"/g, '""')}"`,
-      `"${b.whatsapp}"`,
-      `"${b.phone}"`,
-      b.plan.toUpperCase(),
-      b.pinned ? 'SI' : 'NO',
-      b.rating,
-      b.reviewCount,
-      b.status,
-    ]);
+    const headers = ['ID', 'Nombre', 'Categoria', 'Ciudad', 'Direccion', 'WhatsApp', 'Telefono', 'Plan', 'Number Verified', 'Destacado_Top', 'Calificacion', 'Resenas', 'Estado'];
+    const rows = businesses.map((b) => {
+      const nr = b.number_verified || 'unverified';
+      return [
+        b.id,
+        `"${b.name.replace(/"/g, '""')}"`,
+        `"${b.category}"`,
+        `"${b.city}"`,
+        `"${b.address.replace(/"/g, '""')}"`,
+        `"${b.whatsapp}"`,
+        `"${b.phone}"`,
+        b.plan.toUpperCase(),
+        nr,
+        b.pinned ? 'SI' : 'NO',
+        b.rating,
+        b.reviewCount,
+        b.status,
+      ];
+    });
 
     const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -803,7 +866,7 @@ export default function AdminGodModeDashboard() {
 
                           <button
                             type="button"
-                            onClick={() => handleToggleStatus(b.id)}
+                            onClick={() => setVerifyingPaymentId(b.id)}
                             style={{
                               padding: '6px 10px',
                               borderRadius: TOKENS.radii.pill,
@@ -811,14 +874,174 @@ export default function AdminGodModeDashboard() {
                               fontSize: '0.74rem',
                               fontWeight: 700,
                               cursor: 'pointer',
-                              backgroundColor: b.status === 'published' ? 'rgba(220, 38, 38, 0.1)' : 'rgba(37, 211, 102, 0.1)',
-                              color: b.status === 'published' ? '#DC2626' : '#15803D',
+                              backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                              color: '#15803D',
                             }}
                           >
-                            {b.suspended ? 'Reactivar' : b.workflowStatus === 'published' ? 'Suspender' : 'Publicar'}
+                            <MessageCircle size={13} /> Verificar pago VE
                           </button>
                         </div>
+                        {/* #38: verificar número por llamada */}
+                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', marginLeft: '8px', marginTop: '4px' }}>
+                          {b.number_verified !== 'verified' && (
+                            <button
+                              type="button"
+                              onClick={() => handleNumberVerify(b.id, 'verified')}
+                              style={{
+                                fontSize: '0.7rem', padding: '3px 8px', borderRadius: TOKENS.radii.xs,
+                                border: 'none', cursor: 'pointer',
+                                backgroundColor: '#15803D', color: '#FFFFFF', fontWeight: 700,
+                              }}
+                            >
+                              ✓ Confirmar por llamada
+                            </button>
+                          )}
+                          {b.number_verified === 'verified' && (
+                            <button
+                              type="button"
+                              onClick={() => handleNumberVerify(b.id, 'pending')}
+                              style={{
+                                fontSize: '0.7rem', padding: '3px 8px', borderRadius: TOKENS.radii.xs,
+                                border: 'none', cursor: 'pointer',
+                                backgroundColor: TOKENS.colors.surfaceElevated, color: '#D97706', fontWeight: 700,
+                              }}
+                            >
+                              Revertir a pendiente
+                            </button>
+                          )}
+                        </div>
+                        {/* Badge number_verified */}
+                        <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center', marginLeft: '8px', marginTop: '4px' }}>
+                          {b.number_verified === 'verified' && (
+                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: TOKENS.radii.xs, backgroundColor: 'rgba(37, 211, 102, 0.15)', color: '#15803D', fontWeight: 700 }}>✓ Verificado</span>
+                          )}
+                          {b.number_verified === 'pending' && (
+                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: TOKENS.radii.xs, backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#D97706', fontWeight: 700 }}>⏳ Pending</span>
+                          )}
+                          {b.number_verified === 'unverified' && (
+                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: TOKENS.radii.xs, backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#DC2626', fontWeight: 700 }}>✗ No verificado</span>
+                          )}
+                        </div>
                       </td>
+
+                      {/* FORMULARIO VER PAGO VE (modal-style) */}
+                      {verifyingPaymentId === b.id && (
+                        <div style={{
+                          position: 'fixed',
+                          top: '0', left: '0', right: '0', bottom: '0',
+                          background: 'rgba(0,0,0,0.5)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '24px',
+                        }}>
+                          <div style={{
+                            background: TOKENS.colors.surfaceElevated,
+                            borderRadius: TOKENS.radii.lg,
+                            padding: '32px 24px',
+                            width: '400px',
+                            maxWidth: '90%',
+                          }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: '0 0 20px' }}>
+                              Verificar pago VE
+                            </h3>
+                            <form
+                              onSubmit={(e) => handleVerifyPaymentSubmit(e, b.id)}
+                              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+                            >
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
+                                  Método
+                                </label>
+                                <select
+                                  id="ve-method"
+                                  style={{
+                                    width: '100%', padding: '12px 16px',
+                                    borderRadius: TOKENS.radii.pill,
+                                    backgroundColor: TOKENS.colors.surfaceInset,
+                                    border: `1px solid ${TOKENS.colors.borderLight}`,
+                                    color: TOKENS.colors.textMain,
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                  }}
+                                >
+                                  <option value="pagomovil">PagoMóvil</option>
+                                  <option value="zelle">Zelle</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
+                                  Referencia
+                                </label>
+                                <input
+                                  type="text"
+                                  id="ve-reference"
+                                  placeholder="Número de referencia o transacción"
+                                  style={{
+                                    width: '100%', padding: '12px 16px',
+                                    borderRadius: TOKENS.radii.pill,
+                                    backgroundColor: TOKENS.colors.surfaceInset,
+                                    border: `1px solid ${TOKENS.colors.borderLight}`,
+                                    color: TOKENS.colors.textMain,
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                  }}
+                                  required
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 800, color: TOKENS.colors.textMain, marginBottom: '6px' }}>
+                                  Monto (VES)
+                                </label>
+                                <input
+                                  type="number"
+                                  id="ve-amount"
+                                  placeholder="Monto en Bolívares"
+                                  style={{
+                                    width: '100%', padding: '12px 16px',
+                                    borderRadius: TOKENS.radii.pill,
+                                    backgroundColor: TOKENS.colors.surfaceInset,
+                                    border: `1px solid ${TOKENS.colors.borderLight}`,
+                                    color: TOKENS.colors.textMain,
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                  }}
+                                  required
+                                />
+                              </div>
+
+                              <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                  type="submit"
+                                  style={{
+                                    background: '#15803D', color: '#FFFFFF', border: 'none',
+                                    padding: '12px 24px', borderRadius: TOKENS.radii.pill,
+                                    fontWeight: 800, fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Verificar y actualizar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setVerifyingPaymentId(null)}
+                                  style={{
+                                    background: '#6B7280', color: '#FFFFFF', border: 'none',
+                                    padding: '12px 24px', borderRadius: TOKENS.radii.pill,
+                                    fontWeight: 800, fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      )}
                     </tr>
                   ))}
                 </tbody>

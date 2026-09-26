@@ -1,0 +1,33 @@
+{
+  "runId": 1790388852889,
+  "groups": [
+    {
+      "key": "phone:573104163897::clinica dental home  diseno de sonrisa medellin",
+      "winnerCount": 1,
+      "loserCount": 1,
+      "fieldCount": 0
+    }
+  ],
+  "reported": [
+    {
+      "groupKey": "phone:573104163897",
+      "winnerId": "GKI-0001317",
+      "loserCount": 1
+    },
+    {
+      "groupKey": "phone:6015938393",
+      "winnerId": "GKI-7359c3a3-41f3-40e7-840c-8ad1a59d4a72",
+      "loserCount": 1
+    },
+    {
+      "groupKey": "phone:6016580000",
+      "winnerId": "GKI-623f1eff-98aa-46a1-b19a-3e2e98e41523",
+      "loserCount": 2
+    },
+    {
+      "groupKey": "phone:573104163897::clinica dental home  diseno de sonrisa medellin",
+      "winnerId": "GKI-0001317",
+      "loserCount": 1
+    }
+  ]
+}

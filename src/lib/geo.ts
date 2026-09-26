@@ -74,7 +74,7 @@ export const CITY_CATALOG: CityEntry[] = [
   { name: 'San Cristóbal', country: 'VE', zone: 'Centro & Pirineos', role: 'Próxima Sede' },
 ];
 
-function normalizeCity(value?: string | null): string {
+export function normalizeCity(value?: string | null): string {
   return (value ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -86,6 +86,31 @@ export function findCity(city?: string | null): CityEntry | undefined {
   const target = normalizeCity(city);
   if (!target) return undefined;
   return CITY_CATALOG.find((entry) => normalizeCity(entry.name) === target);
+}
+
+// 2026-09-24 (decisión Edwin — "los afiches cerca de mí"): áreas metropolitanas
+// — el LocationButton geocodifica a nivel MUNICIPIO (ej. Envigado, Soacha,
+// Los Teques) que no matchea las ciudades del catálogo; el metro resuelve el
+// match ("Envigado" → Medellín, "Los Teques" → Caracas).
+const METRO_AREAS: Record<string, string[]> = {
+  medellin: ['envigado', 'itagui', 'itagüí', 'bello', 'sabaneta', 'la estrella', 'caldas', 'copacabana', 'girardota', 'barbosa', 'medellin'],
+  bogota: ['soacha', 'chia', 'chía', 'cajica', 'cajicá', 'la calera', 'mosquera', 'funza', 'madrid', 'bogota'],
+  cali: ['jamundi', 'jamundí', 'yumbo', 'palmira', 'florida', 'pradera', 'cali'],
+  barranquilla: ['soledad', 'puerto colombia', 'malambo', 'galapa', 'barranquilla'],
+  bucaramanga: ['floridablanca', 'giron', 'girón', 'piedecuesta', 'bucaramanga'],
+  caracas: ['los teques', 'guarenas', 'guatire', 'guatire', 'petare', 'el hatillo', 'baruta', 'chacao', 'caracas'],
+  valencia: ['naguanagua', 'san diego', 'guacara', 'cabudare', 'valencia'],
+  pereira: ['dosquebradas', 'dos quebradas', 'villamaría', 'pereira'],
+  cartagena: ['turbaco', 'arjona', 'cartagena'],
+};
+
+export function metroOf(city?: string | null): string | null {
+  const target = normalizeCity(city);
+  if (!target) return null;
+  for (const [metro, municipios] of Object.entries(METRO_AREAS)) {
+    if (municipios.some((m) => target.includes(m) || m.includes(target))) return metro;
+  }
+  return findCity(city) ? normalizeCity(city) : null;
 }
 
 export function countryOfCity(city?: string | null): CountryCode {

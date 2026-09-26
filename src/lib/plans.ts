@@ -37,6 +37,16 @@ export interface PublicPricing {
   plans: GuakiPlan[];
   status: 'configured' | 'missing' | 'invalid' | 'read-error';
   flashDiscountPercent: number;
+  // 2026-09-23 (bloque 1 #9): la promo de apertura como flag de producto —
+  // vive en platform_settings ('launch_promo'), no solo en copy.
+  launchPromo?: LaunchPromoState | null;
+}
+
+export interface LaunchPromoState {
+  active: boolean;
+  limit: number;
+  remaining: number;
+  label: string;
 }
 
 export function parsePricingSettings(raw: unknown): PricingSettings | null {
@@ -60,19 +70,41 @@ export function parsePricingSettings(raw: unknown): PricingSettings | null {
   };
 }
 
-function defaultPublicPricing(status: PublicPricing['status']): PublicPricing {
-  return { plans: getPlansForCountry('CO'), status, flashDiscountPercent: 0 };
+function defaultPublicPricing(status: PublicPricing['status'], launchPromo: PublicPricing['launchPromo'] = null): PublicPricing {
+  return { plans: getPlansForCountry('CO'), status, flashDiscountPercent: 0, launchPromo };
+}
+
+// 2026-09-23 (bloque 1 #9): el estado de la promo de apertura — desde
+// platform_settings ('launch_promo') + el conteo de fichas reclamadas.
+function resolveLaunchPromo(promoRow: { value: unknown } | null, claimedCount: number | null): LaunchPromoState | null {
+  if (!promoRow || typeof promoRow.value !== 'object' || Array.isArray(promoRow.value)) return null;
+  const p = promoRow.value as Record<string, unknown>;
+  if (p.active !== true) return null;
+  const limit = typeof p.limit === 'number' && p.limit > 0 ? p.limit : 100;
+  const claimed = typeof claimedCount === 'number' && Number.isFinite(claimedCount) ? claimedCount : 0;
+  return {
+    active: true,
+    limit,
+    remaining: Math.max(0, limit - claimed),
+    label: typeof p.label === 'string' && p.label ? p.label : 'GRATIS — apertura',
+  };
 }
 
 // The persisted admin contract is COP-only; never reinterpret these amounts as USD.
-export function resolvePublicPricing(row: { value: unknown } | null): PublicPricing {
-  if (!row) return defaultPublicPricing('missing');
+export function resolvePublicPricing(
+  row: { value: unknown } | null,
+  promoRow?: { value: unknown } | null,
+  claimedCount?: number | null,
+): PublicPricing {
+  const launchPromo = promoRow !== undefined ? resolveLaunchPromo(promoRow ?? null, claimedCount ?? null) : undefined;
+  if (!row) return defaultPublicPricing('missing', launchPromo);
   const pricing = parsePricingSettings(row.value);
-  if (!pricing) return defaultPublicPricing('invalid');
+  if (!pricing) return defaultPublicPricing('invalid', launchPromo);
   const discount = pricing.flashDiscountEnabled ? pricing.flashDiscountPercent : 0;
   return {
     status: 'configured',
     flashDiscountPercent: discount,
+    launchPromo,
     plans: getPlansForCountry('CO').map((plan) => {
       if (plan.id === 'gratis') return plan;
       const base = plan.id === 'verificado' ? pricing.priceVerificado : pricing.priceVip;
@@ -101,13 +133,30 @@ function pricingReadFailureReason(error: unknown): string {
 
 // Called by the server component with a server-only reader. Dependency injection
 // keeps credentials/client creation out of this shared module and tests offline.
+// 2026-09-23 (bloque 1 #9): readPromo + countClaimed opcionalmente alimentan
+// el estado de la promo de apertura ("GRATIS — primeras 100 fichas").
 export async function loadPublicPricing(
   readPricing: () => PromiseLike<{ data: { value: unknown } | null; error: unknown }>,
+  readPromo?: () => PromiseLike<{ data: { value: unknown } | null; error: unknown }>,
+  countClaimed?: () => PromiseLike<number>,
 ): Promise<PublicPricing> {
   try {
     const { data, error } = await readPricing();
     if (error) throw error;
-    const pricing = resolvePublicPricing(data);
+    let launchPromo: LaunchPromoState | null = null;
+    if (readPromo) {
+      try {
+        const promoRes = await readPromo();
+        if (!promoRes.error) {
+          let claimed: number | null = null;
+          if (countClaimed) {
+            try { claimed = await countClaimed(); } catch { claimed = null; }
+          }
+          launchPromo = resolveLaunchPromo(promoRes.data, claimed);
+        }
+      } catch { /* la promo degrada a null — sin banner */ }
+    }
+    const pricing = resolvePublicPricing(data, launchPromo !== null ? { value: launchPromo } : undefined, launchPromo?.remaining !== undefined ? launchPromo.limit - launchPromo.remaining : null);
     if (pricing.status === 'missing') warnPricingFallback('pricing row absent');
     if (pricing.status === 'invalid') warnPricingFallback('pricing settings malformed');
     return pricing;

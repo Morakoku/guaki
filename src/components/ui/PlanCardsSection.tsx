@@ -38,6 +38,11 @@ export default function PlanCardsSection({
       {pricing && pricing.flashDiscountPercent > 0 && (
         <p><small>Descuento flash del {pricing.flashDiscountPercent}% aplicado a Verificado y VIP.</small></p>
       )}
+      {pricing?.launchPromo?.active && (
+        <p role="status" style={{ fontWeight: 800 }}><small>
+          🎁 {pricing.launchPromo.label} — quedan {pricing.launchPromo.remaining} de {pricing.launchPromo.limit}. Al cerrar la apertura, el Verificado vuelve a su precio normal.
+        </small></p>
+      )}
     <div className="guaki-plans-grid">
       {plans.map((plan: GuakiPlan) => {
         const isSelected = selectedPlanId === plan.id;
@@ -139,15 +144,19 @@ export default function PlanCardsSection({
                   style={{
                     fontSize: '2.45rem',
                     fontWeight: 900,
-                    color: plan.vip ? '#D97706' : plan.highlight ? '#15803D' : TOKENS.colors.textMain,
+                    // 2026-09-23 (bloque 1 #9): promo de apertura — el Verificado
+                    // sale GRATIS con la concesión (quedan N fichas).
+                    color: plan.vip ? '#D97706' : plan.highlight && pricing?.launchPromo?.active ? '#15803D' : plan.highlight ? '#15803D' : TOKENS.colors.textMain,
                     letterSpacing: '-0.04em',
                     lineHeight: 1.05,
                   }}
                 >
-                  {plan.priceFormatted}
+                  {plan.highlight && pricing?.launchPromo?.active ? 'GRATIS' : plan.priceFormatted}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary, fontWeight: 700, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {plan.period}
+                  {plan.highlight && pricing?.launchPromo?.active
+                    ? `${pricing.launchPromo.remaining} fichas de ${pricing.launchPromo.limit} disponibles`
+                    : plan.period}
                 </div>
               </div>
 

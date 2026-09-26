@@ -17,6 +17,16 @@ export default function TrackedLink({ event, children, onClick, ...rest }: Track
     <a
       {...rest}
       onClick={(e) => {
+        // #39 tiempo-a-contacto: segundos desde abrir la página hasta tocar el link
+        // (performance.now() = ms desde el time origin de la navegación; medido, no inventado).
+        try {
+          if (typeof performance !== 'undefined') {
+            event.metadata = {
+              ...(event.metadata || {}),
+              time_to_contact_seconds: Math.round(performance.now() / 1000),
+            };
+          }
+        } catch {}
         trackEvent(event);
         onClick?.(e);
       }}

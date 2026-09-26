@@ -17,6 +17,7 @@ import { getPublishedProviderBySlug } from '@/lib/published_providers';
 import { BusinessStore } from '@/lib/business_store';
 import { GuakiDataService } from '@/lib/supabase';
 import { getCountryMeta } from '@/lib/geo';
+import { ReportButton } from '@/components/ReportButton';
 import { ProviderShareButton } from '@/components/ProviderShareButton';
 import SaveBusinessButton from '@/components/ui/SaveBusinessButton';
 import { ProviderReviewForm } from '@/components/ProviderReviewForm';
@@ -27,7 +28,11 @@ import DynamicScheduleView from '@/components/ui/DynamicScheduleView';
 import GuakiHeader from '@/components/ui/GuakiHeader';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import TrackedLink from '@/components/ui/TrackedLink';
+import ClaimConfirmCard from '@/components/ui/ClaimConfirmCard';
+import ComparadorGratisVerificado from '@/components/ui/ComparadorGratisVerificado';
 import EntityViewTracker from '@/components/ui/EntityViewTracker';
+import type { LaunchPromoState } from '@/lib/plans';
+import { createClient } from '@supabase/supabase-js';
 import { TOKENS } from '@/lib/design-tokens';
 import { absoluteUrl, slugify } from '@/lib/site';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
@@ -90,18 +95,55 @@ export default async function ProviderProfilePage(props: Props) {
   const provider = await getPublishedProviderBySlug(params.slug);
   if (!provider) notFound();
 
+  // 2026-09-23 (P0 janitor): sin fallback a BusinessStore demo — datos reales
+  // solo. Si Supabase no está configurado, notFound (veracidad del público).
   const fullDetails = GuakiDataService.isConfigured()
     ? await GuakiDataService.getBusinessById(provider.id)
-    : BusinessStore.getBySlug(params.slug);
+    : null;
 
   const pageUrl = absoluteUrl(`/proveedores/${provider.slug}`);
   const categoryUrl = absoluteUrl(`/servicios/${slugify(provider.category)}/${slugify(provider.city)}`);
-  // REGLA DE PLAN GRATIS: no existe ficha — solo tarjeta en directorio con
-  // link directo a WhatsApp. La ruta del slug gratuito no es página pública.
+  // REGLA DE PLAN GRATIS — ACTUALIZADA 2026-09-23 (decisión Edwin, funnel
+  // "Tu Afiche Aquí"): la ficha free SÍ es página pública. El lead llega del
+  // email a SU ficha, la confirma (WhatsApp) y reclama — sin página no hay
+  // funnel. El claim CTA (sección 3.5) vive en la ficha.
   const freePlan = ['free', 'gratis', 'basico'].includes(
     String(fullDetails?.plan || (provider as any).plan || '').toLowerCase()
   );
-  if (freePlan) notFound();
+
+  // 2026-09-23 (bloque 3 #18): el estado de la promo para el comparador
+  // (gratis vs Verificado) — cargado server-side con el patrón de /unete.
+  let launchPromo: LaunchPromoState | null = null;
+  let priceVerificado: string | null = null;
+  try {
+    const promoUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const promoKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    if (promoUrl && promoKey) {
+      const promoClient = createClient(promoUrl, promoKey, { auth: { persistSession: false } });
+      const [promoRes, countRes] = await Promise.all([
+        promoClient.from('platform_settings').select('value').eq('key', 'launch_promo').maybeSingle(),
+        promoClient.from('businesses').select('id', { count: 'exact', head: true }).neq('claim_status', 'unclaimed'),
+      ]);
+      const pv = promoRes.data?.value as Record<string, unknown> | null;
+      if (pv && pv.active === true) {
+        const limit = typeof pv.limit === 'number' && pv.limit > 0 ? pv.limit : 100;
+        const claimed = countRes.count ?? 0;
+        launchPromo = {
+          active: true,
+          limit,
+          remaining: Math.max(0, limit - claimed),
+          label: typeof pv.label === 'string' && pv.label ? pv.label : 'GRATIS — apertura',
+        };
+      }
+      const priceRes = await promoClient.from('platform_settings').select('value').eq('key', 'pricing').maybeSingle();
+      const priceVal = (priceRes.data?.value as Record<string, unknown> | null)?.priceVerificado;
+      if (typeof priceVal === 'number' && priceVal > 0) {
+        priceVerificado = `$${priceVal.toLocaleString('es-CO')}`;
+      }
+    }
+  } catch {
+    // sin promo: el comparador muestra el precio normal
+  }
   const localBusiness: Record<string, unknown> = {
     '@type': 'LocalBusiness',
     '@id': `${pageUrl}#business`,
@@ -162,6 +204,49 @@ export default async function ProviderProfilePage(props: Props) {
   const address = fullDetails?.address || provider.address || '';
   // H-03 FIX: Verification badge must depend on actual audit approval, not payment plan.
   const isVerified = Boolean(fullDetails?.approvedAt || fullDetails?.isVerified);
+
+  // #31 Frescura verificable: timestamp relativo de actualización en español
+  function formatoFechaRelativo(fechaISO: string | null | undefined): string {
+    if (!fechaISO) return '';
+    const fecha = new Date(fechaISO);
+    const ahora = new Date();
+    const diffMs = ahora.getTime() - fecha.getTime();
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDias === 0) return 'hoy';
+    if (diffDias === 1) return 'hace 1 día';
+    if (diffDias < 30) return `hace ${diffDias} días`;
+    const diffMeses = Math.floor(diffDias / 30);
+    if (diffMeses === 1) return 'hace 1 mes';
+    return `hace ${diffMeses} meses`;
+  }
+
+  // #32 Jerarquía clara de insignias: nivel más alto de confianza (solo un chip por ficha)
+  const planTexto = String(fullDetails?.plan || (provider as any).plan || '').toLowerCase();
+  const esPlanGratis = planTexto === 'gratis' || planTexto === 'free' || planTexto === 'basico';
+  const esDueñoConfirmado = !!(fullDetails?.ownerId || fullDetails?.claimStatus === 'verified');
+  const esVerificado = isVerified; // ya computed: Boolean(fullDetails?.approvedAt || fullDetails?.isVerified)
+
+  // Texto de frescura: usa updated_at (o approved_at como fallback)
+  const campoActualizado = fullDetails?.updatedAt || fullDetails?.approvedAt;
+  const ultimaActualizacion = formatoFechaRelativo(campoActualizado);
+
+  // Nivel de confianza: 1=Ficha, 2=Dueño confirmado, 3=Verificado
+  let nivelConfianza = 0;
+  if (!esPlanGratis) {
+    nivelConfianza = 1; // "Ficha" (base, gris)
+    if (esDueñoConfirmado) nivelConfianza = 2; // "Dueño confirmado" (✓✓, ámbar)
+    if (esVerificado) nivelConfianza = 3; // "Verificado" (✓✓✓, verde)
+  }
+
+  // #2 TAREA 2: Indicador de verificación de número
+  // Regla: 'unverified' (default) = tratado como verificado para no castigar retroactivamente
+  // Si plan verified pero number_verified='pending' → muestra "Verificado (número por confirmar)"
+  const numeroVerificado = fullDetails?.number_verified;
+  const numeroVerificadoStatus = numeroVerificado === 'pending'
+    ? 'número por confirmar'
+    : numeroVerificado === 'verified' || numeroVerificado === 'unverified'
+      ? 'verificado'
+      : undefined;
 
   const rawWebsite = fullDetails?.website || (provider as any).website || '';
   const websiteUrl = rawWebsite ? (rawWebsite.startsWith('http') ? rawWebsite : `https://${rawWebsite}`) : null;
@@ -294,6 +379,7 @@ export default async function ProviderProfilePage(props: Props) {
               businessName={provider.name}
             />
             <ProviderShareButton businessName={provider.name} />
+            <ReportButton businessName={provider.name} slug={provider.slug} />
           </div>
         </div>
 
@@ -336,23 +422,121 @@ export default async function ProviderProfilePage(props: Props) {
               }}
             />
 
-            {/* Badges Flotantes sobre portada (Follows legal rule: Free has NO badge) */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                display: 'flex',
-                gap: '8px',
-              }}
-            >
-              {/* Verificado por Guaki (Follows legal rule: Free has NO badge) */}
-              <VerifiedBadge
-                plan={fullDetails?.plan || (provider as any).plan || null}
-                isVerified={isVerified}
-                size="lg"
-              />
-            </div>
+            {/* #31 Frescura verificable: línea de timestamp cerca de la zona de confianza */}
+            {campoActualizado && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '56px',
+                  right: '16px',
+                  fontSize: '0.72rem',
+                  color: TOKENS.colors.textSecondary,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Actualizado {ultimaActualizacion}
+              </div>
+            )}
+
+            {/* #32 Jerarquía clara de insignias: un solo chip por ficha, nivel más alto alcanzado */}
+            {!esPlanGratis && nivelConfianza > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  display: 'flex',
+                  gap: '4px',
+                  alignItems: 'center',
+                  fontSize: '0.72rem',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    borderRadius: TOKENS.radii.pill,
+                    backgroundColor: nivelConfianza === 1
+                      ? 'rgba(255,255,255,0.4)'
+                      : nivelConfianza === 2
+                      ? 'rgba(180,83,9,0.15)'
+                      : 'rgba(23,56,45,0.1)',
+                    color: nivelConfianza === 1
+                      ? TOKENS.colors.textSecondary
+                      : nivelConfianza === 2
+                      ? TOKENS.colors.warning
+                      : TOKENS.colors.emeraldDark,
+                    fontWeight: 600,
+                  }}
+                  title={
+                    nivelConfianza === 1
+                      ? 'Publicada en Guaki'
+                      : nivelConfianza === 2
+                      ? 'El dueño confirmó sus datos recientemente'
+                      : 'Auditada por Guaki'
+                }
+                >
+                  {nivelConfianza === 1
+                    ? 'Ficha'
+                    : nivelConfianza === 2
+                    ? 'Dueño confirmado'
+                    : 'Verificado'}
+                </span>
+              </div>
+            )}
+
+            {/* #2 TAREA 2: Badge de verificación de número */}
+            {(!esPlanGratis && nivelConfianza >= 3) && numeroVerificadoStatus && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  display: 'flex',
+                  gap: '4px',
+                  alignItems: 'center',
+                  fontSize: '0.72rem',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {numeroVerificadoStatus === 'número por confirmar' && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      borderRadius: TOKENS.radii.pill,
+                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                      color: '#D97706',
+                      fontWeight: 600,
+                    }}
+                    title="Verificado (número por confirmar)"
+                  >
+                    <span>Verificado</span> ({numeroVerificadoStatus})
+                  </span>
+                )}
+                {numeroVerificadoStatus === 'verificado' && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      borderRadius: TOKENS.radii.pill,
+                      backgroundColor: 'rgba(37, 211, 102, 0.15)',
+                      color: '#15803D',
+                      fontWeight: 600,
+                    }}
+                    title="Número de contacto verificado"
+                  >
+                    ✓ Verificado
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Cuerpo Informativo del Hero (Centrado y Simétrico) */}
@@ -542,55 +726,22 @@ export default async function ProviderProfilePage(props: Props) {
         </section>
 
         {/* ── 3.5 RECLAMO DE FICHA (negocios sin dueño registrado) ── */}
+        {/* 2026-09-23: funnel "Tu Afiche Aquí" — confirma WhatsApp ANTES del registro */}
         {!fullDetails?.ownerId && (
-          <section
-            className="neu-level-2"
-            style={{
-              marginBottom: '32px',
-              padding: '18px 22px',
-              borderRadius: TOKENS.radii.xl,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '14px',
-              flexWrap: 'wrap',
-              backgroundColor: TOKENS.colors.surfaceElevated,
-              border: `1px solid ${TOKENS.colors.borderLight}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <ShieldCheck size={22} color={TOKENS.colors.emeraldDark} />
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.92rem', color: TOKENS.colors.textMain }}>
-                  ¿Eres el dueño de {provider.name}?
-                </strong>
-                <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textSecondary }}>
-                  Reclama esta ficha gratis para editar tus datos, servicios y recibir contactos directos.
-                </span>
-              </div>
-            </div>
-            <TrackedLink
-              event={{
-                event_name: 'claim_started',
-                business_id: provider.id,
-                metadata: { slug: provider.slug, name: provider.name, entry: 'ficha' },
-              }}
-              href={`/provider/dashboard?claim=${encodeURIComponent(provider.id)}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 20px',
-                borderRadius: TOKENS.radii.pill,
-                backgroundColor: TOKENS.colors.emeraldDark,
-                color: '#FFFFFF',
-                fontSize: '0.86rem',
-                fontWeight: 800,
-                textDecoration: 'none',
-              }}
-            >
-              Reclamar mi ficha
-            </TrackedLink>
+          <ClaimConfirmCard
+            businessId={provider.id}
+            slug={provider.slug}
+            name={provider.name}
+            city={provider.city}
+            category={provider.category}
+          />
+        )}
+
+        {/* ── 3.6 COMPARADOR: gratis vs Verificado (bloque 3 #18, spec designer) ── */}
+        {/* El lead ve su ficha + cómo se vería con el plan — la oferta visual. */}
+        {!fullDetails?.ownerId && (
+          <section style={{ marginBottom: '32px' }}>
+            <ComparadorGratisVerificado launchPromo={launchPromo} priceVerificado={priceVerificado} />
           </section>
         )}
 
@@ -757,7 +908,7 @@ export default async function ProviderProfilePage(props: Props) {
             Fotos de las Instalaciones & Pacientes
           </h2>
           <div className="neu-level-2" style={{ padding: '16px', overflow: 'hidden', borderRadius: TOKENS.radii.lg }}>
-            <ProviderPhotoCarousel images={providerImages} businessName={provider.name} />
+            <ProviderPhotoCarousel images={providerImages} businessName={provider.name} category={provider.category} />
           </div>
         </section>}
 

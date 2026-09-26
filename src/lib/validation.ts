@@ -93,6 +93,11 @@ export interface BusinessRecord {
   submittedAt?: string;
   approvedAt?: string;
   updatedAt?: string;
+  updated_at?: string | null;
+  plan_source?: string | null;
+  plan_expires_at?: string | null;
+  payment_method?: string | null;
+  number_verified?: string | null;
   createdAt?: string;
 }
 
@@ -240,6 +245,10 @@ export function validateBusinessPayload(
   if (payload.pinned !== undefined) sanitized.pinned = Boolean(payload.pinned);
   if (payload.suspended !== undefined) sanitized.suspended = Boolean(payload.suspended);
   if (payload.auditNotes !== undefined) sanitized.auditNotes = sanitizeString(payload.auditNotes);
+  if (payload.plan_source !== undefined) sanitized.plan_source = sanitizeString(payload.plan_source);
+  if (payload.plan_expires_at !== undefined) sanitized.plan_expires_at = sanitizeString(payload.plan_expires_at);
+  if (payload.payment_method !== undefined) sanitized.payment_method = sanitizeString(payload.payment_method);
+  if (payload.updated_at !== undefined) sanitized.updated_at = payload.updated_at;
 
   return { success: true, data: sanitized };
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Mic } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TOKENS } from '../../lib/design-tokens';
+import { normalizeCity, CITY_CATALOG } from '../../lib/geo';
 
 export const PLACEHOLDER_PHRASES = [
   '¿Qué servicio necesitas hoy?',
@@ -78,23 +79,12 @@ export default function SearchBar({
   // Si se detecta una ubicación, preestablecer ciudad en segundo plano
   useEffect(() => {
     if (detectedLocation && !city) {
-      if (
-        detectedLocation.toLowerCase().includes('medellín') ||
-        detectedLocation.toLowerCase().includes('poblado') ||
-        detectedLocation.toLowerCase().includes('laureles') ||
-        detectedLocation.toLowerCase().includes('envigado')
-      ) {
-        setCity('Medellín');
-      } else if (
-        detectedLocation.toLowerCase().includes('bogotá') ||
-        detectedLocation.toLowerCase().includes('usaquén') ||
-        detectedLocation.toLowerCase().includes('chapinero')
-      ) {
-        setCity('Bogotá');
-      } else if (detectedLocation.toLowerCase().includes('cali')) {
-        setCity('Cali');
-      } else if (detectedLocation.toLowerCase().includes('soacha')) {
-        setCity('Soacha');
+      const normalized = normalizeCity(detectedLocation);
+      const match = CITY_CATALOG.find(
+        (entry) => normalized.includes(normalizeCity(entry.name))
+      );
+      if (match) {
+        setCity(match.name);
       }
     }
   }, [detectedLocation, city]);

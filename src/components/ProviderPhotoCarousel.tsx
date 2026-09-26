@@ -4,13 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
 import { TOKENS } from '../lib/design-tokens';
+import { categoryImage } from '../lib/category-images';
 
 interface Props {
   images: string[];
   businessName: string;
+  /** 2026-09-23: fallback por categoría (antes: veterinaria para TODAS). */
+  category?: string;
 }
 
-export function ProviderPhotoCarousel({ images, businessName }: Props) {
+export function ProviderPhotoCarousel({ images, businessName, category }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -30,7 +33,7 @@ export function ProviderPhotoCarousel({ images, businessName }: Props) {
   const safeImages =
     images && images.length > 0
       ? images
-      : ['/images/veterinaria/hero.jpg', '/images/veterinaria/foto1.jpg', '/images/veterinaria/foto2.jpg'];
+      : [categoryImage(category)];
 
   useEffect(() => {
     if (isHovered || safeImages.length <= 1) return;

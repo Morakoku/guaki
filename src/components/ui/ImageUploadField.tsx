@@ -31,11 +31,12 @@ interface ImageUploadFieldProps {
   label: string;
   value: string;
   onChange: (url: string) => void;
+  onRemove?: () => void; // called before onChange('') when "Quitar imagen" is clicked
   variant?: 'logo' | 'cover';
   hint?: string;
 }
 
-export default function ImageUploadField({ label, value, onChange, variant = 'cover', hint }: ImageUploadFieldProps) {
+export default function ImageUploadField({ label, value, onChange, onRemove, variant = 'cover', hint }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
@@ -158,7 +159,10 @@ export default function ImageUploadField({ label, value, onChange, variant = 'co
         {value && (
           <button
             type="button"
-            onClick={() => onChange('')}
+            onClick={() => {
+              if (onRemove) onRemove();
+              onChange('');
+            }}
             style={{
               background: 'none',
               border: 'none',

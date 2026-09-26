@@ -7,6 +7,7 @@ import { MapPin, CheckCircle2, Star, MessageCircle, ArrowRight } from 'lucide-re
 import { TOKENS } from '../../lib/design-tokens';
 import { AficheBusinessData } from '../../lib/demo_afiche';
 import { normalizeWhatsAppNumber } from '../../lib/whatsapp';
+import { categoryImage } from '../../lib/category-images';
 
 interface BusinessListItemProps {
   business: AficheBusinessData;
@@ -19,7 +20,7 @@ export default function BusinessListItem({
   className = '',
   style = {},
 }: BusinessListItemProps) {
-  const [imgSrc, setImgSrc] = useState(business.imageUrl);
+  const [imgSrc, setImgSrc] = useState(() => business.imageUrl || categoryImage(business.category));
   const [imgError, setImgError] = useState(false);
 
   const fallback = business.fallbackImageUrl;

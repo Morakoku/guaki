@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
 import { TOKENS } from '../../lib/design-tokens';
+import { categoryImage } from '../../lib/category-images';
 import SoftBadge from './SoftBadge';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -21,6 +22,7 @@ export interface BusinessCardData {
   phone?: string | null;
   isVerified?: boolean | null;
   plan?: string | null;
+  updatedAt?: string | null;
 }
 
 interface BusinessCardProps {
@@ -34,9 +36,19 @@ export default function BusinessCard({
   className = '',
   style = {},
 }: BusinessCardProps) {
+  const getFreshnessText = (updatedAt: string | null): string => {
+    if (!updatedAt) return '';
+    const diffMs = new Date().getTime() - new Date(updatedAt).getTime();
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDias === 0) return 'Actualizada hoy';
+    if (diffDias === 1) return 'Actualizada hace 1 día';
+    if (diffDias < 7) return 'Actualizada esta semana';
+    return `Actualizada hace ${diffDias} días`;
+  };
+
   const defaultImage =
     business.featuredImage ||
-    '/images/veterinaria/hero.jpg';
+    categoryImage(business.category);
 
   return (
     <article
@@ -119,6 +131,13 @@ export default function BusinessCard({
               <Star size={13} fill="#EAB308" color="#EAB308" />
               <span>{business.rating.toFixed(1)}</span>
               {business.reviewCount && <span style={{ color: TOKENS.colors.textMuted }}>({business.reviewCount})</span>}
+            </span>
+          )}
+
+          {business.updatedAt && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: TOKENS.colors.textMuted }}>
+              <span style={{ fontSize: '0.82rem', color: TOKENS.colors.textMuted, opacity: 0.6 }}>•</span>
+              {getFreshnessText(business.updatedAt)}
             </span>
           )}
         </div>

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #030712;
+        font-family: 'Inter', sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 1080px;
+        overflow: hidden;
+        background: #030712;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 120px;
+        opacity: 0;
+      }
+
+      /* ── Scene 1: motion-blur-streak ── */
+      .hook-line {
+        font-family: 'Outfit', sans-serif;
+        font-size: 76px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: #F8FAFC;
+        max-width: 1300px;
+        position: relative;
+      }
+      .hook-line .dim { color: #64748B; }
+      .motion-streak {
+        position: absolute;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #04798D 0%, #04798D 50%, #FF5722 100%);
+        border-radius: 4px;
+        box-shadow: 0 0 20px #04798D;
+        opacity: 0;
+      }
+
+      /* ── Scene 2: nudge-curve ── */
+      .nudge-pill {
+        background: #111827;
+        border: 2px solid #334155;
+        border-radius: 8px;
+        padding: 16px 24px;
+        color: #F8FAFC;
+        font-family: 'Outfit', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        margin: 8px 0;
+        min-width: 280px;
+        transition: all 0.3s ease;
+      }
+      .nudge-pill.active {
+        border-color: #04798D;
+        background: #04798D;
+        color: #FFFFFF;
+        box-shadow: 0 0 16px #04798D;
+      }
+
+      /* ── Scene 3: proof-card + particle-burst ── */
+      .proof-card {
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 48px 56px;
+        width: 980px;
+        text-align: left;
+        box-shadow: 4px 4px 0 #0A0A0A;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(6, 182, 212, 0.12);
+        color: #04798D;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 8px 16px;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+      }
+      .biz-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 40px;
+        font-weight: 800;
+        color: #04798D;
+        margin-bottom: 8px;
+      }
+      .biz-sub {
+        font-size: 19px;
+        color: #6C7786;
+        margin-bottom: 34px;
+      }
+      .stats {
+        display: flex;
+        gap: 24px;
+      }
+      .stat {
+        flex: 1;
+        background: #FFFFFF;
+        border: 2px solid #0A0A0A;
+        border-radius: 0;
+        padding: 26px 28px;
+      }
+      .stat .label {
+        font-size: 17px;
+        font-weight: 600;
+        color: #6C7786;
+        margin-bottom: 10px;
+      }
+      .stat .value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 46px;
+        font-weight: 900;
+        color: #0A0A0A;
+        letter-spacing: -0.02em;
+      }
+      .stat .value .rating { color: #04798D; }
+
+      /* ── Scene 3: principles ── */
+      .prin {
+        font-family: 'Outfit', sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: #F8FAFC;
+        margin: 18px 0;
+        max-width: 1350px;
+      }
+      .prin::before {
+        content: "—";
+        color: #06B6D4;
+        margin-right: 18px;
+      }
+
+      /* ── Scene 4: outro ── */
+      .outro-logo {
+        font-family: 'Outfit', sans-serif;
+        font-size: 132px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: #06B6D4;
+        line-height: 1;
+        margin-bottom: 18px;
+      }
+      .outro-tag {
+        font-size: 30px;
+        font-weight: 600;
+        color: #94A3B8;
+        margin-bottom: 34px;
+      }
+      .outro-pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 87, 34, 0.1);
+        border: 1px solid rgba(255, 87, 34, 0.3);
+        color: #FF5722;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 12px 24px;
+        border-radius: 0;
+        margin-bottom: 26px;
+      }
+      .outro-url {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: #F8FAFC;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="18"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- ESCENA 1 — HOOK DE BUSQUEDA A CITA -->
+      <section class="scene scene-hook">
+        <div class="hook-line">
+          <span>De la búsqueda</span><br>
+          <span class="accent naranja">a la cita.</span>
+        </div>
+        <div class="motion-streak" id="motion-streak"></div>
+      </section>
+
+      <!-- ESCENA 2 — NUDGE-CURVE 3 PASOS -->
+      <section class="scene scene-proof">
+        <div class="nudge-curve">
+          <div class="nudge-pill" id="pill-1">1. Busca en Guaki.</div>
+          <div class="nudge-pill" id="pill-2">2. Encuentra la mejor.</div>
+          <div class="nudge-pill" id="pill-3">3. Habla por WhatsApp.</div>
+        </div>
+      </section>
+
+      <!-- ESCENA 3 — PROOF-CARD + COUNT-UP + PARTICLE-BURST -->
+      <section class="scene scene-principles">
+        <div class="proof-card">
+          <span class="badge">✓ NEGOCIO VERIFICADO 100%</span>
+          <div class="biz-name">Clínica Odontológica San Martín</div>
+          <div class="biz-sub">Barranquilla, Colombia · Salud Privada & Implantes</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">⏱️ Respuesta</div>
+              <div class="value">Inmediata</div>
+            </div>
+            <div class="stat">
+              <div class="label">⭐ <span id="rating">4.9</span> · 142 reseñas</div>
+              <div class="value"><span class="rating" id="rating-big">4.9</span> / 5</div>
+            </div>
+          </div>
+          <div class="particle-burst" id="particle-burst"></div>
+        </div>
+      </section>
+
+      <!-- ESCENA 4 — OUTRO -->
+      <section class="scene scene-outro">
+        <div class="outro-logo">Guaki</div>
+        <div class="outro-tag">Confianza y Crecimiento para tu negocio.</div>
+        <div class="outro-pill">⚡ REINVENTANDO EL DESCUBRIMIENTO EMPRESARIAL EN LATINOAMÉRICA</div>
+        <div class="outro-url">guaki.online</div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true, immediateRender: false });
+
+      // Escena 1 (0 – 3.9s): motion-blur-streak
+      tl.fromTo(".scene-hook", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 0);
+      tl.fromTo(".motion-streak", { width: 0, opacity: 0.5 }, { width: "100%", opacity: 1, duration: 0.8, ease: "power2.out" }, 0.15);
+      // The streak blur resolves to 0 at settle via CSS filter
+      tl.fromTo(".hook-line span.accent", { x: -80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 0.6);
+      tl.to(".scene-hook", { opacity: 0, duration: 0.4 }, 3.5);
+
+      // Escena 2 (3.9 – 9.4s): nudge-curve 3 pasos slow-fast-slow
+      tl.fromTo(".scene-proof", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9);
+      // Slow-fast-slow slide: power3.in → linear → power4.out
+      tl.fromTo("#pill-1", { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, ease: "power3.inOut" }, 4.1);
+      tl.fromTo("#pill-2", { x: 0, opacity: 1 }, { x: 65, opacity: 1, duration: 0.6, ease: "linear" }, 5.0);
+      tl.fromTo("#pill-3", { x: 65, opacity: 1 }, { x: 0, opacity: 1, duration: 0.8, ease: "power4.out" }, 5.7);
+      tl.to(".scene-proof", { opacity: 0, duration: 0.4 }, 9.0);
+
+      // Escena 3 (9.4 – 14.3s): proof-card spring-pop + count-up + particle-burst
+      tl.fromTo(".scene-principles", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 9.4);
+      // Spring-pop entrance on proof-card
+      tl.fromTo(".proof-card", { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }, 9.7);
+      // Count-up 0→4.9 en #rating-big
+      const rating = { v: 0 };
+      tl.to(
+        rating,
+        {
+          v: 4.9,
+          duration: 1.2,
+          ease: "power1.out",
+          onUpdate: function () {
+            const val = rating.v.toFixed(1);
+            document.getElementById("rating").textContent = val;
+            document.getElementById("rating-big").textContent = val;
+          }
+        },
+        10.6
+      );
+      // Particle burst behind rating - deterministic, no Math.random
+      const particleCount = 36;
+      const particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({ x: 0, y: 0, vx: 0, vy: 0, alpha: 0, size: Math.max(1, 2 + i % 3) });
+      }
+      // Create particles DOM
+      const burstContainer = document.getElementById("particle-burst");
+      for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = '50%';
+        p.style.top = '50%';
+        p.style.width = particles[i].size + 'px';
+        p.style.height = particles[i].size + 'px';
+        p.style.background = '#04798D';
+        p.style.position = 'absolute';
+        p.style.borderRadius = '50%';
+        p.style.pointerEvents = 'none';
+        burstContainer.appendChild(p);
+        particles[i].elem = p;
+      }
+      // Staggered burst out from center - ease:"none" with onUpdate balístico puro
+      tl.to(particles.map(p => ({ x: p.x, y: p.vy })), {
+        x: [],
+        y: [],
+        duration: 1.0,
+        ease: "none",
+        onUpdate: function () {
+          for (let i = 0; i < particleCount; i++) {
+            const p = particles[i];
+            const elapsed = i * 0.02;
+            const t = elapsed;
+            // Balistic pure update - no Math.random, deterministic
+            p.x += p.vx * t;
+            p.y += p.vy * t;
+            p.alpha = 1 - t * 0.1;
+            p.elem.style.left = (50 + p.x) + '%';
+            p.elem.style.top = (50 + p.y) + '%';
+            p.elem.style.opacity = Math.max(0, p.alpha);
+          }
+        }
+      }, 11.2);
+      tl.to(".scene-principles", { opacity: 0, duration: 0.4 }, 13.9);
+
+      // Escena 4 (14.3 – 18s): outro de marca
+      tl.fromTo(".scene-outro", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 14.3);
+      tl.fromTo(".outro-pill", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 15.2);
+      tl.fromTo(".outro-url", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 15.8);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

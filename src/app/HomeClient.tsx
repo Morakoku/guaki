@@ -1,19 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Store,
   ArrowRight,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 import { TOKENS } from '../lib/design-tokens';
+import { isOpenNowFromSchedule } from '../lib/schedule';
 import SearchBar from '../components/ui/SearchBar';
 import LocationButton from '../components/ui/LocationButton';
 import AficheCard from '../components/ui/AficheCard';
 import GuakiHeader from '../components/ui/GuakiHeader';
 import PlanCardsSection from '../components/ui/PlanCardsSection';
 import { AficheBusinessData } from '../lib/demo_afiche';
+import { metroOf } from '../lib/geo';
 
 interface HomeClientProps {
   // Inventario server-rendered (ISR 5 min). El filtrado por categoría y la
@@ -25,13 +29,31 @@ export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) 
   const [detectedCity, setDetectedCity] = useState<string>('');
   const [detectedLocationName, setDetectedLocationName] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('todos');
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const router = useRouter();
 
+  // Cargar búsquedas recientes de localStorage (post-mount para evitar hydration mismatch)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('guaki_recent_searches');
+      if (saved) {
+        setRecentSearches(JSON.parse(saved).slice(0, 5));
+      }
+    } catch {}
+  }, []);
+
+  // 2026-09-24 (decisión Edwin): el catálogo ampliado al real.
   const categories = [
     { id: 'todos', label: 'Todos', icon: '✨' },
-    { id: 'veterinaria', label: 'Veterinarias', icon: '🐾' },
+    { id: 'barberia', label: 'Barberías', icon: '💈' },
     { id: 'spa', label: 'Belleza & Spa', icon: '💅' },
+    { id: 'unas', label: 'Uñas', icon: '💅' },
     { id: 'odontologia', label: 'Odontología', icon: '🦷' },
-    { id: 'restaurante', label: 'Restaurantes', icon: '☕' },
+    { id: 'salud', label: 'Salud & Bienestar', icon: '🌿' },
+    { id: 'gimnasio', label: 'Gimnasios', icon: '🏋️' },
+    { id: 'tatuajes', label: 'Tatuajes', icon: '🖋️' },
+    { id: 'veterinaria', label: 'Veterinarias', icon: '🐾' },
+    { id: 'inmobiliaria', label: 'Inmobiliarias', icon: '🏠' },
   ];
 
   const allBusinesses = initialBusinesses;
@@ -43,12 +65,68 @@ export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) 
       .filter(Boolean)
   ).size;
 
-  const filteredBusinesses =
-    activeCategory === 'todos'
-      ? allBusinesses
-      : allBusinesses.filter((a) =>
-          a.category.toLowerCase().includes(activeCategory.toLowerCase())
-        );
+  // 2026-09-23: "Comercios destacados según MI UBICACIÓN" (decisión Edwin) —
+  // cuando detectamos tu ciudad, los comercios de tu ciudad suben en el feed
+  // manteniendo la prioridad de plan (pro → verificado → free) dentro de cada
+  // grupo. Sin ubicación: el orden por plan del inventario server-rendered.
+  const filteredBusinesses = useMemo(() => {
+    const byCategory =
+      activeCategory === 'todos'
+        ? allBusinesses
+        : allBusinesses.filter((a) =>
+            a.category.toLowerCase().includes(activeCategory.toLowerCase())
+          );
+    if (!detectedCity) return byCategory;
+    // 2026-09-24: match por ÁREA METROPOLITANA — el LocationButton detecta
+    // municipios (Envigado, Soacha, Los Teques) que no están en las fichas;
+    // el metro los resuelve ("Envigado" → medellín → las fichas de Medellín
+    // suben en el feed).
+    const metro = metroOf(detectedCity) || detectedCity.toLowerCase().trim();
+    const inCity = byCategory.filter((a) => {
+      const aMetro = metroOf((a.city || '') + ' ' + (a.address || ''));
+      return aMetro !== null && (aMetro === metro || metro.includes(aMetro));
+    });
+    const rest = byCategory.filter((a) => !inCity.includes(a));
+    return [...inCity, ...rest];
+  }, [allBusinesses, activeCategory, detectedCity]);
+
+  // #44 "Hoy en tu ciudad": datos dinámicos según ciudad detectada.
+  // Pool estricto por área metropolitana (mismo patrón del ranking de arriba);
+  // sin ubicación: el inventario completo server-rendered.
+  const cityPool = useMemo(() => {
+    if (!detectedCity) return allBusinesses;
+    const metro = metroOf(detectedCity) || detectedCity.toLowerCase().trim();
+    return allBusinesses.filter((a) => {
+      const aMetro = metroOf((a.city || '') + ' ' + (a.address || ''));
+      return aMetro !== null && (aMetro === metro || metro.includes(aMetro));
+    });
+  }, [allBusinesses, detectedCity]);
+
+  // "Abierto ahora": horario real del schedule (offset -05:00, AM/PM).
+  const hoyAbiertos = useMemo(
+    () => cityPool.filter((b) => isOpenNowFromSchedule(b.schedule)).slice(0, 8),
+    [cityPool]
+  );
+
+  // "Fichas nuevas": frescura real (updated_at); sin fechas → últimas del inventario.
+  const hoyNuevas = useMemo(() => {
+    const withDate = cityPool.filter((b) => !!b.updatedAt);
+    const source =
+      withDate.length > 0
+        ? [...withDate].sort((a, z) => (z.updatedAt! > a.updatedAt! ? 1 : -1))
+        : cityPool;
+    return source.slice(0, 8);
+  }, [cityPool]);
+
+  // "Mejor valorados": rating real descendente (el mapper ya lo oculta en free).
+  const hoyMejores = useMemo(
+    () =>
+      [...cityPool]
+        .filter((b) => typeof b.rating === 'number')
+        .sort((a, z) => z.rating! - a.rating!)
+        .slice(0, 8),
+    [cityPool]
+  );
 
   return (
     <div className="page-fade-in" style={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
@@ -106,6 +184,46 @@ export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) 
             staticPlaceholder="Ej. veterinaria en Medellín"
           />
         </div>
+
+        {/* 🔍 Chips de Búsquedas Recientes en Home */}
+        {recentSearches.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              marginBottom: '16px',
+              flexWrap: 'wrap',
+            }}
+          >
+            {recentSearches.slice(0, 5).map((sTerm) => (
+              <button
+                key={sTerm}
+                type="button"
+                style={{
+                  background: 'none',
+                  border: `1px solid ${TOKENS.colors.borderLight}`,
+                  backgroundColor: 'rgba(23, 56, 45, 0.04)',
+                  color: TOKENS.colors.emeraldDark,
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  padding: '3px 10px',
+                  borderRadius: TOKENS.radii.pill,
+                  cursor: 'pointer',
+                  transition: 'transform 120ms ease, background-color 120ms ease',
+                }}
+                onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.95)')}
+                onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                onClick={() => {
+                  router.push(`/directorio?q=${encodeURIComponent(sTerm)}`);
+                }}
+              >
+                {sTerm}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Chips de Categorías Minimalistas */}
         {allBusinesses.length === 0 ? (
@@ -196,7 +314,7 @@ export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Store size={18} color={TOKENS.colors.emeraldDark} />
             <h2 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0 }}>
-              Comercios destacados
+              {detectedCity ? `Los mejores en ${detectedCity}` : 'Comercios destacados'}
             </h2>
           </div>
           <span style={{ fontSize: '0.8rem', color: TOKENS.colors.textMuted, fontWeight: 600 }}>
@@ -238,6 +356,39 @@ export default function HomeClient({ initialBusinesses = [] }: HomeClientProps) 
           </Link>
         </div>
       </section>
+
+      {/* #44: "Hoy en tu ciudad" — abierto ahora + fichas nuevas + mejor valorados,
+          dinámico según ciudad detectada. Solo se renderizan los rails con datos. */}
+      {(hoyAbiertos.length > 0 || hoyNuevas.length > 0 || hoyMejores.length > 0) && (
+        <section style={{ padding: '8px 20px 28px', maxWidth: '1120px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+            <Clock size={18} color={TOKENS.colors.emeraldDark} />
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 900, color: TOKENS.colors.textMain, margin: 0 }}>
+              {detectedCity ? `Hoy en ${detectedCity}` : 'Hoy en tu ciudad'}
+            </h2>
+          </div>
+          {[
+            { key: 'abiertos', title: 'Abierto ahora', items: hoyAbiertos },
+            { key: 'nuevas', title: 'Fichas nuevas', items: hoyNuevas },
+            { key: 'mejores', title: 'Mejor valorados', items: hoyMejores },
+          ]
+            .filter((rail) => rail.items.length > 0)
+            .map((rail) => (
+              <div key={rail.key} style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: TOKENS.colors.textSecondary, margin: '0 0 10px' }}>
+                  {rail.title}
+                </h3>
+                <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '6px' }}>
+                  {rail.items.map((b) => (
+                    <div key={b.id} style={{ flexShrink: 0, width: '270px' }}>
+                      <AficheCard afiche={b} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </section>
+      )}
 
       {/* ── 💡 SECCIÓN: ¿CÓMO FUNCIONA GUAKI? ── */}
       <section

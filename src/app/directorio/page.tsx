@@ -41,13 +41,25 @@ function DirectorySeoHeading() {
 }
 
 interface DirectoryPageProps {
-  searchParams: Promise<{ q?: string; city?: string; cat?: string; category?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    city?: string;
+    cat?: string;
+    category?: string;
+    // #45: deep-links de "Compartir búsqueda" (q, city, cat, country, open)
+    country?: string;
+    open?: string;
+  }>;
 }
 
 export default async function DirectoryPage(props: DirectoryPageProps) {
   const params = await props.searchParams;
   // Deep-link de categoría: /directorio?cat=veterinaria. Acepta también "category".
   const initialCategory = params.cat || params.category || 'todos';
+  // #45: país y "solo abierto ahora" compartibles por URL.
+  const initialCountry: 'todos' | 'co' | 've' =
+    params.country === 'co' || params.country === 've' ? params.country : 'todos';
+  const initialOnlyOpenNow = params.open === '1';
 
   // Graceful degradation: si la fuente de datos falla o no está configurada,
   // se sirve un directorio vacío (no 500, no spinner infinito) y se revalida
@@ -71,6 +83,8 @@ export default async function DirectoryPage(props: DirectoryPageProps) {
         initialQuery={params.q || ''}
         initialCity={params.city || ''}
         initialCategory={initialCategory}
+        initialCountry={initialCountry}
+        initialOnlyOpenNow={initialOnlyOpenNow}
       />
     </div>
   );

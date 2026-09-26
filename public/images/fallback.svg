@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Guaki — sin foto publicada">
+  <rect width="800" height="500" fill="#EDF1EC"/>
+  <rect width="800" height="500" fill="#DCE9D5" opacity="0.45"/>
+  <g transform="translate(400,215)">
+    <circle r="88" cx="0" cy="0" fill="#17382D"/>
+    <circle r="62" cx="0" cy="0" fill="none" stroke="#DCE9D5" stroke-width="6"/>
+    <path d="M-34 6 C-34 -22 -14 -40 0 -40 C14 -40 34 -22 34 6 C34 34 16 46 0 46 C-16 46 -34 34 -34 6 Z" fill="#16A34A"/>
+    <ellipse cx="0" cy="8" rx="13" ry="16" fill="#DCE9D5"/>
+  </g>
+  <text x="400" y="372" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#17382D" letter-spacing="-1">GUAKI</text>
+  <text x="400" y="412" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" fill="#5A6E63">Negocio publicado en Guaki</text>
+</svg>

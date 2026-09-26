@@ -246,7 +246,7 @@ function slideHtml(slide, index, total) {
   .hint { color: ${COLORS.cream}D8; font-weight: 800; font-size: 2.96vw; }
   .counter { font-family: '${theme.fonts.head}'; font-weight: 700; font-size: 2.59vw; color: ${COLORS.cream}CC; }
   .counter-light { color: ${COLORS.cream}D8; }
-  .counter-dark { color: ${COLORS.ink}8C; }
+  .counter-dark { color: ${COLORS.ink}D8; }
   .url-pill { margin-top: 1.7vw; align-self: flex-start; background: ${COLORS.sage}; color: ${COLORS.emerald}; font-family: '${theme.fonts.head}'; font-weight: 900; font-size: 3.7vw; padding: 2.04vw 3.7vw; border-radius: ${theme.pillRadius || '999px'}; }
   .panel { background: ${COLORS.cream}F0; border-radius: 4.44vw; padding: 5.93vw 5.37vw; box-shadow: 0 2.78vw 7.41vw ${COLORS.panelShadow}; margin-top: auto; }
   .panel-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3.15vw; }
@@ -270,6 +270,11 @@ function slideHtml(slide, index, total) {
   body.theme-light .panel { background: #FFFFFFF0; }
   body.theme-light .kicker-dark { color: ${COLORS.ink}; }
   body.theme-light .check { background: ${COLORS.emerald}; }
+  /* CTA claro Guaki (DESIGN.md 2026-09-14): fondo sage + ink, sin fondo emerald oscuro (banned). */
+  body.theme-light .scrim-emerald { background: linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(226,232,225,0.08) 40%, rgba(226,232,225,0.30) 100%); }
+  body.theme-light .kicker-light { color: ${COLORS.emerald}; }
+  body.theme-light .sub-light { color: ${COLORS.ink}D8; }
+  body.theme-light .url-pill { background: ${COLORS.emerald}; color: #FFFFFF; }
   /* Modo suizo web Veyra (2026-09-14): UPPERCASE, negro total en cover/CTA, card con borde duro */
   body.title-upper .title { text-transform: uppercase; }
   body.title-upper .title-cover { font-size: 7.6vw; }
@@ -280,8 +285,8 @@ function slideHtml(slide, index, total) {
   body.panel-swiss .check { border-radius: 0; }
 </style>
 </head>
-<body class="${isLight && !isCta ? 'theme-light ' : ''}${theme.titleCase === 'upper' ? 'title-upper ' : ''}${theme.noPhoto && isPanel ? 'panel-page ' : ''}${theme.noPhoto ? 'no-photo ' : ''}${theme.panelStyle === 'swiss' && isPanel ? 'panel-swiss' : ''}">
-  ${theme.noPhoto ? '' : `<img class="bg ${isLightCover ? 'bg-decorative' : ''}" src="${BG_PREFIX}${escapeHtml(bg)}" alt="" />`}
+<body class="${isLight ? 'theme-light ' : ''}${theme.titleCase === 'upper' ? 'title-upper ' : ''}${theme.noPhoto && isPanel ? 'panel-page ' : ''}${theme.noPhoto ? 'no-photo ' : ''}${theme.panelStyle === 'swiss' && isPanel ? 'panel-swiss' : ''}">
+  ${theme.noPhoto ? '' : `<img class="bg ${isLight && !isStory ? 'bg-decorative' : ''}" src="${BG_PREFIX}${escapeHtml(bg)}" alt="" />`}
   ${inner}
 </body>
 </html>`;

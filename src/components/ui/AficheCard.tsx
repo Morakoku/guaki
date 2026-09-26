@@ -18,6 +18,7 @@ import VerifiedBadge from './VerifiedBadge';
 import { AficheBusinessData } from '../../lib/demo_afiche';
 import { normalizeWhatsAppNumber } from '../../lib/whatsapp';
 import { trackEvent } from '../../lib/analytics';
+import { categoryImage } from '../../lib/category-images';
 
 interface AficheCardProps {
   afiche: AficheBusinessData;
@@ -34,7 +35,7 @@ export default function AficheCard({
   source = 'directory',
   previewMode = false,
 }: AficheCardProps) {
-  const [imgSrc, setImgSrc] = useState(afiche.imageUrl);
+  const [imgSrc, setImgSrc] = useState(() => afiche.imageUrl || categoryImage(afiche.category));
   const [imgError, setImgError] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const viewTrackedRef = useRef(false);
