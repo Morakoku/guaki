@@ -9,3 +9,8 @@ node_modules/
 .opencode/
 
 tsconfig.tsbuildinfo
+
+# brags mp4 locales (entregables viven en Downloads)
+brag-output-*/
+brag-run*/
+
