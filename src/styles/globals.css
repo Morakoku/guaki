@@ -16,8 +16,9 @@
 
   /* 🖋️ Editorial Typography */
   --guaki-text-main: #16231D;
-  --guaki-text-secondary: #5A6E63;
-  --guaki-text-muted: #5A6E63;
+  /* #42 WCAG: sincronizado con design-tokens.ts (#4E6157) */
+  --guaki-text-secondary: #4E6157;
+  --guaki-text-muted: #4E6157;
   --guaki-text-inverse: #F8FAF7;
 
   /* 🌲 Dark Emerald & Sage Accents (Level 3) */
@@ -87,7 +88,9 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  /* Auditoría: `hidden` crea un scroll container y ROMPE position:sticky
+     (header y buscador no se pegaban). `clip` recorta sin romper sticky. */
+  overflow-x: clip;
   width: 100%;
 }
 
@@ -109,7 +112,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip; /* Auditoría: clip (no hidden) para no romper position:sticky */
   width: 100%;
   -webkit-tap-highlight-color: transparent;
 }
@@ -946,4 +949,25 @@ button {
 }
 @media (prefers-reduced-motion: reduce) {
   .gk-spin { animation: none; }
+}
+
+/* ============================================================
+   Auditoria de diseno 360 + #42 WCAG (26/09)
+   (focus-visible global ya existe arriba: *:focus-visible con
+   var(--guaki-emerald-dark) — no se duplica)
+   ============================================================ */
+
+/* Dock flotante: la BARRA de navegación y el FAB de voz son affordance MÓVIL.
+   Decisión de Edwin (2026-10-05): "Hablar ahora" SOLO aparece en celular;
+   en desktop no se muestra (el header ya navega y no tapa formularios). */
+@media (min-width: 1024px) {
+  .soft-bottom-dock {
+    display: none !important;
+  }
+  .guaki-fab-dock-wrapper {
+    display: none !important;
+  }
+  .guaki-fab-float {
+    display: none !important;
+  }
 }
