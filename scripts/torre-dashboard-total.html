@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinidad — Torre de Control Total</title>
+<style>
+:root{--bg:#000;--card:rgba(255,255,255,.045);--border:#1c1c1c;--fg:#fff;--muted:#9aa0a6;--accent:#ff6b35;--green:#00c853;--red:#ff1744;--yellow:#ffd600;--blue:#2979ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',monospace;color:var(--fg);min-height:100vh;padding:20px;background:#000}
+::selection{background:var(--accent);color:#0a0a0a}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:#0a0a0a}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:6px}
+a{color:var(--blue);text-decoration:none}a:hover{color:var(--accent)}
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;gap:15px}
+.header h1{font-size:22px;font-weight:700}.header h1 .logo{color:var(--accent)}
+.header .meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ts{font-size:11px;color:var(--muted)}
+.pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.pill.on{background:rgba(0,200,83,.15);color:var(--green);border:1px solid var(--green)}
+.pill.off{background:rgba(255,23,68,.15);color:var(--red);border:1px solid var(--red)}
+.pill.warn{background:rgba(255,214,0,.15);color:var(--yellow);border:1px solid var(--yellow)}
+.refresh-btn{background:0 0;border:1px solid var(--border);color:var(--fg);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+.refresh-btn:hover{border-color:var(--accent)}
+h2{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin:26px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.09);border-top-color:rgba(255,255,255,.16);border-radius:14px;padding:18px;transition:border-color .2s}
+.card:hover{border-color:var(--accent)}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px}
+.card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.card-value{font-size:26px;font-weight:700;margin:2px 0}
+.card-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.card-sub b{color:var(--fg)}
+.rows{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px}
+.row .name{color:var(--fg);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .detail{color:var(--muted)}
+.mini{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700}
+.mini.on{background:rgba(0,200,83,.15);color:var(--green)}
+.mini.off{background:rgba(255,23,68,.15);color:var(--red)}
+.mini.warn{background:rgba(255,214,0,.15);color:var(--yellow)}
+.links{display:flex;gap:10px;flex-wrap:wrap}
+.link-chip{border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:var(--fg);background:var(--card)}
+.link-chip:hover{border-color:var(--accent)}
+.err-banner{display:none;background:rgba(255,23,68,.12);border:1px solid var(--red);border-radius:10px;padding:12px 16px;font-size:13px;margin-bottom:20px}
+#countdown{font-size:11px;color:var(--muted);min-width:70px;text-align:right}
+.loading{color:var(--muted);font-size:13px;padding:30px;text-align:center}
+@media (max-width:640px){body{padding:12px}.header h1{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1><span class="logo">TRINIDAD</span> — Torre de Control Total</h1>
+  <div class="meta">
+    <span class="ts" id="ts">cargando…</span>
+    <span id="countdown">—</span>
+    <button class="refresh-btn" onclick="load(true)">Refrescar</button>
+    <span class="pill warn" id="overall">…</span>
+  </div>
+</div>
+<div class="err-banner" id="err"></div>
+
+<h2>Marcas</h2>
+<div class="grid" id="marcas"><div class="loading">Consultando sitios y APIs…</div></div>
+
+<h2>Infraestructura</h2>
+<div class="grid" id="infra"><div class="loading">Consultando Docker, Supabase y Resend…</div></div>
+
+<h2>Canales</h2>
+<div class="grid" id="canales"><div class="loading">Consultando OpenWA y Postiz…</div></div>
+
+<h2>Pipeline de prospección</h2>
+<div class="grid" id="pipeline"><div class="loading">Consultando leads y envíos…</div></div>
+
+<h2>Accesos rápidos</h2>
+<div class="links">
+  <a class="link-chip" href="/torre-control/kanban" target="_blank">Kanban Hermes</a>
+  <a class="link-chip" href="/torre-clasica" target="_blank">Torre clásica (ops Mapache)</a>
+  <a class="link-chip" href="https://guaki.online" target="_blank">guaki.online</a>
+  <a class="link-chip" href="https://veyrasoluciones.com" target="_blank">veyrasoluciones.com</a>
+  <a class="link-chip" href="http://127.0.0.1:4007" target="_blank">Postiz (IG)</a>
+</div>
+
+<script>
+const TOKEN = '__OPS_TOKEN__';
+const REFRESH_S = 30;
+let secs = REFRESH_S;
+
+const pill = (state, text) =>
+  state === 'ok' ? `<span class="pill on">${text || 'OPERATIVO'}</span>` :
+  state === 'warn' ? `<span class="pill warn">${text || 'ATENCIÓN'}</span>` :
+  `<span class="pill off">${text || 'CAÍDO'}</span>`;
+const mini = (state, text) =>
+  state === 'ok' ? `<span class="mini on">${text || 'OK'}</span>` :
+  state === 'warn' ? `<span class="mini warn">${text || 'WARN'}</span>` :
+  `<span class="mini off">${text || 'DOWN'}</span>`;
+const siteState = (r) => !r ? 'off' : r.ok ? 'ok' : (r.status >= 300 && r.status < 500) ? 'warn' : 'off';
+const siteDetail = (r) => !r ? 'sin respuesta' : (r.status ? `HTTP ${r.status} · ${r.ms} ms` : `sin conexión (${r.ms} ms)`);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => '&#' + c.charCodeAt(0) + ';');
+
+function card(title, state, stateText, bodyHtml) {
+  return `<div class="card"><div class="card-head"><span class="card-title">${title}</span>${pill(state, stateText)}</div>${bodyHtml}</div>`;
+}
+
+function render(data) {
+  const t = new Date(data.timestamp);
+  document.getElementById('ts').textContent = 'Actualizado ' + t.toLocaleTimeString('es-CO');
+
+  // ---------- MARCAS ----------
+  const g = data.guaki || {}, gs = g.site || {}, gh = (g.health && g.health.data) || {};
+  const supa = gh.dependencies ? gh.dependencies.supabase : null;
+  const fichas = (g.metrics && g.metrics.data) ? g.metrics.data.totalPublished : null;
+  const guakiState = siteState(gs) === 'ok' && g.health && g.health.ok ? 'ok' : (siteState(gs) === 'ok' ? 'warn' : 'off');
+  const vs = data.sitios && data.sitios.veyra ? data.sitios.veyra : null;
+  const bs = data.sitios && data.sitios.brenda ? data.sitios.brenda : null;
+  const mp = data.mapache || {};
+  document.getElementById('marcas').innerHTML =
+    card('Guaki', guakiState, guakiState === 'ok' ? 'OPERATIVO' : null,
+      `<div class="card-value">${fichas != null ? fichas : '—'} <span style="font-size:13px;color:var(--muted)">fichas publicadas</span></div>
+       <div class="card-sub">Sitio: <b>${siteDetail(gs)}</b><br>API: <b>${g.health ? (g.health.ok ? 'HEALTHY' : 'HTTP ' + g.health.status) : 'sin respuesta'}</b> · Supabase: <b>${esc(supa) || 'n/d'}</b></div>`) +
+    card('Veyra', siteState(vs), null,
+      `<div class="card-sub">veyrasoluciones.com<br><b>${siteDetail(vs)}</b><br>Plataforma CRM + intake WhatsApp (ver canales)</div>`) +
+    card('Brenda', siteState(bs), null,
+      `<div class="card-sub">brenda-site.vercel.app<br><b>${siteDetail(bs)}</b><br>Tienda — push del sitio pendiente del dueño según vault</div>`) +
+    card('Mapache (backend :8000)', mp.ok ? 'ok' : 'off', null,
+      `<div class="card-sub">${mp.ok ? 'Respondiendo' : 'SIN RESPUESTA'} — <b>${siteDetail(mp)}</b><br>CRM local; la Torre clásica hace proxy aquí.</div>`);
+
+  // ---------- INFRA ----------
+  const dockers = (data.docker && data.docker.containers) || [];
+  const up = dockers.filter(c => /Up/i.test(c.Status)).length;
+  const dockerState = dockers.length === 0 ? 'off' : up === dockers.length ? 'ok' : 'warn';
+  const resend = data.resend || {};
+  const last = resend.ultimo || {};
+  const envOk = (resend.envios && resend.envios.enviado) || 0;
+  const envErr = (resend.envios && resend.envios.error) || 0;
+  document.getElementById('infra').innerHTML =
+    card('Docker (' + up + '/' + dockers.length + ' up)', dockerState, dockerState === 'ok' ? 'OPERATIVO' : null,
+      `<div class="rows">${dockers.map(c => {
+        const st = /Up/i.test(c.Status) ? (/\(healthy\)/i.test(c.Status) ? 'ok' : 'ok') : 'off';
+        return `<div class="row"><span class="name">${esc(c.Names)}</span><span class="detail">${mini(st, /Up/i.test(c.Status) ? 'UP' : 'DOWN')}</span></div>`;
+      }).join('') || '<div class="row"><span class="detail">docker ps sin respuesta</span></div>'}</div>`) +
+    card('Supabase (proyecto guaki)', supa === 'AVAILABLE' ? 'ok' : (supa ? 'warn' : 'off'), null,
+      `<div class="card-sub">Estado reportado por /api/health: <b>${esc(supa) || 'n/d'}</b><br>Postgres 17 · us-west-2 · vía health de Guaki</div>`) +
+    card('Resend (email)', envErr > 0 && !last ? 'warn' : 'ok', null,
+      `<div class="card-value">${envOk} <span style="font-size:13px;color:var(--muted)">envíos OK · ${envErr} errores</span></div>
+       <div class="card-sub">Último: <b>${last.estado ? esc(last.estado) : '—'}</b> ${last.fecha ? '· ' + esc(last.fecha) : ''}<br>Clave nueva instalada 2026-10-06 · dominio guaki.online verificado</div>`);
+
+  // ---------- CANALES ----------
+  const wa = data.openwa || {};
+  const gw = wa.gateway || {};
+  const brands = wa.brands || {};
+  const waCard = (name, b) => {
+    const s = (b && b.session) || {};
+    const st = s.status === 'linked' ? 'ok' : (s.status === 'not_configured' ? 'warn' : (s.status ? 'warn' : 'off'));
+    return card('WhatsApp — ' + name, st, s.status === 'linked' ? 'CONECTADO' : null,
+      `<div class="card-sub">Sesión: <b>${esc(s.status) || 'n/d'}</b> · identidad: <b>${s.identityVerified ? 'verificada' : 'no verificada'}</b><br>Gateway :2785: <b>${esc(gw.status) || 'n/d'}</b> ${gw.version ? '· v' + esc(gw.version) : ''}</div>`);
+  };
+  const pz = data.postiz || {};
+  document.getElementById('canales').innerHTML =
+    (brands.guaki ? waCard('Guaki', brands.guaki) : '') +
+    (brands.veyra ? waCard('Veyra', brands.veyra) : '') +
+    card('Postiz (publicador IG)', (pz.status >= 200 && pz.status < 400) ? 'ok' : (pz.status > 0 ? 'warn' : 'off'), null,
+      `<div class="card-sub">UI :4007 — <b>${siteDetail(pz)}</b><br>Stack: postiz + postgres + redis + temporal (Docker)</div>`);
+
+  // ---------- PIPELINE ----------
+  const cv = data.cveliz || {};
+  const batch = cv.batch || null;
+  const regs = data.contactos || {};
+  document.getElementById('pipeline').innerHTML =
+    card('Leads CVELIZ', 'ok', null,
+      `<div class="card-value">${cv.leads != null ? cv.leads : '—'} <span style="font-size:13px;color:var(--muted)">leads</span></div>
+       <div class="card-sub">Nuevos sin contactar: <b>${cv.nuevos != null ? cv.nuevos : '—'}</b><br>Base: leads.db (prospeccion)</div>`) +
+    card('Batch email-first', batch ? 'warn' : 'off', batch ? 'PENDIENTE' : null,
+      `<div class="card-sub">${batch ? 'Archivo: <b>' + esc(batch) + '</b><br>100 leads score 40 · esperando aprobación de hash de Edwin' : 'Sin batch generado'}</div>`) +
+    card('Contactos por marca', 'ok', null,
+      `<div class="rows">
+        <div class="row"><span class="name">CVELIZ</span><span class="detail">${regs.cveliz || 0} contactados</span></div>
+        <div class="row"><span class="name">Guaki</span><span class="detail">${regs.guaki || 0} contactados</span></div>
+        <div class="row"><span class="name">Veyra</span><span class="detail">${regs.veyra || 0} contactados</span></div>
+      </div>`);
+
+  // ---------- OVERALL ----------
+  const critical = [
+    guakiState, siteState(vs), siteState(bs), mp.ok ? 'ok' : 'off',
+    dockerState,
+    (brands.guaki && brands.guaki.session && brands.guaki.session.status === 'linked') ? 'ok' : 'warn',
+    (brands.veyra && brands.veyra.session && brands.veyra.session.status === 'linked') ? 'ok' : 'warn',
+    (pz.status >= 200 && pz.status < 400) ? 'ok' : (pz.status > 0 ? 'warn' : 'off')
+  ];
+  const anyOff = critical.includes('off');
+  const anyWarn = critical.includes('warn');
+  const overall = document.getElementById('overall');
+  overall.className = 'pill ' + (anyOff ? 'off' : anyWarn ? 'warn' : 'on');
+  overall.textContent = anyOff ? 'ATENCIÓN REQUERIDA' : anyWarn ? 'ATENCIÓN' : 'TODOS OPERATIVOS';
+}
+
+async function load(manual) {
+  secs = REFRESH_S;
+  try {
+    const r = await fetch('/torre-control/total', { headers: { 'x-veyra-token': TOKEN } });
+    if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 401 ? ' — token de operador inválido o ausente' : ''));
+    render(await r.json());
+    document.getElementById('err').style.display = 'none';
+  } catch (e) {
+    const el = document.getElementById('err');
+    el.style.display = 'block';
+    el.textContent = 'No pude consultar el estado: ' + e.message;
+    document.getElementById('overall').className = 'pill off';
+    document.getElementById('overall').textContent = 'SIN DATOS';
+  }
+}
+
+setInterval(() => {
+  secs--;
+  if (secs <= 0) { load(); return; }
+  document.getElementById('countdown').textContent = '↻ ' + secs + 's';
+}, 1000);
+load();
+</script>
+</body>
+</html>

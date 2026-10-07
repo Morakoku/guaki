@@ -1,5 +1,10 @@
 import fs from 'node:fs';
 import http from 'node:http';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { createKanbanHandler } from './torre-kanban.mjs';
+import { readOpsToken, createLocalKanbanGuard } from './torre-auth.mjs';
+import { createServiceMonitor } from './torre-services.mjs';
 
 // Torre de control local. TRES responsabilidades:
 // 1) Servir la PAGINA de la torre desde el repo local (fuente unica de verdad: el
@@ -37,17 +42,7 @@ const BRANDS = {
 };
 const ESTADOS = new Set(['contactado', 'respondio', 'pendiente']);
 
-// Puentes WhatsApp (Baileys) del ecosistema (#5): sondas server-side (sin CORS).
-const BRIDGE_PORTS = { atlas: 3000, veyra: 3001, guaki: 3002, cveliz: 3004 };
-const probeBridge = async (port) => {
-  try {
-    const r = await fetch(`http://127.0.0.1:${port}/status`, { signal: AbortSignal.timeout(1500) });
-    if (!r.ok) return { ok: false, status: r.status };
-    let estado = null;
-    try { const j = await r.json(); estado = j.status || j.state || null; } catch {}
-    return { ok: true, status: r.status, estado };
-  } catch { return { ok: false, status: 0 }; }
-};
+const serviceMonitor = createServiceMonitor({configRoot:'C:/Users/edwin/Documents/Trinidad/tools/openwa/.private'});
 
 const readReg = (file) => {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -72,15 +67,12 @@ const readBody = (req) => new Promise((resolve) => {
 // Token de operador: misma fuente de verdad que el backend (backend/.env).
 // /torre.json y /{brand}/contactos lo exigen (leen/escriben datos del
 // escritorio: PII de leads). Sin .env o sin token configurado: fail-closed.
-const OPS_TOKEN = (() => {
-  try {
-    const env = fs.readFileSync(TORRE_PY.split('/app/routers/')[0] + '/.env', 'utf8');
-    const m = env.match(/^VEYRA_ADMIN_TOKEN=(.+)$/m);
-    return m ? m[1].trim() : null;
-  } catch { return null; }
-})();
+const OPS_ENV = TORRE_PY.split('/app/routers/')[0] + '/.env';
 const ORIGINS_OK = new Set(['http://127.0.0.1:7788', 'http://localhost:7788']);
-const tokenOk = (req) => !!OPS_TOKEN && req.headers['x-veyra-token'] === OPS_TOKEN;
+const tokenOk = (req) => {
+  const token = readOpsToken(OPS_ENV);
+  return !!token && req.headers['x-veyra-token'] === token;
+};
 const originOk = (req) => {
   const o = req.headers.origin;
   return !o || ORIGINS_OK.has(String(o));
@@ -92,6 +84,101 @@ const datosGuard = (req, res) => {
     return false;
   }
   return true;
+};
+
+const handleKanban = createKanbanHandler({
+  file: 'C:/Users/edwin/Documents/Trinidad/.local/torre-kanban.json',
+  seed: new URL('./torre-kanban.seed.json', import.meta.url),
+  page: new URL('./torre-kanban.html', import.meta.url),
+  guard: createLocalKanbanGuard(PORT),
+  readBody
+});
+
+// ---- Dashboard Total: agregación del ecosistema completo ----
+const TOTAL_HTML_FILE = 'C:/Users/edwin/Documents/Trinidad/guaki/scripts/torre-dashboard-total.html';
+const execFileP = promisify(execFile);
+const settle = (p) => p.then(v => ({ ok: true, v }), () => ({ ok: false }));
+const fetchCheck = async (url, ms = 5000) => {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(ms), redirect: 'manual' });
+    return { ok: r.ok, status: r.status, ms: Date.now() - t0 };
+  } catch {
+    return { ok: false, status: 0, ms: Date.now() - t0 };
+  }
+};
+const fetchJson = async (url, ms = 5000) => {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(ms) });
+    let data = null;
+    try { data = await r.json(); } catch {}
+    return { ok: r.ok, status: r.status, ms: Date.now() - t0, data };
+  } catch {
+    return { ok: false, status: 0, ms: Date.now() - t0, data: null };
+  }
+};
+const PY_PIPELINE = `import json,sqlite3,glob,os
+out={}
+try:
+ c=sqlite3.connect(r'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/leads.db')
+ out['leads']=c.execute('SELECT COUNT(*) FROM leads').fetchone()[0]
+ out['nuevos']=c.execute("SELECT COUNT(*) FROM leads WHERE estado='nuevo'").fetchone()[0]
+ out['envios']=dict(c.execute('SELECT estado,COUNT(*) FROM envios_log GROUP BY estado').fetchall())
+ r=c.execute('SELECT estado,fecha FROM envios_log ORDER BY id DESC LIMIT 1').fetchone()
+ out['ultimo']={'estado':r[0],'fecha':r[1]} if r else None
+except Exception as e:
+ out['err']=str(e)
+b=sorted(glob.glob(r'D:/Proyectos IA/01_PROYECTOS/CVELIZ/prospeccion/tandas/email_first_*.json'))
+out['batch']=os.path.basename(b[-1]) if b else None
+print(json.dumps(out))`;
+const dockerPs = () => execFileP('docker', ['ps', '--format', '{{json .}}'], { timeout: 8000, windowsHide: true })
+  .then(({ stdout }) => stdout.trim().split(/\r?\n/).filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return { Names: l, Status: 'parse_error' }; } }));
+const pipelineStats = () => execFileP('python', ['-c', PY_PIPELINE], { timeout: 10000, windowsHide: true })
+  .then(({ stdout }) => JSON.parse(stdout));
+const totalStatus = async () => {
+  const [guakiSite, guakiHealth, guakiMetrics, veyraSite, brendaSite, mapache, postiz, openwa, docker, pipeline] = await Promise.all([
+    fetchCheck('https://guaki.online'),
+    fetchJson('https://guaki.online/api/health'),
+    fetchJson('https://guaki.online/api/businesses?metrics=true'),
+    fetchCheck('https://veyrasoluciones.com'),
+    fetchCheck('https://brenda-site-morakokus-projects.vercel.app'),
+    fetchCheck('http://127.0.0.1:8000/'),
+    fetchCheck('http://127.0.0.1:4007/'),
+    settle(serviceMonitor()),
+    settle(dockerPs()),
+    settle(pipelineStats())
+  ]);
+  const regs = {};
+  for (const [k, f] of Object.entries(BRANDS)) {
+    try { regs[k] = Object.keys(readReg(f).contactos || {}).length; } catch { regs[k] = 0; }
+  }
+  return {
+    timestamp: new Date().toISOString(),
+    sitios: { veyra: veyraSite, brenda: brendaSite },
+    guaki: { site: guakiSite, health: guakiHealth, metrics: guakiMetrics },
+    mapache, postiz,
+    openwa: openwa.ok ? openwa.v : null,
+    docker: { containers: docker.ok ? docker.v : [] },
+    resend: pipeline.ok ? { envios: pipeline.v.envios || {}, ultimo: pipeline.v.ultimo || null } : {},
+    cveliz: pipeline.ok ? { leads: pipeline.v.leads, nuevos: pipeline.v.nuevos, batch: pipeline.v.batch } : {},
+    contactos: regs,
+    torre: { uptime_seconds: Math.floor(process.uptime()) }
+  };
+};
+// Página TOTAL con token de operador inyectado (same-origin, fail-closed si falta).
+let totalCache = { mtime: 0, html: null };
+const totalPage = () => {
+  try {
+    const st = fs.statSync(TOTAL_HTML_FILE);
+    if (totalCache.html && st.mtimeMs === totalCache.mtime) return totalCache.html;
+    const token = readOpsToken(OPS_ENV) || '';
+    const src = fs.readFileSync(TOTAL_HTML_FILE, 'utf8');
+    totalCache = { mtime: st.mtimeMs, html: src.replace('__OPS_TOKEN__', token) };
+    return totalCache.html;
+  } catch (e) {
+    return '<!DOCTYPE html><html><body style="font-family:system-ui;background:#0a0a0a;color:#eee;padding:40px"><h2>No pude leer torre-dashboard-total.html</h2><pre>' + e.message + '</pre></body></html>';
+  }
 };
 
 const server = http.createServer(async (req, res) => {
@@ -110,6 +197,19 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204);
     return res.end();
   }
+  if (await handleKanban(req, res, url)) return;
+  if (url === '/torre-control/services') {
+    if (!datosGuard(req, res)) return;
+    if (req.method !== 'GET') { res.writeHead(405).end(); return; }
+    res.writeHead(200, { 'Content-Type':'application/json; charset=utf-8' });
+    return res.end(JSON.stringify(await serviceMonitor()));
+  }
+  if (url === '/torre-control/total') {
+    if (!datosGuard(req, res)) return;
+    if (req.method !== 'GET') { res.writeHead(405).end(); return; }
+    res.writeHead(200, { 'Content-Type':'application/json; charset=utf-8' });
+    return res.end(JSON.stringify(await totalStatus()));
+  }
 
   // ---- datos locales ----
   if (url === '/health') {
@@ -119,11 +219,9 @@ const server = http.createServer(async (req, res) => {
     for (const [k, f] of Object.entries(BRANDS)) {
       try { regs[k] = Object.keys(readReg(f).contactos || {}).length; } catch {}
     }
-    // Sondas de puentes WhatsApp (:3000-:3004) + uptime del proceso (#4/#5).
-    const bridgeEntries = await Promise.all(
-      Object.entries(BRIDGE_PORTS).map(async ([k, p]) => [k, await probeBridge(p)])
-    );
-    const bridges = Object.fromEntries(bridgeEntries);
+    // Public legacy compatibility: no session details or private configuration.
+    // Detailed authenticated monitoring lives at /torre-control/services.
+    const bridges = {guaki:{ok:false,estado:'consultar monitor OpenWA'},veyra:{ok:false,estado:'consultar monitor OpenWA'}};
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify({
       ok: true, generatedAt, cvelizContactos: regs.cveliz || 0, registros: regs,
@@ -134,9 +232,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url === '/' || url === '/torre-control' || url === '/torre-control/') {
-    const html = torrePage();
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    return res.end(html);
+    return res.end(totalPage());
+  }
+  if (url === '/torre-clasica') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(torrePage());
   }
 
   if (url === '/torre.json') {
